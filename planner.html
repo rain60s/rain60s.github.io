@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -553,10 +554,7 @@ function importData(ev) {
   r.readAsText(f); ev.target.value = '';
 }
 
-// ===== 启动 =====
-render();
-updateSyncTime();
-
+// ===== 工具函数 =====
 const today = () => new Date().toISOString().slice(0, 10);
 function daysDiff(dateStr) {
   if (!dateStr) return Infinity;
@@ -594,6 +592,10 @@ function categorize(tasks) {
   });
   return r;
 }
+
+// ===== 启动 =====
+render();
+updateSyncTime();
 
 // ===== Render =====
 function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
