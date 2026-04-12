@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>主人计划</title>
+<!-- 腾讯云开发 CloudBase Web SDK -->
+<script src="https://unpkg.com/@cloudbase/js-sdk@2/dist/cloudbase.full.js"></script>
+<style>
+:root {
+  --bg: #f5f5f0;
+  --card: #ffffff;
+  --border: #e8e8e3;
+  --text: #2c2c2c;
+  --text-dim: #999;
+  --accent: #e67e22;
+  --accent-light: #fef0e0;
+  --red: #e74c3c;
+  --red-light: #fdecea;
+  --green: #27ae60;
+  --green-light: #e8f8f0;
+  --blue: #3498db;
+  --blue-light: #eaf4fb;
+  --radius: 10px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; line-height: 1.6;
+  padding-bottom: 80px;
+}
+
+/* Header */
+.header {
+  max-width: 640px; margin: 0 auto;
+  padding: 28px 20px 0;
+}
+.header h1 { font-size: 22px; font-weight: 800; }
+.header h1 span { color: var(--accent); }
+.header-date { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+
+/* Container */
+.container { max-width: 640px; margin: 0 auto; padding: 16px 20px; }
+
+/* Habits */
+.habits {
+  display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+}
+.habit-chip {
+  padding: 8px 16px; border-radius: 20px;
+  background: var(--card); border: 1.5px solid var(--border);
+  font-size: 14px; cursor: pointer; transition: all 0.2s;
+  user-select: none;
+}
+.habit-chip:active { transform: scale(0.96); }
+.habit-chip.active {
+  background: var(--green-light); border-color: var(--green);
+  color: var(--green); text-decoration: line-through;
+}
+
+/* Section */
+.section { margin-bottom: 24px; }
+.section-title {
+  font-size: 14px; font-weight: 700; color: var(--text-dim);
+  margin-bottom: 10px; padding-left: 2px;
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* Task Item */
+.task {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  margin-bottom: 8px; transition: all 0.2s;
+  position: relative;
+}
+.task:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.task.done { opacity: 0.5; }
+.task.done .task-title { text-decoration: line-through; color: var(--text-dim); }
+
+.task-check {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid #ccc; cursor: pointer; flex-shrink: 0;
+  margin-top: 1px; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.task-check:hover { border-color: var(--accent); }
+.task-check.checked {
+  background: var(--accent); border-color: var(--accent);
+}
+.task-check.checked::after {
+  content: '✓'; color: #fff; font-size: 13px; font-weight: bold;
+}
+
+.task-body { flex: 1; min-width: 0; }
+.task-title { font-size: 15px; font-weight: 500; word-break: break-word; }
+.task-sub {
+  font-size: 12px; color: var(--text-dim); margin-top: 3px;
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+}
+.task-tag {
+  font-size: 11px; padding: 1px 8px; border-radius: 10px; font-weight: 500;
+}
+.tag-overdue { background: var(--red-light); color: var(--red); }
+.tag-today { background: var(--accent-light); color: var(--accent); }
+.tag-tomorrow { background: #fff8e1; color: #f39c12; }
+.tag-week { background: var(--blue-light); color: var(--blue); }
+.tag-future { background: #f0f0f0; color: #888; }
+.tag-recurring { background: #f3e8ff; color: #8b5cf6; }
+
+.task-note { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+.task-actions {
+  display: flex; gap: 2px; flex-shrink: 0;
+  opacity: 0.35; transition: opacity 0.15s;
+}
+.task:hover .task-actions { opacity: 1; }
+.task-btn {
+  width: 28px; height: 28px; border-radius: 6px;
+  background: none; border: none; color: var(--text-dim);
+  cursor: pointer; font-size: 14px; display: flex;
+  align-items: center; justify-content: center;
+}
+.task-btn:hover { background: #f0f0f0; }
+
+/* Empty */
+.empty { text-align: center; padding: 20px; color: var(--text-dim); font-size: 14px; }
+
+/* FAB */
+.fab {
+  position: fixed; bottom: 28px; right: 28px;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); color: #fff; border: none;
+  font-size: 28px; cursor: pointer;
+  box-shadow: 0 4px 14px rgba(230,126,34,0.4);
+  transition: all 0.2s; z-index: 50;
+  display: flex; align-items: center; justify-content: center;
+}
+.fab:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(230,126,34,0.5); }
+.fab:active { transform: scale(0.95); }
+
+/* Settings bar */
+.settings-bar {
+  display: flex; gap: 8px; justify-content: flex-end;
+  margin-bottom: 16px;
+}
+.settings-btn {
+  padding: 6px 12px; border-radius: 8px;
+  background: var(--card); border: 1px solid var(--border);
+  color: var(--text-dim); font-size: 12px; cursor: pointer;
+  transition: all 0.2s;
+}
+.settings-btn:hover { border-color: var(--accent); color: var(--text); }
+
+/* Modal */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4); z-index: 100;
+  align-items: flex-end; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--card); border-radius: 16px 16px 0 0;
+  padding: 24px; width: 100%; max-width: 640px;
+  max-height: 85vh; overflow-y: auto;
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.modal h2 { font-size: 17px; font-weight: 700; margin-bottom: 18px; }
+.form-group { margin-bottom: 14px; }
+.form-group label {
+  display: block; font-size: 12px; color: var(--text-dim);
+  margin-bottom: 5px; font-weight: 600;
+}
+.form-group input, .form-group textarea {
+  width: 100%; padding: 10px 14px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: var(--bg);
+  color: var(--text); font-size: 15px; font-family: inherit;
+  outline: none; transition: border 0.2s;
+}
+.form-group input:focus, .form-group textarea:focus {
+  border-color: var(--accent);
+}
+.form-group textarea { min-height: 60px; resize: vertical; }
+.modal-actions {
+  display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px;
+}
+.btn {
+  padding: 10px 22px; border-radius: 8px; border: none;
+  font-size: 14px; cursor: pointer; font-weight: 600; transition: all 0.2s;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #d35400; }
+.btn-cancel { background: var(--bg); color: var(--text-dim); }
+
+/* Progress bar for habits */
+.habit-progress {
+  font-size: 12px; color: var(--text-dim); margin-bottom: 8px;
+}
+
+.habit-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.habit-row:last-child { border-bottom: none; }
+.habit-row-icon {
+  font-size: 22px; width: 36px; text-align: center;
+}
+.habit-row-info { flex: 1; }
+.habit-row-name { font-size: 15px; font-weight: 500; }
+.habit-row-detail { font-size: 12px; color: var(--text-dim); }
+.habit-row-del {
+  width: 28px; height: 28px; border-radius: 6px;
+  background: none; border: none; color: var(--text-dim);
+  cursor: pointer; font-size: 14px;
+}
+.habit-row-del:hover { background: var(--red-light); color: var(--red); }
+.btn-add {
+  width: 100%; padding: 10px; border-radius: 8px;
+  border: 1.5px dashed var(--border); background: none;
+  color: var(--text-dim); font-size: 14px; cursor: pointer;
+  margin-top: 12px; transition: all 0.2s;
+}
+.btn-add:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Responsive */
+@media (min-width: 660px) {
+  .modal { border-radius: 16px; margin-bottom: 40px; }
+  .modal-overlay { align-items: center; }
+}
+@media (max-width: 640px) {
+  .fab { bottom: 20px; right: 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🦐 <span>主人计划</span></h1>
+  <div class="header-date" id="headerDate"></div>
+</div>
+
+<div class="container">
+  <div class="settings-bar">
+    <button class="settings-btn" onclick="exportData()">📤 导出</button>
+    <button class="settings-btn" onclick="document.getElementById('importFile').click()">📥 导入</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    <button class="settings-btn" id="migrateBtn" onclick="migrateLocalStorage()" title="把旧版本存在浏览器里的数据迁移到服务器">🔄 迁移本地数据</button>
+  </div>
+
+  <!-- Habits -->
+  <div class="section">
+    <div class="habit-progress" id="habitProgress"></div>
+    <div class="habits" id="habitList"></div>
+  </div>
+
+  <!-- Sections rendered by JS -->
+  <div id="taskSections"></div>
+</div>
+
+<!-- FAB -->
+<button class="fab" onclick="openModal()">＋</button>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle">添加任务</h2>
+    <input type="hidden" id="editId">
+    <div class="form-group">
+      <label>任务名称</label>
+      <input type="text" id="taskTitle" placeholder="要做什么？" autofocus>
+    </div>
+    <div class="form-group">
+      <label>截止日期（可选）</label>
+      <input type="date" id="taskDate">
+    </div>
+    <div class="form-group">
+      <label>循环（可选）</label>
+      <select id="taskRecurrence" style="width:100%;padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:15px;outline:none;">
+        <option value="">不循环</option>
+        <option value="每天">🔄 每天</option>
+        <option value="每周">🔄 每周</option>
+        <option value="每月">🔄 每月</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>备注（可选）</label>
+      <textarea id="taskNote" placeholder="补充说明…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveTask()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Habit Modal -->
+<div class="modal-overlay" id="habitModal">
+  <div class="modal">
+    <h2>⚙️ 管理习惯</h2>
+    <div id="habitModalList"></div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeHabitModal()">关闭</button>
+      <button class="btn btn-primary" onclick="saveHabitChanges()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== Storage =====
+const DATA_FILE = 'planner_data.json';
+const DEFAULT_TASKS = [
+  {id:'1',title:'汇总民生领域信访问题报纪检组（周五12时前）',date:'2026-04-17',note:'信访来源、问题主要内容、是否已解决、解决时间、预计解决时间',done:false,doneDate:null},
+  {id:'2',title:'反馈污排部整改复核环保督察工作',date:'2026-04-13',note:'协同',done:false,doneDate:null},
+  {id:'3',title:'省委巡视进展反馈',date:'2026-04-13',note:'',done:false,doneDate:null},
+  {id:'4',title:'首脑会议',date:'2026-04-16',note:'',done:false,doneDate:null},
+  {id:'5',title:'第八轮阶段性整改意见（张俏、陈辰、王绍伟）',date:'2026-04-16',note:'',done:false,doneDate:null},
+  {id:'6',title:'报送住建系统阶段整改',date:'2026-04-16',note:'孟大乾 13940554193，党政公文（3月17日件）',done:false,doneDate:null},
+  {id:'7',title:'营商环境建设对标改革任务清单',date:'2026-04-15',note:'2026年版（试行）',done:false,doneDate:null},
+  {id:'8',title:'七班晨间分享',date:'2026-04-16',note:'周四',done:false,doneDate:null},
+  {id:'9',title:'局长谈话（贺永存）',date:'2026-04-22',note:'每月22日',done:false,doneDate:null},
+  {id:'10',title:'四不两直，检查省委巡视',date:'2026-04-23',note:'',done:false,doneDate:null},
+  {id:'11',title:'报送整治吃喝圈子',date:'2026-04-25',note:'4月10日收材料',done:false,doneDate:null},
+  {id:'12',title:'首脑会议',date:'2026-04-28',note:'',done:false,doneDate:null},
+  {id:'13',title:'开班分享',date:'2026-04-30',note:'',done:false,doneDate:null},
+  {id:'14',title:'冠中冠分享',date:'2026-05-01',note:'',done:false,doneDate:null},
+  {id:'15',title:'首脑会议',date:'2026-05-06',note:'',done:false,doneDate:null},
+  {id:'16',title:'省委第八轮巡查整改',date:'2026-08-10',note:'',done:false,doneDate:null},
+  {id:'17',title:'本荷大作业改稿',date:'',note:'',done:false,doneDate:null},
+  {id:'18',title:'私信点评学员',date:'',note:'',done:false,doneDate:null},
+  {id:'19',title:'带天龙八步',date:'',note:'',done:false,doneDate:null},
+  {id:'20',title:'拉票',date:'',note:'',done:false,doneDate:null},
+  {id:'21',title:'学习脱口秀',date:'',note:'',done:false,doneDate:null},
+  {id:'22',title:'材料星',date:'',note:'',done:false,doneDate:null},
+  {id:'23',title:'小龙虾',date:'',note:'',done:false,doneDate:null},
+  {id:'24',title:'政府工作报告重点工作分解细化进展',date:'',note:'',done:false,doneDate:null},
+  {id:'25',title:'第八轮巡查整改方案修改，上平台',date:'',note:'',done:false,doneDate:null},
+  {id:'26',title:'《终身成长》PPT',date:'',note:'',done:false,doneDate:null},
+  {id:'27',title:'七班3个故事线索',date:'',note:'',done:false,doneDate:null},
+  {id:'28',title:'统战工作报告',date:'',note:'',done:false,doneDate:null},
+  {id:'29',title:'2025年度拟实现目标（一年后回看）',date:'2027-01-01',note:'https://kdocs.cn/l/ciGxqQf7QhgO',done:false,doneDate:null},
+  {id:'30',title:'故事力助教预约（曹廷凯/牛牛/王爱芳/永霞）',date:'',note:'',done:false,doneDate:null},
+  {id:'31',title:'故事力项目整体推进',date:'',note:'持续开展中',done:false,doneDate:null},
+  {id:'32',title:'了解爸身体情况',date:'',note:'',recurrence:'每周',done:false,doneDate:null},
+  {id:'33',title:'局长谈话（贺永存）',date:'2026-04-22',note:'每月22日',recurrence:'每月',done:false,doneDate:null},
+  {id:'34',title:'聂处长报告进度（贺处长）',date:'',note:'周一',recurrence:'每周',done:false,doneDate:null},
+  {id:'35',title:'调度第八巡察（局长谈话）',date:'',note:'',recurrence:'每周',done:false,doneDate:null},
+];
+const DEFAULT_HABITS = [
+  {id:'h1',icon:'🧘',name:'冥想',detail:'20分钟',active:false},
+  {id:'h2',icon:'📖',name:'阅读',detail:'30分钟',active:false},
+  {id:'h3',icon:'🏃',name:'运动',detail:'30分钟',active:false},
+  {id:'h4',icon:'✍️',name:'复盘',detail:'每日总结',active:false},
+];
+
+// ===== 腾讯云开发 CloudBase 配置 =====
+// ⚠️ 首次使用需要配置以下信息（创建云环境后填入）
+const CLOUDBASE_CONFIG = {
+  env: 'rain60s-0grwy653dbbd04a5',
+};
+
+// CloudBase 初始化状态
+let _cloudDB = null;
+let _cloudReady = false;
+const DATA_DOC_ID = 'planner_main'; // 云数据库中的文档ID
+
+async function initCloud() {
+  if (_cloudReady || !CLOUDBASE_CONFIG.env) return;
+  try {
+    const app = cloudbase.init({ env: CLOUDBASE_CONFIG.env });
+    const auth = app.auth();
+    // 匿名登录（无需用户注册）
+    await auth.anonymousAuthProvider().signIn();
+    _cloudDB = app.database();
+    _cloudReady = true;
+    console.log('☁️ CloudBase 已连接');
+  } catch(e) {
+    console.warn('CloudBase 初始化失败:', e);
+  }
+}
+
+// ===== 云端数据读写 =====
+let _tasksCache = null, _habitsCache = null, _saveTimer = null;
+
+async function loadTasks() {
+  if (_tasksCache) return _tasksCache;
+  if (_cloudReady) {
+    try {
+      const res = await _cloudDB.collection('planner').doc(DATA_DOC_ID).get();
+      const d = res.data;
+      _tasksCache = d.tasks || [];
+      _habitsCache = d.habits || [];
+      return _tasksCache;
+    } catch(e) {
+      // 文档不存在，创建初始文档
+      if (e.message && e.message.includes('not exist')) {
+        _tasksCache = DEFAULT_TASKS;
+        _habitsCache = DEFAULT_HABITS;
+        await cloudSave();
+        return _tasksCache;
+      }
+    }
+  }
+  // 降级：localStorage
+  const raw = localStorage.getItem('xx_tasks_v2');
+  return raw ? JSON.parse(raw) : DEFAULT_TASKS;
+}
+
+async function saveTasks(d) {
+  _tasksCache = d;
+  debounceSave();
+}
+
+async function loadHabits() {
+  if (_habitsCache) return _habitsCache;
+  if (_cloudReady) {
+    try {
+      const res = await _cloudDB.collection('planner').doc(DATA_DOC_ID).get();
+      const d = res.data;
+      _tasksCache = d.tasks || [];
+      _habitsCache = d.habits || [];
+      return _habitsCache;
+    } catch(e) {}
+  }
+  const raw = localStorage.getItem('xx_habits_v2');
+  return raw ? JSON.parse(raw) : DEFAULT_HABITS;
+}
+
+async function saveHabits(d) {
+  _habitsCache = d;
+  debounceSave();
+}
+
+function debounceSave() {
+  if (_saveTimer) clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(cloudSave, 500);
+}
+
+async function cloudSave() {
+  if (_cloudReady && _tasksCache && _habitsCache) {
+    try {
+      // 使用 set 实现 upsert（存在则更新，不存在则创建）
+      await _cloudDB.collection('planner').doc(DATA_DOC_ID).set({
+        data: { tasks: _tasksCache, habits: _habitsCache, updatedAt: Date.now() }
+      });
+      return;
+    } catch(e) {
+      console.warn('云端保存失败，降级到本地:', e);
+    }
+  }
+  // 降级：localStorage
+  if (_tasksCache) localStorage.setItem('xx_tasks_v2', JSON.stringify(_tasksCache));
+  if (_habitsCache) localStorage.setItem('xx_habits_v2', JSON.stringify(_habitsCache));
+}
+
+// 每10秒自动从云端刷新数据（检测另一台电脑的同步）
+setInterval(async () => {
+  if (!_cloudReady) return;
+  try {
+    const res = await _cloudDB.collection('planner').doc(DATA_DOC_ID).get();
+    const d = res.data;
+    if (JSON.stringify(d.tasks) !== JSON.stringify(_tasksCache) ||
+        JSON.stringify(d.habits) !== JSON.stringify(_habitsCache)) {
+      _tasksCache = d.tasks || [];
+      _habitsCache = d.habits || [];
+      render();
+      console.log('🔄 检测到云端数据更新，已同步');
+    }
+  } catch(e) {}
+}, 10000);
+
+// ===== 启动 =====
+initCloud().then(() => render());
+
+const today = () => new Date().toISOString().slice(0, 10);
+function daysDiff(dateStr) {
+  if (!dateStr) return Infinity;
+  const t = new Date(today()), d = new Date(dateStr);
+  return Math.round((d - t) / 86400000);
+}
+
+function endOfWeek() {
+  const d = new Date(), day = d.getDay();
+  return new Date(d.getTime() + (7 - day) * 86400000).toISOString().slice(0,10);
+}
+
+function dateTag(task) {
+  if (task.recurrence) return `<span class="task-tag tag-recurring">🔄 ${task.recurrence}</span>`;
+  const diff = daysDiff(task.date);
+  if (!task.date) return '';
+  if (diff < 0) return `<span class="task-tag tag-overdue">已过期${Math.abs(diff)}天</span>`;
+  if (diff === 0) return `<span class="task-tag tag-today">今天</span>`;
+  if (diff === 1) return `<span class="task-tag tag-tomorrow">明天</span>`;
+  if (diff <= 7) return `<span class="task-tag tag-week">${diff}天后</span>`;
+  const m = new Date(task.date).getMonth()+1, d = new Date(task.date).getDate();
+  return `<span class="task-tag tag-future">${m}月${d}日</span>`;
+}
+
+function categorize(tasks) {
+  const t = today(), we = endOfWeek();
+  const r = {urgent:[], week:[], later:[], done:[]};
+  tasks.forEach(tk => {
+    if (tk.done) { r.done.push(tk); return; }
+    // 每日循环任务已在习惯区展示，主列表不重复显示
+    if (tk.recurrence === '每天') return;
+    if (tk.recurrence && !tk.date) { r.later.push(tk); return; }
+    if (tk.date && tk.date <= t) { r.urgent.push(tk); return; }
+    if (tk.date && tk.date <= we) { r.week.push(tk); return; }
+    r.later.push(tk);
+  });
+  return r;
+}
+
+// ===== Render =====
+function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+function renderTask(tk) {
+  const noteHtml = tk.note ? `<div class="task-note">${esc(tk.note)}</div>` : '';
+  return `
+    <div class="task ${tk.done?'done':''}" data-id="${tk.id}">
+      <div class="task-check ${tk.done?'checked':''}" onclick="toggleTask('${tk.id}')"></div>
+      <div class="task-body">
+        <div class="task-title">${esc(tk.title)}</div>
+        <div class="task-sub">${dateTag(tk)}</div>
+        ${noteHtml}
+      </div>
+      <div class="task-actions">
+        <button class="task-btn" onclick="editTask('${tk.id}')" title="编辑">✏️</button>
+        <button class="task-btn" onclick="deleteTask('${tk.id}')" title="删除">🗑</button>
+      </div>
+    </div>`;
+}
+
+function renderList(tasks) {
+  if (!tasks.length) return '<div class="empty">✨ 暂无</div>';
+  return tasks.sort((a,b) => {
+    // sort by date, then no-date at end
+    if (a.date && b.date) return a.date.localeCompare(b.date);
+    if (a.date) return -1;
+    if (b.date) return 1;
+    return 0;
+  }).map(renderTask).join('');
+}
+
+function render() {
+  loadTasks().then(tasks => {
+  loadHabits().then(habits => {
+  const now = new Date();
+  const wd = ['日','一','二','三','四','五','六'];
+  document.getElementById('headerDate').textContent =
+    `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 星期${wd[now.getDay()]}`;
+
+  // Habits: fixed habits + daily recurring tasks
+  const dailyTasks = tasks.filter(t => t.recurrence === '每天' && !t.done);
+  const active = habits.filter(h=>h.active).length;
+  const allHabitCount = habits.length + dailyTasks.length;
+  document.getElementById('habitProgress').innerHTML =
+    active ? `今日习惯 ${active}/${allHabitCount} ✨ · <span style="cursor:pointer" onclick="openHabitModal()" title="管理习惯">⚙️ 管理</span>` : '今日习惯 · <span style="cursor:pointer" onclick="openHabitModal()" title="管理习惯">⚙️ 管理</span>';
+  const fixedChips = habits.map(h => `
+    <div class="habit-chip ${h.active?'active':''}" onclick="toggleHabit('${h.id}')">
+      ${h.icon} ${h.name}
+    </div>
+  `).join('');
+  const dailyChips = dailyTasks.map(t => {
+    const id = t.id;
+    return `<div class="habit-chip" onclick="toggleTask('${id}')">${esc(t.title)}</div>`;
+  }).join('');
+  document.getElementById('habitList').innerHTML = fixedChips + dailyChips;
+
+  // Tasks
+  const cat = categorize(tasks);
+  const sections = [
+    { title: '🔴 紧急', tasks: cat.urgent },
+    { title: '🟡 本周', tasks: cat.week },
+    { title: '🔵 以后再说', tasks: cat.later },
+    { title: '✅ 已完成', tasks: cat.done },
+  ];
+  document.getElementById('taskSections').innerHTML = sections.map(s => {
+    if (s.title === '✅ 已完成' && !s.tasks.length) return '';
+    return `
+      <div class="section">
+        <div class="section-title">${s.title} <span style="font-weight:400;color:var(--text-dim)">${s.tasks.length}</span></div>
+        <div>${renderList(s.tasks)}</div>
+      </div>`;
+  }).join('');
+  }); // end loadHabits
+  }); // end loadTasks
+}
+
+// ===== Actions =====
+async function toggleTask(id) {
+  const d = await loadTasks(), t = d.find(x=>x.id===id);
+  if (!t) return;
+  t.done = !t.done;
+  t.doneDate = t.done ? today() : null;
+  if (t.done && t.recurrence && t.date) {
+    const dt = new Date(t.date);
+    if (t.recurrence === '每天') dt.setDate(dt.getDate()+1);
+    else if (t.recurrence === '每周') dt.setDate(dt.getDate()+7);
+    else if (t.recurrence === '每月') dt.setMonth(dt.getMonth()+1);
+    t.date = dt.toISOString().slice(0,10);
+    t.done = false;
+    t.doneDate = null;
+  }
+  await saveTasks(d); render();
+}
+
+async function deleteTask(id) {
+  const d = (await loadTasks()).filter(t=>t.id!==id);
+  await saveTasks(d); render();
+}
+
+async function editTask(id) {
+  const t = (await loadTasks()).find(x=>x.id===id);
+  if (!t) return;
+  document.getElementById('modalTitle').textContent = '编辑';
+  document.getElementById('editId').value = id;
+  document.getElementById('taskTitle').value = t.title;
+  document.getElementById('taskDate').value = t.date||'';
+  document.getElementById('taskRecurrence').value = t.recurrence||'';
+  document.getElementById('taskNote').value = t.note||'';
+  document.getElementById('modal').classList.add('show');
+  document.getElementById('taskTitle').focus();
+}
+
+function openModal() {
+  document.getElementById('modalTitle').textContent = '添加任务';
+  document.getElementById('editId').value = '';
+  document.getElementById('taskTitle').value = '';
+  document.getElementById('taskDate').value = today();
+  document.getElementById('taskNote').value = '';
+  document.getElementById('taskRecurrence').value = '';
+  document.getElementById('modal').classList.add('show');
+  document.getElementById('taskTitle').focus();
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+
+async function saveTask() {
+  const title = document.getElementById('taskTitle').value.trim();
+  if (!title) { document.getElementById('taskTitle').style.borderColor='var(--red)'; return; }
+  const editId = document.getElementById('editId').value;
+  const obj = {
+    title,
+    date: document.getElementById('taskDate').value,
+    recurrence: document.getElementById('taskRecurrence').value,
+    note: document.getElementById('taskNote').value.trim(),
+    done: false, doneDate: null,
+  };
+  const d = await loadTasks();
+  if (editId) {
+    const idx = d.findIndex(t=>t.id===editId);
+    if (idx !== -1) d[idx] = {...d[idx], ...obj};
+  } else {
+    obj.id = Date.now().toString();
+    d.push(obj);
+  }
+  await saveTasks(d); closeModal(); render();
+}
+
+async function toggleHabit(id) {
+  const d = await loadHabits(), h = d.find(x=>x.id===id);
+  if (h) { h.active = !h.active; await saveHabits(d); render(); }
+}
+
+// ===== Habit Management =====
+let tempHabits = [];
+let tempDailyTasks = [];
+
+async function openHabitModal() {
+  tempHabits = JSON.parse(JSON.stringify(await loadHabits()));
+  tempDailyTasks = (await loadTasks()).filter(t => t.recurrence === '每天' && !t.done);
+  renderHabitModal();
+  document.getElementById('habitModal').classList.add('show');
+}
+
+function closeHabitModal() {
+  document.getElementById('habitModal').classList.remove('show');
+}
+
+function renderHabitModal() {
+  const icons = ['🧘','📖','🏃','✍️','💤','💧','🧹','🍎','🎵','💡','📝','🧘‍♀️','🚴','🏊','🎨','🌿','💊','✨'];
+  let html = '';
+  // 固定习惯
+  html += '<div style="font-size:12px;color:var(--text-dim);margin:10px 0 6px;font-weight:600;">📌 固定习惯</div>';
+  html += tempHabits.map((h, i) => `
+    <div class="habit-row" data-idx="${i}">
+      <div class="habit-row-icon">
+        <select onchange="tempHabits[${i}].icon=this.value;renderHabitModal()" style="font-size:18px;border:none;background:none;cursor:pointer;outline:none;">
+          ${icons.map(ic => `<option value="${ic}" ${h.icon===ic?'selected':''}>${ic}</option>`).join('')}
+        </select>
+      </div>
+      <div class="habit-row-info">
+        <input type="text" value="${esc(h.name)}" onchange="tempHabits[${i}].name=this.value" placeholder="习惯名称"
+          style="font-size:15px;border:none;background:none;outline:none;width:100%;padding:2px 0;">
+        <input type="text" value="${esc(h.detail||'')}" onchange="tempHabits[${i}].detail=this.value" placeholder="补充说明"
+          style="font-size:12px;color:var(--text-dim);border:none;background:none;outline:none;width:100%;padding:2px 0;">
+      </div>
+      <button class="habit-row-del" onclick="tempHabits.splice(${i},1);renderHabitModal()" title="删除">🗑</button>
+    </div>
+  `).join('');
+  html += `<button class="btn-add" onclick="tempHabits.push({id:'h'+Date.now(),icon:'✨',name:'',detail:'',active:false});renderHabitModal()">＋ 添加固定习惯</button>`;
+
+  // 每日循环任务
+  html += '<div style="font-size:12px;color:var(--text-dim);margin:18px 0 6px;font-weight:600;">🔄 每日循环任务</div>';
+  if (tempDailyTasks.length === 0) {
+    html += '<div style="font-size:13px;color:var(--text-dim);padding:8px 0;">暂无（添加任务时选"每天"循环即可）</div>';
+  } else {
+    html += tempDailyTasks.map((t, i) => `
+      <div class="habit-row">
+        <div class="habit-row-icon">📋</div>
+        <div class="habit-row-info">
+          <input type="text" value="${esc(t.title)}" onchange="tempDailyTasks[${i}].title=this.value" placeholder="任务名称"
+            style="font-size:15px;border:none;background:none;outline:none;width:100%;padding:2px 0;">
+        </div>
+        <button class="habit-row-del" onclick="tempDailyTasks.splice(${i},1);renderHabitModal()" title="删除">🗑</button>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('habitModalList').innerHTML = html;
+}
+
+async function saveHabitChanges() {
+  const valid = tempHabits.filter(h => h.name.trim());
+  await saveHabits(valid);
+  const dailyIds = new Set(tempDailyTasks.map(t => t.id));
+  const allTasks = await loadTasks();
+  const kept = allTasks.filter(t => !(t.recurrence === '每天' && !dailyIds.has(t.id)));
+  tempDailyTasks.forEach(dt => {
+    const idx = kept.findIndex(t => t.id === dt.id);
+    if (idx !== -1) kept[idx].title = dt.title;
+  });
+  await saveTasks(kept);
+  closeHabitModal();
+  render();
+}
+
+async function exportData() {
+  const blob = new Blob([JSON.stringify({tasks: await loadTasks(), habits: await loadHabits(), date:today()},null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `主人计划_${today()}.json`;
+  a.click();
+}
+
+function importData(ev) {
+  const f = ev.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = (e) => {
+    try {
+      const d = JSON.parse(e.target.result);
+      if (d.tasks) saveTasks(d.tasks);
+      if (d.habits) saveHabits(d.habits);
+      render(); alert('导入成功！');
+    } catch(err) { alert('文件格式有误'); }
+  };
+  r.readAsText(f); ev.target.value='';
+}
+
+async function migrateLocalStorage() {
+  const rawTasks = localStorage.getItem('xx_tasks_v2');
+  const rawHabits = localStorage.getItem('xx_habits_v2');
+  if (!rawTasks && !rawHabits) {
+    alert('没有找到本地数据。\n\n如果你之前有导出过JSON文件，请用【📥 导入】按钮导入。');
+    return;
+  }
+  if (!confirm('检测到本地存储的数据，确定迁移到云端吗？\n（会覆盖云上的现有数据）')) return;
+  _tasksCache = rawTasks ? JSON.parse(rawTasks) : [];
+  _habitsCache = rawHabits ? JSON.parse(rawHabits) : [];
+  await cloudSave();
+  render();
+  document.getElementById('migrateBtn').textContent = '✅ 迁移完成';
+  setTimeout(() => { document.getElementById('migrateBtn').textContent = '🔄 迁移本地数据'; }, 3000);
+}
+
+// Events
+document.getElementById('modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+document.getElementById('habitModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeHabitModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); closeHabitModal(); }
+  if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) openModal();
+});
+
+// render 由 initCloud 完成后自动调用；若未配置云环境则立即渲染
+if (!CLOUDBASE_CONFIG.env) render();
+</script>
+</body>
+</html>
