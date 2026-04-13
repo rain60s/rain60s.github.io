@@ -578,14 +578,21 @@ function dateTag(task) {
   return '<span class="task-tag tag-future">' + m + '月' + d + '日</span>';
 }
 
+function tomorrow() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
 function categorize(tasks) {
-  const t = today(), we = endOfWeek();
-  const r = {urgent:[], week:[], later:[], done:[]};
+  const t = today(), tmr = tomorrow(), we = endOfWeek();
+  const r = {urgent:[], tomorrow:[], week:[], later:[], done:[]};
   tasks.forEach(tk => {
     if (tk.done) { r.done.push(tk); return; }
     if (tk.recurrence === '每天') return;
     if (tk.recurrence && !tk.date) { r.later.push(tk); return; }
     if (tk.date && tk.date <= t) { r.urgent.push(tk); return; }
+    if (tk.date && tk.date === tmr) { r.tomorrow.push(tk); return; }
     if (tk.date && tk.date <= we) { r.week.push(tk); return; }
     r.later.push(tk);
   });
@@ -648,7 +655,8 @@ function render() {
   // Tasks
   const cat = categorize(tasks);
   const sections = [
-    { title: '🔴 紧急', tasks: cat.urgent },
+    { title: '🔴 今天', tasks: cat.urgent },
+    { title: '🟠 明天', tasks: cat.tomorrow },
     { title: '🟡 本周', tasks: cat.week },
     { title: '🔵 以后再说', tasks: cat.later },
     { title: '✅ 已完成', tasks: cat.done },
