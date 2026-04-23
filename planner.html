@@ -747,11 +747,9 @@ function toggleHabit(id) {
 
 // ===== Habit Management =====
 let tempHabits = [];
-let tempDailyTasks = [];
 
 function openHabitModal() {
   tempHabits = JSON.parse(JSON.stringify(loadHabits()));
-  tempDailyTasks = loadTasks().filter(t => t.recurrence === '每天' && !t.done);
   renderHabitModal();
   document.getElementById('habitModal').classList.add('show');
 }
@@ -777,31 +775,12 @@ function renderHabitModal() {
   ).join('');
   html += '<button class="btn-add" onclick="tempHabits.push({id:\'h\'+Date.now(),icon:\'✨\',name:\'\',detail:\'\',active:false});renderHabitModal()">＋ 添加固定习惯</button>';
 
-  html += '<div style="font-size:12px;color:var(--text-dim);margin:18px 0 6px;font-weight:600;">🔄 每日循环任务</div>';
-  if (tempDailyTasks.length === 0) {
-    html += '<div style="font-size:13px;color:var(--text-dim);padding:8px 0;">暂无（添加任务时选"每天"循环即可）</div>';
-  } else {
-    html += tempDailyTasks.map((t, i) =>
-      '<div class="habit-row"><div class="habit-row-icon">📋</div>'
-      + '<div class="habit-row-info"><input type="text" value="' + esc(t.title) + '" onchange="tempDailyTasks[' + i + '].title=this.value" placeholder="任务名称" style="font-size:15px;border:none;background:none;outline:none;width:100%;padding:2px 0;"></div>'
-      + '<button class="habit-row-del" onclick="tempDailyTasks.splice(' + i + ',1);renderHabitModal()" title="删除">🗑</button></div>'
-    ).join('');
-  }
-
   document.getElementById('habitModalList').innerHTML = html;
 }
 
 function saveHabitChanges() {
   const valid = tempHabits.filter(h => h.name.trim());
   saveHabits(valid);
-  const dailyIds = new Set(tempDailyTasks.map(t => t.id));
-  const allTasks = loadTasks();
-  const kept = allTasks.filter(t => !(t.recurrence === '每天' && !dailyIds.has(t.id)));
-  tempDailyTasks.forEach(dt => {
-    const idx = kept.findIndex(t => t.id === dt.id);
-    if (idx !== -1) kept[idx].title = dt.title;
-  });
-  saveTasks(kept);
   closeHabitModal();
   render();
 }
