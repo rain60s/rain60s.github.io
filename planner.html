@@ -589,7 +589,7 @@ function categorize(tasks) {
   const r = {urgent:[], tomorrow:[], week:[], later:[], done:[]};
   tasks.forEach(tk => {
     if (tk.done) { r.done.push(tk); return; }
-    if (tk.recurrence === '每天') return;
+    if (tk.recurrence === '每天') { r.urgent.push(tk); return; }
     if (tk.recurrence && !tk.date) { r.later.push(tk); return; }
     if (tk.date && tk.date <= t) { r.urgent.push(tk); return; }
     if (tk.date && tk.date === tmr) { r.tomorrow.push(tk); return; }
@@ -639,18 +639,13 @@ function render() {
     now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日 星期' + wd[now.getDay()];
 
   // Habits
-  const dailyTasks = tasks.filter(t => t.recurrence === '每天' && !t.done);
   const active = habits.filter(h=>h.active).length;
-  const allHabitCount = habits.length + dailyTasks.length;
   document.getElementById('habitProgress').innerHTML =
-    active ? '今日习惯 ' + active + '/' + allHabitCount + ' ✨ · <span style="cursor:pointer" onclick="openHabitModal()" title="管理习惯">⚙️ 管理</span>' : '今日习惯 · <span style="cursor:pointer" onclick="openHabitModal()" title="管理习惯">⚙️ 管理</span>';
+    active ? '今日习惯 ' + active + '/' + habits.length + ' ✨ · <span style="cursor:pointer" onclick="openHabitModal()" title="管理习惯">⚙️ 管理</span>' : '今日习惯 · <span style="cursor:pointer" onclick="openHabitModal()" title="管理习惯">⚙️ 管理</span>';
   const fixedChips = habits.map(h =>
     '<div class="habit-chip ' + (h.active?'active':'') + '" onclick="toggleHabit(\'' + h.id + '\')">' + h.icon + ' ' + esc(h.name) + '</div>'
   ).join('');
-  const dailyChips = dailyTasks.map(t =>
-    '<div class="habit-chip" onclick="toggleTask(\'' + t.id + '\')">' + esc(t.title) + '</div>'
-  ).join('');
-  document.getElementById('habitList').innerHTML = fixedChips + dailyChips;
+  document.getElementById('habitList').innerHTML = fixedChips;
 
   // Tasks
   const cat = categorize(tasks);
