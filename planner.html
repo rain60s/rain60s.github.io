@@ -589,7 +589,11 @@ function categorize(tasks) {
   const r = {urgent:[], tomorrow:[], week:[], later:[], done:[]};
   tasks.forEach(tk => {
     if (tk.done) { r.done.push(tk); return; }
-    if (tk.recurrence === '每天') { r.urgent.push(tk); return; }
+    if (tk.recurrence === '每天') {
+      if (!tk.date || tk.date <= t) { r.urgent.push(tk); return; }
+      if (tk.date === tmr) { r.tomorrow.push(tk); return; }
+      r.later.push(tk); return;
+    }
     if (tk.recurrence && !tk.date) { r.later.push(tk); return; }
     if (tk.date && tk.date <= t) { r.urgent.push(tk); return; }
     if (tk.date && tk.date === tmr) { r.tomorrow.push(tk); return; }
