@@ -309,6 +309,59 @@ body {
 }
 .btn-add:hover { border-color: var(--accent); color: var(--accent); }
 
+/* ===== 历史日志弹窗 ===== */
+.log-modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5); z-index: 200;
+  align-items: flex-end; justify-content: center;
+}
+.log-modal-overlay.show { display: flex; }
+.log-modal {
+  background: var(--card); border-radius: 16px 16px 0 0;
+  padding: 24px; width: 100%; max-width: 640px;
+  max-height: 85vh; overflow-y: auto;
+  animation: slideUp 0.25s ease;
+}
+.log-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.log-modal-header h2 { font-size: 17px; font-weight: 700; }
+.log-month-nav {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px;
+}
+.log-month-nav button {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1px solid var(--border); background: none;
+  cursor: pointer; font-size: 16px; color: var(--text-dim);
+  display: flex; align-items: center; justify-content: center;
+}
+.log-month-nav button:hover { border-color: var(--accent); color: var(--accent); }
+.log-month-label { font-size: 15px; font-weight: 600; flex: 1; text-align: center; }
+.log-day-block { margin-bottom: 16px; }
+.log-day-title {
+  font-size: 13px; font-weight: 700; color: var(--text-dim);
+  margin-bottom: 6px; padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.log-entry {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 4px; font-size: 14px;
+  border-bottom: 1px solid #f0f0ec;
+}
+.log-entry:last-child { border-bottom: none; }
+.log-entry-time { font-size: 12px; color: var(--text-dim); min-width: 36px; }
+.log-entry-title { flex: 1; }
+.log-empty { text-align: center; padding: 32px; color: var(--text-dim); font-size: 14px; }
+.log-copy-btn {
+  margin-top: 16px; width: 100%; padding: 10px;
+  border-radius: 8px; border: 1px solid var(--border);
+  background: none; cursor: pointer; font-size: 14px;
+  color: var(--text-dim); font-weight: 500;
+}
+.log-copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
 /* Responsive */
 @media (min-width: 660px) {
   .modal { border-radius: 16px; margin-bottom: 40px; }
@@ -338,6 +391,7 @@ body {
     </div>
     <div class="sync-time" id="syncTime"></div>
     <div class="sync-btns">
+      <button class="sync-btn" onclick="openLogModal()">📖 历史日志</button>
       <button class="sync-btn" onclick="openSyncModal()">🔄 换电脑同步</button>
     </div>
   </div>
@@ -400,6 +454,23 @@ body {
       <button class="btn btn-cancel" onclick="closeHabitModal()">关闭</button>
       <button class="btn btn-primary" onclick="saveHabitChanges()">保存</button>
     </div>
+  </div>
+</div>
+
+<!-- Log Modal -->
+<div class="log-modal-overlay" id="logModal">
+  <div class="log-modal">
+    <div class="log-modal-header">
+      <h2>📖 历史日志</h2>
+      <button class="sync-modal-close" onclick="closeLogModal()">关闭</button>
+    </div>
+    <div class="log-month-nav">
+      <button onclick="logNavMonth(-1)">‹</button>
+      <div class="log-month-label" id="logMonthLabel"></div>
+      <button onclick="logNavMonth(1)">›</button>
+    </div>
+    <div id="logModalContent"></div>
+    <button class="log-copy-btn" id="logCopyMonthBtn" onclick="copyMonthLog()">📋 复制本月全部记录</button>
   </div>
 </div>
 
@@ -713,6 +784,93 @@ function copyDailyLog() {
     document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
     var btn2 = document.getElementById('copyLogBtn');
     if (btn2) { btn2.textContent = '✅ 已复制！'; setTimeout(function(){ btn2.textContent = '📋 复制今日清单'; }, 1500); }
+  }
+}
+
+// ===== 历史日志弹窗 =====
+var _logViewYear = 0, _logViewMonth = 0;
+
+function openLogModal() {
+  var now = new Date();
+  _logViewYear = now.getFullYear();
+  _logViewMonth = now.getMonth() + 1;
+  renderLogModal();
+  document.getElementById('logModal').classList.add('show');
+}
+
+function closeLogModal() {
+  document.getElementById('logModal').classList.remove('show');
+}
+
+function logNavMonth(delta) {
+  _logViewMonth += delta;
+  if (_logViewMonth > 12) { _logViewMonth = 1; _logViewYear++; }
+  if (_logViewMonth < 1) { _logViewMonth = 12; _logViewYear--; }
+  renderLogModal();
+}
+
+function renderLogModal() {
+  var log = getDailyLog();
+  var ym = _logViewYear + '-' + String(_logViewMonth).padStart(2,'0');
+  document.getElementById('logMonthLabel').textContent = _logViewYear + '年' + _logViewMonth + '月';
+
+  var dayKeys = Object.keys(log).filter(function(k){ return k.startsWith(ym); }).sort().reverse();
+
+  if (!dayKeys.length) {
+    document.getElementById('logModalContent').innerHTML = '<div class="log-empty">本月暂无完成记录</div>';
+    document.getElementById('logCopyMonthBtn').style.display = 'none';
+    return;
+  }
+  document.getElementById('logCopyMonthBtn').style.display = '';
+
+  var html = '';
+  dayKeys.forEach(function(dateKey) {
+    var entries = log[dateKey];
+    if (!entries || !entries.length) return;
+    var d = new Date(dateKey);
+    var wd = ['日','一','二','三','四','五','六'];
+    var dayLabel = dateKey + ' 星期' + wd[d.getDay()] + '（' + entries.length + '项）';
+    html += '<div class="log-day-block">';
+    html += '<div class="log-day-title">' + dayLabel + '</div>';
+    entries.forEach(function(e) {
+      html += '<div class="log-entry">'
+        + '<span class="log-entry-time">' + e.time + '</span>'
+        + '<span class="log-entry-title">✓ ' + esc(e.title) + '</span>'
+        + '</div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('logModalContent').innerHTML = html;
+}
+
+function copyMonthLog() {
+  var log = getDailyLog();
+  var ym = _logViewYear + '-' + String(_logViewMonth).padStart(2,'0');
+  var dayKeys = Object.keys(log).filter(function(k){ return k.startsWith(ym); }).sort();
+  if (!dayKeys.length) { alert('本月暂无记录'); return; }
+
+  var total = 0;
+  var lines = ['📖 ' + _logViewYear + '年' + _logViewMonth + '月 完成记录', ''];
+  dayKeys.forEach(function(dateKey) {
+    var entries = log[dateKey];
+    if (!entries || !entries.length) return;
+    lines.push('── ' + dateKey + ' ──');
+    entries.forEach(function(e) { lines.push('✓ ' + e.time + '  ' + e.title); total++; });
+    lines.push('');
+  });
+  lines.push('共完成 ' + total + ' 项');
+  var text = lines.join('\n');
+
+  var btn = document.getElementById('logCopyMonthBtn');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      if (btn) { btn.textContent = '✅ 已复制！'; setTimeout(function(){ btn.textContent = '📋 复制本月全部记录'; }, 1500); }
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    if (btn) { btn.textContent = '✅ 已复制！'; setTimeout(function(){ btn.textContent = '📋 复制本月全部记录'; }, 1500); }
   }
 }
 
