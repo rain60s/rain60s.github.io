@@ -662,8 +662,18 @@ function render() {
     { title: '🔵 以后再说', tasks: cat.later },
     { title: '✅ 已完成', tasks: cat.done },
   ];
+  const logEntries = (getDailyLog()[today()] || []).length;
   document.getElementById('taskSections').innerHTML = sections.map(s => {
-    if (s.title === '✅ 已完成' && !s.tasks.length) return '';
+    if (s.title === '✅ 已完成' && !s.tasks.length && !logEntries) return '';
+    if (s.title === '✅ 已完成') {
+      return '<div class="section">'
+        + '<div class="section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">'
+        + '<span>✅ 已完成 <span style="font-weight:400;color:var(--text-dim)">' + s.tasks.length + '</span></span>'
+        + '<button id="copyLogBtn" onclick="copyDailyLog()" style="font-size:12px;padding:3px 10px;border-radius:20px;border:1px solid var(--text-dim);background:none;cursor:pointer;color:var(--text-dim);">📋 复制今日清单' + (logEntries ? '（' + logEntries + '项）' : '') + '</button>'
+        + '</div>'
+        + (s.tasks.length ? '<div>' + renderList(s.tasks) + '</div>' : '')
+        + '</div>';
+    }
     return '<div class="section">'
       + '<div class="section-title">' + s.title + ' <span style="font-weight:400;color:var(--text-dim)">' + s.tasks.length + '</span></div>'
       + '<div>' + renderList(s.tasks) + '</div></div>';
@@ -671,11 +681,47 @@ function render() {
 }
 
 // ===== Actions =====
+function getDailyLog() {
+  try { return JSON.parse(localStorage.getItem('xx_daily_log_v1') || '{}'); } catch(e) { return {}; }
+}
+function saveDailyLog(log) { localStorage.setItem('xx_daily_log_v1', JSON.stringify(log)); }
+function addLogEntry(title) {
+  const log = getDailyLog();
+  const key = today();
+  if (!log[key]) log[key] = [];
+  const now = new Date();
+  const hm = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  log[key].push({ time: hm, title: title });
+  saveDailyLog(log);
+}
+function copyDailyLog() {
+  const log = getDailyLog();
+  const key = today();
+  const entries = log[key] || [];
+  if (!entries.length) { alert('今天还没有完成任何任务～'); return; }
+  const lines = ['📋 ' + key + ' 今日完成（共 ' + entries.length + ' 项）', ''];
+  entries.forEach(function(e) { lines.push('✓ ' + e.time + '  ' + e.title); });
+  const text = lines.join('\n');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      var btn = document.getElementById('copyLogBtn');
+      if (btn) { btn.textContent = '✅ 已复制！'; setTimeout(function(){ btn.textContent = '📋 复制今日清单'; }, 1500); }
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    var btn2 = document.getElementById('copyLogBtn');
+    if (btn2) { btn2.textContent = '✅ 已复制！'; setTimeout(function(){ btn2.textContent = '📋 复制今日清单'; }, 1500); }
+  }
+}
+
 function toggleTask(id) {
   const d = loadTasks(), t = d.find(x=>x.id===id);
   if (!t) return;
   t.done = !t.done;
   t.doneDate = t.done ? today() : null;
+  if (t.done) addLogEntry(t.title);
   if (t.done && t.recurrence && t.date) {
     const dt = new Date(t.date);
     if (t.recurrence === '每天') dt.setDate(dt.getDate()+1);
