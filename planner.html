@@ -618,40 +618,60 @@ function leapMonth(y){return lunarInfo[y-1900]&0xf;}
 function leapDays(y){if(leapMonth(y))return(lunarInfo[y-1900]&0x10000)?30:29;return 0;}
 function monthDays(y,m){return(lunarInfo[y-1900]&(0x10000>>m))?30:29;}
 
-// 公历 → 农历
+// 公历 → 农历 (修复闰月死循环 + 缓存加速)
+var _lunarCache = {};
 function solar2lunar(y,m,d){
-  var offset=(Date.UTC(y,m-1,d)-Date.UTC(1900,0,31))/86400000;
-  var i,temp=0;
-  for(i=1900;i<2101&&offset>0;i++)temp=lYearDays(i),offset-=temp;
-  if(offset<0)offset+=temp,i--;
-  var ly=i,lm=1,ld,lIsLeap=false;
-  for(lm=1;lm<13&&offset>0;lm++){
-    var mDays=monthDays(ly,lm);
-    if(lm===leapMonth(ly)+1)mDays=leapDays(ly),lIsLeap=true,lm--;
-    offset-=mDays;
-    if(offset<0&&lIsLeap)lIsLeap=false,lm++,offset+=mDays;
+  var ck = y + '-' + m + '-' + d;
+  if (_lunarCache[ck]) return _lunarCache[ck];
+  var offset = Math.floor((Date.UTC(y,m-1,d) - Date.UTC(1900,0,31)) / 86400000);
+  var ly, lm, ld, isLeap = false, i, tmp;
+  // 找年
+  for (i = 1900; i < 2101 && offset > 0; i++) { offset -= lYearDays(i); }
+  if (offset < 0) { offset += lYearDays(i-1); i--; }
+  ly = i;
+  // 找月（正确处理闰月：先处理闰月再处理本月，不改变 lm 避免震荡）
+  var leapM = leapMonth(ly);
+  for (lm = 1; lm <= 12; lm++) {
+    if (leapM > 0 && lm === leapM + 1) {
+      tmp = leapDays(ly);
+      offset -= tmp;
+      if (offset < 0) { offset += tmp; isLeap = true; break; }
+    }
+    tmp = monthDays(ly, lm);
+    offset -= tmp;
+    if (offset < 0) { offset += tmp; isLeap = false; break; }
+    isLeap = false;
   }
-  if(offset<0&&!lIsLeap)offset+=monthDays(ly,lm-1),lm--;
-  else if(offset<0)offset+=leapDays(ly),lm--;
-  ld=Math.floor(offset)+1;
-  return {lYear:ly,lMonth:lm,lDay:ld,lIsLeap:lIsLeap,monthStr:lunarMonth[lm-1],dayStr:lunarDay[ld-1]};
+  ld = Math.floor(offset) + 1;
+  // 兜底
+  if (lm > 12) { lm = 12; ld = monthDays(ly, 12); }
+  var r = {lYear:ly,lMonth:lm,lDay:ld,isLeap:isLeap,monthStr:lunarMonth[lm-1],dayStr:lunarDay[ld-1]};
+  _lunarCache[ck] = r;
+  return r;
 }
 
 // ===== 24节气 (近似算法, 基于2100前) =====
 var sTermInfo=[0,21208,42467,63836,85337,107014,128867,150921,173149,195551,218072,240693,263343,285989,308563,331033,353350,375494,397447,419210,440795,462224,483532,504758];
 var sTermNames=['小寒','大寒','立春','雨水','惊蛰','春分','清明','谷雨','立夏','小满','芒种','夏至','小暑','大暑','立秋','处暑','白露','秋分','寒露','霜降','立冬','小雪','大雪','冬至'];
-function getSolarTerm(y,m,d){
-  var dt=new Date(y,m-1,d);
-  for(var i=0;i<24;i++){
-    var termDate=sTermDay(y,i);
-    var td=new Date(y,0,1);td.setDate(termDate);
-    if(td.getMonth()===m-1&&td.getDate()===d)return sTermNames[i];
+var _termCache = null;
+function buildTermMap(year) {
+  if (_termCache && _termCache._year === year) return _termCache;
+  var map = {};
+  for (var i = 0; i < 24; i++) {
+    var offDate = new Date((31556925974.7*(year-1900)+sTermInfo[i]*60000)+Date.UTC(1900,0,6,2,5));
+    var tm = offDate.getUTCMonth() + 1;
+    var td = offDate.getUTCDate();
+    var key = tm + '-' + td;
+    map[key] = sTermNames[i];
   }
-  return '';
+  map._year = year;
+  _termCache = map;
+  return map;
 }
-function sTermDay(y,n){
-  var offDate=new Date((31556925974.7*(y-1900)+sTermInfo[n]*60000)+Date.UTC(1900,0,6,2,5));
-  return offDate.getUTCDate();
+function getSolarTerm(y, m, d) {
+  var map = buildTermMap(y);
+  var key = m + '-' + d;
+  return map[key] || '';
 }
 
 // ===== 节日数据 =====
@@ -1070,37 +1090,37 @@ function copyMonthLog() {
 
 // ===== 日历 =====
 var _calYear = 0, _calMonth = 0, _calFilter = '';
-var _holidays = null, _holidaysFetched = false;
+var _holidays = null, _holidaysFetched = false, _holidaysFetching = false;
 
 function fetchHolidays(year) {
+  if (_holidaysFetching) return;
+  _holidaysFetching = true;
   var url = 'https://timor.tech/api/holiday/year/' + year + '/';
-  fetch(url).then(function(r) { return r.json(); }).then(function(data) {
-    if (data && data.code === 0 && data.holiday) {
-      _holidays = data.holiday;
-      try { localStorage.setItem('xx_holidays_' + year, JSON.stringify(data.holiday)); } catch(e) {}
-    }
+  // 先读缓存兜底
+  try { var c = JSON.parse(localStorage.getItem('xx_holidays_' + year) || 'null'); if (c) _holidays = c; } catch(e) {}
+  // 异步拉取，不阻塞渲染
+  try {
+    fetch(url, { signal: AbortSignal.timeout(5000) }).then(function(r) { return r.json(); }).then(function(data) {
+      if (data && data.code === 0 && data.holiday) {
+        _holidays = data.holiday;
+        try { localStorage.setItem('xx_holidays_' + year, JSON.stringify(data.holiday)); } catch(e) {}
+      }
+    }).catch(function(){}).finally(function() {
+      _holidaysFetched = true;
+      _holidaysFetching = false;
+      // 只有假日数据变了才重绘
+      if (document.getElementById('calendar').childElementCount < 2) return;
+      setTimeout(function(){ renderCalendar(); }, 0);
+    });
+  } catch(e) {
     _holidaysFetched = true;
-    renderCalendar();
-  }).catch(function() {
-    _holidaysFetched = true;
-    var cached = null;
-    try { cached = JSON.parse(localStorage.getItem('xx_holidays_' + year) || 'null'); } catch(e) {}
-    if (cached) { _holidays = cached; }
-    renderCalendar();
-  });
+    _holidaysFetching = false;
+  }
 }
 
 function loadHolidays(year) {
-  if (_holidaysFetched && _holidays) return;
-  if (year !== new Date().getFullYear()) {
-    // 非当前年份，直接从缓存读
-    try { _holidays = JSON.parse(localStorage.getItem('xx_holidays_' + year) || 'null'); } catch(e) {}
-    _holidaysFetched = true;
-  } else {
-    // 当前年份：先读缓存兜底，再联网更新
-    try { _holidays = JSON.parse(localStorage.getItem('xx_holidays_' + year) || 'null'); } catch(e) {}
-    _holidaysFetched = false;
-  }
+  if (_holidays) return;
+  try { _holidays = JSON.parse(localStorage.getItem('xx_holidays_' + year) || 'null'); } catch(e) {}
 }
 
 function getHolidayOn(y, m, d) {
@@ -1114,7 +1134,7 @@ function calNavMonth(delta) {
   if (_calMonth > 12) { _calMonth = 1; _calYear++; }
   if (_calMonth < 1) { _calMonth = 12; _calYear--; }
   loadHolidays(_calYear);
-  if (!_holidaysFetched) fetchHolidays(_calYear);
+  if (!_holidaysFetched && !_holidaysFetching) fetchHolidays(_calYear);
   renderCalendar();
 }
 
@@ -1124,7 +1144,7 @@ function calGoToday() {
   _calMonth = now.getMonth() + 1;
   _calFilter = '';
   loadHolidays(_calYear);
-  if (!_holidaysFetched) fetchHolidays(_calYear);
+  if (!_holidaysFetched && !_holidaysFetching) fetchHolidays(_calYear);
   renderCalendar();
   render();
 }
@@ -1143,54 +1163,49 @@ function renderCalendar() {
     _calYear = now.getFullYear();
     _calMonth = now.getMonth() + 1;
     loadHolidays(_calYear);
-    if (!_holidaysFetched) fetchHolidays(_calYear);
+    if (!_holidaysFetched && !_holidaysFetching) fetchHolidays(_calYear);
   }
   var today = new Date();
   var todayDS = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
   var wd = ['一','二','三','四','五','六','日'];
   var tasks = loadTasks();
-  // Build date → task count map
   var taskMap = {};
-  tasks.forEach(function(tk) {
-    if (tk.done) return;
-    if (!tk.date) return;
+  for (var ti = 0; ti < tasks.length; ti++) {
+    var tk = tasks[ti];
+    if (tk.done) continue;
+    if (!tk.date) continue;
     if (!taskMap[tk.date]) taskMap[tk.date] = 0;
     taskMap[tk.date]++;
-  });
+  }
 
-  // Calendar nav
-  var html = '<div class="cal-nav">';
+  var html = '';
+  html += '<div class="cal-nav">';
   html += '<button onclick="calNavMonth(-1)">‹</button>';
   html += '<div class="cal-nav-label">' + _calYear + '年 ' + _calMonth + '月</div>';
   html += '<button onclick="calNavMonth(1)">›</button>';
   html += '<button class="cal-nav-today" onclick="calGoToday()">今天</button>';
   html += '</div>';
 
-  // Weekday headers
   html += '<div class="cal-grid">';
   for (var i = 0; i < 7; i++) {
     html += '<div class="cal-weekday' + (i >= 5 ? ' weekend' : '') + '">' + wd[i] + '</div>';
   }
 
-  // Calculate first day of month (Monday = 0)
   var firstDay = new Date(_calYear, _calMonth - 1, 1);
-  var firstDow = firstDay.getDay(); // 0=Sun
-  var startOffset = firstDow === 0 ? 6 : firstDow - 1; // Monday=0
-
+  var firstDow = firstDay.getDay();
+  var startOffset = firstDow === 0 ? 6 : firstDow - 1;
   var daysInMonth = new Date(_calYear, _calMonth, 0).getDate();
   var prevMonthDays = new Date(_calYear, _calMonth - 1, 0).getDate();
 
-  // Render grid cells
+  // 预计算本月常用农历（节约 lookup）
   for (var cell = 0; cell < 42; cell++) {
     var d, m = _calMonth, y = _calYear, isOther = false;
     if (cell < startOffset) {
-      // Previous month
       d = prevMonthDays - startOffset + cell + 1;
       m = _calMonth - 1;
       if (m < 1) { m = 12; y--; }
       isOther = true;
     } else if (cell - startOffset >= daysInMonth) {
-      // Next month
       d = cell - startOffset - daysInMonth + 1;
       m = _calMonth + 1;
       if (m > 12) { m = 1; y++; }
@@ -1206,39 +1221,29 @@ function renderCalendar() {
     if (isOther) cellClass += ' other-month';
     if (ds === _calFilter) cellClass += ' selected';
 
-    // Holiday info
     var hol = getHolidayOn(y, m, d);
-
-    // Lunar
     var lunar = solar2lunar(y, m, d);
     var lunarStr = lunar.dayStr;
     if (lunar.dayStr === '初一') lunarStr = lunar.monthStr + '月';
     if (lunar.lDay === 1 && lunar.lMonth === 1) lunarStr = '春节';
-    if (lunarStr === '腊月三十') lunarStr = '除夕';
+    if (lunar.dayStr === '腊月三十' || (lunar.dayStr === '三十' && lunar.monthStr === '腊')) lunarStr = '除夕';
 
-    // Festival
     var festival = '';
     var mmdd = String(m).padStart(2,'0') + '-' + String(d).padStart(2,'0');
     if (solarFestivals[mmdd]) festival = solarFestivals[mmdd];
-    else festival = getFloatFestival(y, m, d);
+    else { var ff = getFloatFestival(y, m, d); if (ff) festival = ff; }
     if (!festival) {
       var lk = lunar.monthStr + '月' + lunar.dayStr;
       if (lunarFestivals[lk]) festival = lunarFestivals[lk];
-      else {
-        var term = getSolarTerm(y, m, d);
-        if (term) festival = term;
-      }
+      else { var term = getSolarTerm(y, m, d); if (term) festival = term; }
     }
 
-    // Holiday class
     if (hol && hol.holiday) cellClass += ' holiday';
     if (hol && !hol.holiday && hol.name) cellClass += ' workday';
 
-    // Badges
     var badgeHtml = '';
     var cnt = taskMap[ds] || 0;
     if (cnt > 0) {
-      // Check if any are urgent (today or overdue)
       var isUrgent = (ds <= todayDS);
       var badgeClass = isUrgent ? 'urgent' : 'normal';
       badgeHtml = '<div class="cal-badges">';
@@ -1249,12 +1254,10 @@ function renderCalendar() {
       badgeHtml += '</div>';
     }
 
-    // Lunar/holiday display
     var lunarDisplay = lunarStr;
     if (hol && hol.holiday) lunarDisplay = hol.name || lunarStr;
-    else if (hol && !hol.holiday) lunarDisplay = hol.name || lunarStr;
+    else if (hol && !hol.holiday && hol.name) lunarDisplay = hol.name || lunarStr;
 
-    // Festival display
     var festDisplay = '';
     if (festival && lunarDisplay !== festival) {
       festDisplay = '<div class="cal-festival">' + festival + '</div>';
@@ -1271,7 +1274,7 @@ function renderCalendar() {
 
   document.getElementById('calendar').innerHTML = html;
   } catch(e) {
-    document.getElementById('calendar').innerHTML = '<div style="padding:12px;font-size:12px;color:var(--red);">⚠️ 日历构建出错: ' + e.message + '</div>';
+    document.getElementById('calendar').innerHTML = '<div style="padding:12px;font-size:12px;color:var(--red);">⚠️ 日历出错: ' + e.message + '</div>';
   }
 }
 
