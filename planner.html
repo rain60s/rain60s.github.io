@@ -31,7 +31,7 @@ body {
 
 /* Header */
 .header {
-  max-width: 1100px; margin: 0 auto;
+  max-width: 1400px; margin: 0 auto;
   padding: 24px 16px 0;
 }
 .header h1 { font-size: 22px; font-weight: 800; }
@@ -39,7 +39,7 @@ body {
 .header-date { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
 
 /* Container */
-.container { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+.container { max-width: 1400px; margin: 0 auto; padding: 0 16px; }
 
 /* ===== 同步状态栏 ===== */
 .sync-bar {
@@ -362,8 +362,8 @@ body {
 }
 .log-copy-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ===== 双栏布局 ===== */
-.layout { display: flex; max-width: 1100px; margin: 0 auto; min-height: calc(100vh - 80px); padding: 0 16px; gap: 0; }
+/* ===== 三栏布局 ===== */
+.layout { display: flex; max-width: 1400px; margin: 0 auto; min-height: calc(100vh - 80px); padding: 0 16px; gap: 0; }
 .sidebar {
   width: 380px; flex-shrink: 0;
   padding: 20px 16px 40px 0;
@@ -371,31 +371,42 @@ body {
   position: sticky; top: 0; height: 100vh;
   overflow-y: auto; overflow-x: hidden;
 }
-.main { flex: 1; min-width: 0; padding: 20px 0 80px 32px; }
+.center { flex: 1; min-width: 0; padding: 20px 0 80px 32px; }
+.right {
+  width: 360px; flex-shrink: 0;
+  padding: 20px 0 80px 28px;
+  border-left: 1px solid var(--border);
+  position: sticky; top: 0; height: 100vh;
+  overflow-y: auto;
+}
+.right .section-title {
+  position: sticky; top: 0; background: var(--bg);
+  padding: 12px 0 8px; margin-bottom: 8px; z-index: 2;
+}
 
 /* sidebar 内的小节 */
 .side-section { margin-bottom: 20px; }
 .side-section-title {
-  font-size: 12px; color: var(--text-dim); font-weight: 700;
+  font-size: 14px; color: var(--text-dim); font-weight: 700;
   letter-spacing: 0.5px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
-.side-habits { display: flex; gap: 4px; flex-wrap: wrap; }
+.side-habits { display: flex; gap: 6px; flex-wrap: wrap; }
 .side-habit-chip {
-  padding: 4px 10px; border-radius: 14px;
-  background: var(--card); border: 1px solid var(--border);
-  font-size: 12px; cursor: pointer; user-select: none;
+  padding: 6px 14px; border-radius: 16px;
+  background: var(--card); border: 1.5px solid var(--border);
+  font-size: 14px; cursor: pointer; user-select: none;
   transition: 0.15s;
 }
 .side-habit-chip:active { transform: scale(0.96); }
 .side-habit-chip.active { background: var(--green-light); border-color: var(--green); color: var(--green); text-decoration: line-through; }
-.side-sync { font-size: 11px; color: var(--text-dim); line-height: 1.8; }
+.side-sync { font-size: 13px; color: var(--text-dim); line-height: 1.8; }
 .side-sync a { color: var(--accent); text-decoration: none; }
 .side-sync a:hover { text-decoration: underline; }
-.side-btn-row { display: flex; gap: 4px; flex-wrap: wrap; }
+.side-btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
 .side-btn {
-  font-size: 11px; padding: 4px 10px; border-radius: 6px;
-  border: 1px solid var(--border); background: none;
+  font-size: 13px; padding: 6px 14px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: none;
   cursor: pointer; color: var(--text-dim);
   transition: 0.15s; white-space: nowrap;
 }
@@ -471,14 +482,14 @@ body {
 <div class="layout">
   <div class="sidebar">
     <div class="side-section">
-      <div class="side-section-title" style="font-size:12px;">📅 万年历</div>
+      <div class="side-section-title" style="font-size:14px;">📅 万年历</div>
       <div class="calendar" id="calendar"></div>
     </div>
 
     <div class="side-section">
       <div class="side-section-title">今日习惯</div>
       <div class="side-habits" id="sideHabitList"></div>
-      <div style="font-size:11px;color:var(--text-dim);margin-top:4px;" id="sideHabitProgress"></div>
+      <div style="font-size:13px;color:var(--text-dim);margin-top:6px;" id="sideHabitProgress"></div>
     </div>
 
     <div class="side-section">
@@ -493,9 +504,13 @@ body {
     </div>
   </div>
 
-  <div class="main">
+  <div class="center">
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
     <div id="taskSections"></div>
+  </div>
+
+  <div class="right">
+    <div id="tomorrowSection"></div>
   </div>
 </div>
 
@@ -1102,24 +1117,24 @@ function render() {
   // Habits
   const active = habits.filter(h=>h.active).length;
   document.getElementById('sideHabitProgress').innerHTML =
-    active ? active + '/' + habits.length + ' ✨ · <span style="cursor:pointer;text-decoration:underline;" onclick="openHabitModal()" title="管理习惯">⚙️ 管理</span>' : '0/' + habits.length + ' · <span style="cursor:pointer;text-decoration:underline;" onclick="openHabitModal()" title="管理习惯">⚙️ 管理</span>';
+    active ? active + '/' + habits.length + ' ✨ · <span style="cursor:pointer;text-decoration:underline;font-size:13px;" onclick="openHabitModal()" title="管理习惯">⚙️ 管理</span>' : '0/' + habits.length + ' · <span style="cursor:pointer;text-decoration:underline;font-size:13px;" onclick="openHabitModal()" title="管理习惯">⚙️ 管理</span>';
   const chips = habits.map(h =>
     '<div class="side-habit-chip ' + (h.active?'active':'') + '" onclick="toggleHabit(\'' + h.id + '\')">' + h.icon + ' ' + esc(h.name) + '</div>'
   ).join('');
-  document.getElementById('sideHabitList').innerHTML = chips || '<span style="font-size:11px;color:var(--text-dim);">暂无，点击⚙️添加</span>';
+  document.getElementById('sideHabitList').innerHTML = chips || '<span style="font-size:13px;color:var(--text-dim);">暂无，点击⚙️添加</span>';
 
   // Tasks
   var cat = categorize(tasks);
-  var sections = [
+  var todaySections = [
     { title: '🔴 今天', tasks: cat.urgent },
-    { title: '🟠 明天', tasks: cat.tomorrow },
     { title: '🟡 本周', tasks: cat.week },
     { title: '🔵 以后再说', tasks: cat.later },
     { title: '✅ 已完成', tasks: cat.done },
   ];
   var logEntries = (getDailyLog()[today()] || []).length;
 
-  document.getElementById('taskSections').innerHTML = sections.map(function(s) {
+  // Render today sections (center)
+  document.getElementById('taskSections').innerHTML = todaySections.map(function(s) {
     if (s.title === '✅ 已完成' && !s.tasks.length && !logEntries) return '';
     if (s.title === '✅ 已完成') {
       return '<div class="section">'
@@ -1134,6 +1149,12 @@ function render() {
       + '<div class="section-title">' + s.title + ' <span style="font-weight:400;color:var(--text-dim)">' + s.tasks.length + '</span></div>'
       + '<div>' + renderList(s.tasks) + '</div></div>';
   }).join('');
+
+  // Render tomorrow (right)
+  var tmrHtml = '<div class="section">'
+    + '<div class="section-title">🟠 明天 <span style="font-weight:400;color:var(--text-dim)">' + cat.tomorrow.length + '</span></div>'
+    + '<div>' + renderList(cat.tomorrow) + '</div></div>';
+  document.getElementById('tomorrowSection').innerHTML = tmrHtml;
 
   // Calendar
   try { renderCalendar(); } catch(e) {
