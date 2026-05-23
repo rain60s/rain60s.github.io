@@ -848,7 +848,14 @@ function showDayTasks(ds, y, m, d) {
   _dayTasksDate = ds;
   document.getElementById('dayTasksTitle').textContent = y+'年'+m+'月'+d+'日 任务';
   var tasks = loadTasks();
-  var dayTasks = tasks.filter(t => t.date === ds);
+  var todayStr = today();
+  var dayTasks = tasks.filter(function(t) {
+    if (ds === todayStr) {
+      // 今天：显示今天的任务 + 所有过期未完成任务
+      return t.date === ds || (!t.done && t.date && t.date < todayStr);
+    }
+    return t.date === ds;
+  });
   var html = '';
   if (!dayTasks.length) {
     html = '<div style="text-align:center;color:var(--text-dim);padding:18px 0;font-size:13px;">这天还没有任务～</div>';
