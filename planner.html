@@ -210,6 +210,13 @@ body {
 
 .task-note { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
 
+.task[draggable="true"] { cursor: grab; }
+.task[draggable="true"]:active { cursor: grabbing; }
+.task.drag-over { border-top: 3px solid var(--accent); margin-top: -2px; }
+.task.drag-over-bottom { border-bottom: 3px solid var(--accent); margin-bottom: -2px; }
+
+.habit-drag-placeholder { opacity: 0.3; }
+
 .task-actions {
   display: flex; gap: 2px; flex-shrink: 0;
   opacity: 0.35; transition: opacity 0.15s;
@@ -496,7 +503,7 @@ body {
       <div class="side-section-title">工具</div>
       <div class="side-btn-row" style="margin-bottom:6px;">
         <button class="side-btn" onclick="openLogModal()">📖 历史日志</button>
-        <button class="side-btn" onclick="copyDailyLog()">📋 复制清单</button>
+        <button class="side-btn" id="sideCopyBtn" onclick="copyDailyLog()">📋 复制清单</button>
         <button class="side-btn" onclick="openSyncModal()">🔄 换电脑同步</button>
       </div>
       <div class="side-sync">
@@ -1085,7 +1092,7 @@ function esc(s) { const d=document.createElement('div'); d.textContent=s; return
 
 function renderTask(tk) {
   const noteHtml = tk.note ? '<div class="task-note">' + esc(tk.note) + '</div>' : '';
-  return '<div class="task ' + (tk.done?'done':'') + '" data-id="' + tk.id + '">'
+  return '<div class="task ' + (tk.done?'done':'') + '" data-id="' + tk.id + '" draggable="true" ondragstart="onTaskDragStart(event,\'' + tk.id + '\')" ondragover="onTaskDragOver(event,this)" ondragleave="onTaskDragLeave(event,this)" ondrop="onTaskDrop(event,\'' + tk.id + '\')" ondragend="onTaskDragEnd(event)">'
     + '<div class="task-check ' + (tk.done?'checked':'') + '" onclick="toggleTask(\'' + tk.id + '\')"></div>'
     + '<div class="task-body">'
     + '<div class="task-title">' + esc(tk.title) + '</div>'
@@ -1100,12 +1107,104 @@ function renderTask(tk) {
 
 function renderList(tasks) {
   if (!tasks.length) return '<div class="empty">✨ 暂无</div>';
+  // 按 order 排序（有 order 的排前面，按 order 升序；没有的排后面，按原规则排）
   return tasks.sort((a,b) => {
+    var aHas = a.order != null, bHas = b.order != null;
+    if (aHas && bHas) return a.order - b.order;
+    if (aHas) return -1;
+    if (bHas) return 1;
     if (a.date && b.date) return a.date.localeCompare(b.date);
     if (a.date) return -1;
     if (b.date) return 1;
     return 0;
   }).map(renderTask).join('');
+}
+
+// ===== 习惯拖拽排序 =====
+var dragHabitIdx = null;
+var habitDragged = false;
+function onHabitDragStart(e, idx) {
+  dragHabitIdx = idx;
+  habitDragged = false;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', idx);
+  e.target.classList.add('habit-drag-placeholder');
+  e.stopPropagation();
+}
+function onHabitDragOver(e, el) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  el.classList.add('drag-over');
+}
+function onHabitDragLeave(e, el) {
+  el.classList.remove('drag-over');
+}
+function onHabitDrop(e, tgtIdx) {
+  e.preventDefault();
+  e.stopPropagation();
+  habitDragged = true;
+  var srcIdx = dragHabitIdx;
+  if (srcIdx === null || srcIdx === tgtIdx) return;
+  var habits = loadHabits();
+  var [moved] = habits.splice(srcIdx, 1);
+  habits.splice(tgtIdx, 0, moved);
+  saveHabits(habits);
+  render();
+}
+function onHabitDragEnd(e) {
+  dragHabitIdx = null;
+  document.querySelectorAll('.side-habit-chip').forEach(function(el) {
+    el.classList.remove('drag-over', 'habit-drag-placeholder');
+  });
+}
+
+// ===== 任务拖拽排序 =====
+var dragTaskId = null;
+var taskDragged = false;
+function onTaskDragStart(e, taskId) {
+  dragTaskId = taskId;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', taskId);
+  setTimeout(function() { if (e.target) e.target.style.opacity = '0.4'; }, 0);
+}
+function onTaskDragOver(e, el) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  var rect = el.getBoundingClientRect();
+  var mid = rect.top + rect.height / 2;
+  el.classList.remove('drag-over', 'drag-over-bottom');
+  if (e.clientY < mid) { el.classList.add('drag-over'); } else { el.classList.add('drag-over-bottom'); }
+}
+function onTaskDragLeave(e, el) {
+  el.classList.remove('drag-over', 'drag-over-bottom');
+}
+function onTaskDrop(e, targetId) {
+  e.preventDefault();
+  e.stopPropagation();
+  taskDragged = true;
+  var srcId = dragTaskId;
+  if (!srcId || srcId === targetId) return;
+  var tasks = loadTasks();
+  var srcIdx = tasks.findIndex(t => t.id === srcId);
+  var tgtIdx = tasks.findIndex(t => t.id === targetId);
+  if (srcIdx < 0 || tgtIdx < 0) return;
+  var el = e.currentTarget;
+  var rect = el.getBoundingClientRect();
+  var mid = rect.top + rect.height / 2;
+  var [moved] = tasks.splice(srcIdx, 1);
+  var newTgtIdx = tasks.findIndex(t => t.id === targetId);
+  if (e.clientY < mid) { tasks.splice(newTgtIdx, 0, moved); } else { tasks.splice(newTgtIdx + 1, 0, moved); }
+  // 重新计算 order
+  tasks.forEach(function(t, idx) { t.order = idx; });
+  saveTasks(tasks);
+  render();
+}
+function onTaskDragEnd(e) {
+  dragTaskId = null;
+  document.querySelectorAll('.task').forEach(function(el) {
+    el.classList.remove('drag-over', 'drag-over-bottom');
+    el.style.opacity = '';
+  });
 }
 
 function render() {
@@ -1119,9 +1218,9 @@ function render() {
   const active = habits.filter(h=>h.active).length;
   document.getElementById('sideHabitProgress').innerHTML =
     active ? active + '/' + habits.length + ' ✨ · <span style="cursor:pointer;text-decoration:underline;font-size:13px;" onclick="openHabitModal()" title="管理习惯">⚙️ 管理</span>' : '0/' + habits.length + ' · <span style="cursor:pointer;text-decoration:underline;font-size:13px;" onclick="openHabitModal()" title="管理习惯">⚙️ 管理</span>';
-  const chips = habits.map(h =>
-    '<div class="side-habit-chip ' + (h.active?'active':'') + '" onclick="toggleHabit(\'' + h.id + '\')">' + h.icon + ' ' + esc(h.name) + '</div>'
-  ).join('');
+  const chips = habits.map(function(h, idx) {
+    return '<div class="side-habit-chip ' + (h.active?'active':'') + '" draggable="true" data-idx="' + idx + '" ondragstart="onHabitDragStart(event,' + idx + ')" ondragover="onHabitDragOver(event,this)" ondragleave="onHabitDragLeave(event,this)" ondrop="onHabitDrop(event,' + idx + ')" ondragend="onHabitDragEnd(event)" onclick="toggleHabit(\'' + h.id + '\')">' + h.icon + ' ' + esc(h.name) + '</div>'
+  }).join('');
   document.getElementById('sideHabitList').innerHTML = chips || '<span style="font-size:13px;color:var(--text-dim);">暂无，点击⚙️添加</span>';
 
   // Tasks
@@ -1139,9 +1238,8 @@ function render() {
     if (s.title === '✅ 已完成' && !s.tasks.length && !logEntries) return '';
     if (s.title === '✅ 已完成') {
       return '<div class="section">'
-        + '<div class="section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">'
+        + '<div class="section-title">'
         + '<span>✅ 已完成 <span style="font-weight:400;color:var(--text-dim)">' + s.tasks.length + '</span></span>'
-        + '<button id="copyLogBtn" onclick="copyDailyLog()" style="font-size:12px;padding:3px 10px;border-radius:20px;border:1px solid var(--text-dim);background:none;cursor:pointer;color:var(--text-dim);">📋 复制今日清单' + (logEntries ? '（' + logEntries + '项）' : '') + '</button>'
         + '</div>'
         + (s.tasks.length ? '<div>' + renderList(s.tasks) + '</div>' : '')
         + '</div>';
@@ -1185,17 +1283,17 @@ function copyDailyLog() {
   const lines = ['📋 ' + key + ' 今日完成（共 ' + entries.length + ' 项）', ''];
   entries.forEach(function(e) { lines.push('✓ ' + e.time + '  ' + e.title); });
   const text = lines.join('\n');
+  var btn = document.getElementById('sideCopyBtn');
+  function showFeedback() {
+    if (btn) { btn.textContent = '✅ 已复制！'; setTimeout(function(){ btn.textContent = '📋 复制清单'; }, 1500); }
+  }
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(function() {
-      var btn = document.getElementById('copyLogBtn');
-      if (btn) { btn.textContent = '✅ 已复制！'; setTimeout(function(){ btn.textContent = '📋 复制今日清单'; }, 1500); }
-    });
+    navigator.clipboard.writeText(text).then(showFeedback);
   } else {
     var ta = document.createElement('textarea');
     ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
     document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-    var btn2 = document.getElementById('copyLogBtn');
-    if (btn2) { btn2.textContent = '✅ 已复制！'; setTimeout(function(){ btn2.textContent = '📋 复制今日清单'; }, 1500); }
+    showFeedback();
   }
 }
 
@@ -1287,6 +1385,7 @@ function copyMonthLog() {
 }
 
 function toggleTask(id) {
+  if (taskDragged) { taskDragged = false; return; }
   const d = loadTasks(), t = d.find(x=>x.id===id);
   if (!t) return;
   t.done = !t.done;
@@ -1360,6 +1459,7 @@ function saveTask() {
 }
 
 function toggleHabit(id) {
+  if (habitDragged) { habitDragged = false; return; }
   const d = loadHabits(), h = d.find(x=>x.id===id);
   if (h) { h.active = !h.active; saveHabits(d); render(); }
 }
