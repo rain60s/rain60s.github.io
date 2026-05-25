@@ -1107,8 +1107,8 @@ function renderTask(tk) {
 
 function renderList(tasks) {
   if (!tasks.length) return '<div class="empty">✨ 暂无</div>';
-  // 按 order 排序（有 order 的排前面，按 order 升序；没有的排后面，按原规则排）
-  return tasks.sort((a,b) => {
+  // 按 order 排序（先 slice 避免原地修改缓存数组）
+  return tasks.slice().sort((a,b) => {
     var aHas = a.order != null, bHas = b.order != null;
     if (aHas && bHas) return a.order - b.order;
     if (aHas) return -1;
