@@ -1161,8 +1161,10 @@ function onHabitDragEnd(e) {
 // ===== 任务拖拽排序 =====
 var dragTaskId = null;
 var taskDragged = false;
+var dropInsertBefore = true; // dragover 时实时记录插入位置
 function onTaskDragStart(e, taskId) {
   dragTaskId = taskId;
+  taskDragged = false;
   e.dataTransfer.effectAllowed = 'move';
   e.dataTransfer.setData('text/plain', taskId);
   setTimeout(function() { if (e.target) e.target.style.opacity = '0.4'; }, 0);
@@ -1173,7 +1175,13 @@ function onTaskDragOver(e, el) {
   var rect = el.getBoundingClientRect();
   var mid = rect.top + rect.height / 2;
   el.classList.remove('drag-over', 'drag-over-bottom');
-  if (e.clientY < mid) { el.classList.add('drag-over'); } else { el.classList.add('drag-over-bottom'); }
+  if (e.clientY < mid) {
+    el.classList.add('drag-over');
+    dropInsertBefore = true;
+  } else {
+    el.classList.add('drag-over-bottom');
+    dropInsertBefore = false;
+  }
 }
 function onTaskDragLeave(e, el) {
   el.classList.remove('drag-over', 'drag-over-bottom');
@@ -1183,20 +1191,22 @@ function onTaskDrop(e, targetId) {
   e.stopPropagation();
   taskDragged = true;
   var srcId = dragTaskId;
-  if (!srcId || srcId === targetId) return;
-  var tasks = loadTasks();
-  var srcIdx = tasks.findIndex(t => t.id === srcId);
-  var tgtIdx = tasks.findIndex(t => t.id === targetId);
-  if (srcIdx < 0 || tgtIdx < 0) return;
-  var el = e.currentTarget;
-  var rect = el.getBoundingClientRect();
-  var mid = rect.top + rect.height / 2;
-  var [moved] = tasks.splice(srcIdx, 1);
-  var newTgtIdx = tasks.findIndex(t => t.id === targetId);
-  if (e.clientY < mid) { tasks.splice(newTgtIdx, 0, moved); } else { tasks.splice(newTgtIdx + 1, 0, moved); }
-  // 重新计算 order
+  if (!srcId || srcId === targetId) { onTaskDragEnd(e); return; }
+  // 操作原始数组的副本，避免缓存污染
+  var tasks = JSON.parse(JSON.stringify(loadTasks()));
+  var srcIdx = tasks.findIndex(function(t) { return t.id === srcId; });
+  var tgtIdx = tasks.findIndex(function(t) { return t.id === targetId; });
+  if (srcIdx < 0 || tgtIdx < 0) { onTaskDragEnd(e); return; }
+  var moved = tasks.splice(srcIdx, 1)[0];
+  var newTgtIdx = tasks.findIndex(function(t) { return t.id === targetId; });
+  if (dropInsertBefore) {
+    tasks.splice(newTgtIdx, 0, moved);
+  } else {
+    tasks.splice(newTgtIdx + 1, 0, moved);
+  }
   tasks.forEach(function(t, idx) { t.order = idx; });
   saveTasks(tasks);
+  onTaskDragEnd(e);
   render();
 }
 function onTaskDragEnd(e) {
