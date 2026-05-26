@@ -1071,7 +1071,7 @@ function cloudPull() {
     })
     .then(function(data) {
       if (!data) return;
-      var cloud = JSON.parse(atob(data.content));
+      var cloud = JSON.parse(decodeURIComponent(escape(atob(data.content))));
       _cloudDataSha = data.sha;
       _cloudUpdatedAt = cloud.updatedAt ? new Date(cloud.updatedAt).getTime() : 0;
 
@@ -1152,7 +1152,7 @@ function cloudPush(force) {
       var cloudTime = 0;
       if (info.sha) {
         try {
-          var cloudData = JSON.parse(atob(info.content));
+          var cloudData = JSON.parse(decodeURIComponent(escape(atob(info.content))));
           cloudTime = cloudData.updatedAt ? new Date(cloudData.updatedAt).getTime() : 0;
         } catch(e) {}
       }
@@ -1213,7 +1213,7 @@ function cloudSyncNow() {
     })
     .then(function(data) {
       if (!data) { cloudPush(true); return; }
-      var cloud = JSON.parse(atob(data.content));
+      var cloud = JSON.parse(decodeURIComponent(escape(atob(data.content))));
       _cloudDataSha = data.sha;
       _cloudUpdatedAt = cloud.updatedAt ? new Date(cloud.updatedAt).getTime() : 0;
 
@@ -1231,6 +1231,65 @@ function cloudSyncNow() {
     .catch(function(e) {
       _setSyncStatus('☁️ 同步失败: ' + e.message, 'var(--red)');
     });
+}
+
+// ===== 数据乱码修复 =====
+function _isMojibake(str) {
+  if (typeof str !== 'string') return false;
+  // 检测常见的 UTF-8 被误读为 Latin1 的模式：连续 3 个 U+0080-U+00FF 字符
+  return /[\u00c0-\u00df][\u0080-\u00bf]{2}|[\u00e0-\u00ef][\u0080-\u00bf]{2}/.test(str);
+}
+
+function _recoverString(str) {
+  if (typeof str !== 'string') return str;
+  try {
+    var fixed = decodeURIComponent(escape(str));
+    // 如果修复后没有乱码了，返回修复后的
+    return _isMojibake(fixed) ? str : fixed;
+  } catch(e) {
+    return str; // 修复失败保留原样
+  }
+}
+
+function _recoverObject(obj) {
+  if (typeof obj === 'string') return _recoverString(obj);
+  if (Array.isArray(obj)) return obj.map(_recoverObject);
+  if (obj && typeof obj === 'object') {
+    var result = {};
+    for (var k in obj) {
+      if (obj.hasOwnProperty(k)) {
+        result[_recoverString(k)] = _recoverObject(obj[k]);
+      }
+    }
+    return result;
+  }
+  return obj;
+}
+
+function autoRecoverData() {
+  var tasks = loadTasks();
+  var habits = loadHabits();
+  var dailyLog = getDailyLog();
+
+  var hasMojibake = false;
+  function check(o) {
+    if (typeof o === 'string') { if (_isMojibake(o)) hasMojibake = true; }
+    else if (Array.isArray(o)) o.forEach(check);
+    else if (o && typeof o === 'object') { for (var k in o) { check(k); check(o[k]); } }
+  }
+  check(tasks); check(habits); check(dailyLog);
+
+  if (hasMojibake) {
+    if (confirm('⚠️ 检测到数据存在乱码（可能是上次同步导致）\n\n是否自动修复？\n（修复后会刷新页面）')) {
+      saveTasks(_recoverObject(tasks));
+      saveHabits(_recoverObject(habits));
+      saveDailyLog(_recoverObject(dailyLog));
+      alert('✅ 数据已修复，页面即将刷新');
+      location.reload();
+      return true;
+    }
+  }
+  return false;
 }
 
 // 页面关闭前兜底推送（仅在本地有修改时）
@@ -1791,7 +1850,10 @@ document.addEventListener('keydown', e => {
   if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) openModal();
 });
 render();
-cloudPull(); // 页面加载时自动拉取云端数据
+// 先检测修复本地乱码，再拉取云端
+if (!autoRecoverData()) {
+  cloudPull(); // 页面加载时自动拉取云端数据
+}
 </script>
 </body>
 </html>
