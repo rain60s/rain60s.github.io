@@ -507,17 +507,14 @@ body {
       <div class="side-btn-row" style="margin-bottom:6px;">
         <button class="side-btn" onclick="openLogModal()">📖 历史日志</button>
         <button class="side-btn" id="sideCopyBtn" onclick="copyDailyLog()">📋 复制清单</button>
-        <button class="side-btn" onclick="openSyncModal()">🔄 换电脑同步</button>
+        <button class="side-btn" onclick="cloudSyncNow()">☁️ 立即同步</button>
       </div>
-      <div class="side-sync">
-        <span id="sideSyncInfo">☁️ 云同步已开启</span>
+      <div class="side-btn-row" style="margin-bottom:6px;">
+        <button class="side-btn" onclick="openTokenModal()">🔑 设置Token</button>
+        <button class="side-btn" onclick="openSyncModal()">📁 手动备份</button>
       </div>
       <div class="side-sync" style="font-size:11px;">
         <span id="cloudSyncStatus">正在连接...</span>
-      </div>
-      <div class="side-btn-row" style="margin-top:4px;">
-        <button class="side-btn" onclick="cloudSyncNow()" id="cloudSyncBtn">☁️ 立即同步</button>
-        <button class="side-btn" onclick="openTokenModal()">🔑 设置Token</button>
       </div>
     </div>
   </div>
@@ -611,33 +608,33 @@ body {
   </div>
 </div>
 
-<!-- Sync Guide Modal -->
+<!-- Manual Backup Modal -->
 <div class="sync-modal-overlay" id="syncModal">
   <div class="sync-modal">
-    <h2>🔄 换电脑怎么同步？</h2>
-    <div class="sub">只需要两步，10秒钟搞定</div>
+    <h2>📁 手动备份与恢复</h2>
+    <div class="sub">云同步已自动运行，这里提供手动备份作为额外保障</div>
 
     <div class="sync-step">
       <div class="sync-step-num">1</div>
       <div class="sync-step-body">
-        <div class="sync-step-title">在这台电脑导出数据</div>
-        <div class="sync-step-desc">点击下方按钮，会下载一个 JSON 文件到你的电脑。<br>把这个文件存到<span style="font-weight:600;color:var(--text)">百度网盘</span>同步文件夹里。</div>
-        <button class="sync-step-btn upload" onclick="doExport()">📤 保存到网盘文件夹</button>
+        <div class="sync-step-title">导出数据到本地</div>
+        <div class="sync-step-desc">下载一个 JSON 文件，可保存到任意位置作为备份。</div>
+        <button class="sync-step-btn upload" onclick="doExport()">📤 导出备份文件</button>
       </div>
     </div>
 
     <div class="sync-step">
       <div class="sync-step-num">2</div>
       <div class="sync-step-body">
-        <div class="sync-step-title">在另一台电脑导入数据</div>
-        <div class="sync-step-desc">打开这个网址，点下方按钮，选择你刚才保存的 JSON 文件即可。</div>
-        <button class="sync-step-btn download" onclick="doImport()">📥 选择JSON文件导入</button>
+        <div class="sync-step-title">从备份文件恢复</div>
+        <div class="sync-step-desc">选择之前导出的 JSON 文件，覆盖当前数据。</div>
+        <button class="sync-step-btn download" onclick="doImport()">📥 选择文件导入</button>
       </div>
     </div>
 
     <div class="sync-modal-footer">
-      <div class="tip">💡 建议每次换电脑前都导出一次<br>这样两边的任务进度就不会丢了</div>
-      <button class="sync-modal-close" onclick="closeSyncModal()">知道了</button>
+      <div class="tip">💡 日常使用无需手动操作，云端会自动同步<br>手动备份仅作为额外的安全措施</div>
+      <button class="sync-modal-close" onclick="closeSyncModal()">关闭</button>
     </div>
   </div>
 </div>
@@ -1202,7 +1199,7 @@ function doExport() {
   a.download = '主人计划_' + today() + '.json';
   a.click();
   var el = document.getElementById('sideSyncInfo');
-  if (el) { el.textContent = '✅ 已导出，请存到百度网盘'; el.style.color = 'var(--green)'; }
+  if (el) { el.textContent = '✅ 已导出备份文件'; el.style.color = 'var(--green)'; }
   setTimeout(function() { if (el) el.style.color = ''; }, 3000);
 }
 
