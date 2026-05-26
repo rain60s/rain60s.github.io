@@ -1001,7 +1001,14 @@ function closeSyncModal() {
 
 // ===== 导出/导入 =====
 function doExport() {
-  const blob = new Blob([JSON.stringify({tasks: loadTasks(), habits: loadHabits(), date: today(), exportedAt: new Date().toLocaleString('zh-CN')}, null, 2)], {type:'application/json'});
+  var exportObj = {
+    tasks: loadTasks(),
+    habits: loadHabits(),
+    dailyLog: getDailyLog(),
+    date: today(),
+    exportedAt: new Date().toLocaleString('zh-CN')
+  };
+  const blob = new Blob([JSON.stringify(exportObj, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = '主人计划_' + today() + '.json';
@@ -1022,9 +1029,11 @@ function importData(ev) {
     try {
       const d = JSON.parse(e.target.result);
       if (!d.tasks && !d.habits) { alert('文件格式有误，请选择正确的导出文件'); return; }
-      if (!confirm('导入后会覆盖当前所有数据，确定继续吗？')) return;
+      var msg = '导入后会覆盖当前所有数据（任务、习惯、历史日志），确定继续吗？';
+      if (!confirm(msg)) return;
       if (d.tasks) saveTasks(d.tasks);
       if (d.habits) saveHabits(d.habits);
+      if (d.dailyLog) saveDailyLog(d.dailyLog);
       render();
       closeSyncModal();
       var si = document.getElementById('sideSyncInfo');
