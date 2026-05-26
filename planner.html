@@ -510,7 +510,14 @@ body {
         <button class="side-btn" onclick="openSyncModal()">🔄 换电脑同步</button>
       </div>
       <div class="side-sync">
-        <span id="sideSyncInfo">数据已自动保存</span> · <a href="#" onclick="openSyncModal()">同步说明</a>
+        <span id="sideSyncInfo">☁️ 云同步已开启</span>
+      </div>
+      <div class="side-sync" style="font-size:11px;">
+        <span id="cloudSyncStatus">正在连接...</span>
+      </div>
+      <div class="side-btn-row" style="margin-top:4px;">
+        <button class="side-btn" onclick="cloudSyncNow()" id="cloudSyncBtn">☁️ 立即同步</button>
+        <button class="side-btn" onclick="openTokenModal()">🔑 设置Token</button>
       </div>
     </div>
   </div>
@@ -988,8 +995,9 @@ const DEFAULT_HABITS = [
 
 // ===== 同步状态 =====
 function updateSyncTime() {
-  var el = document.getElementById('sideSyncInfo');
-  if (el) el.textContent = '数据已自动保存';
+  // 数据变更时触发云端自动推送（防抖）
+  clearTimeout(_cloudPushTimer);
+  _cloudPushTimer = setTimeout(function() { cloudPush(); }, 5000);
 }
 
 function openSyncModal() {
@@ -998,6 +1006,186 @@ function openSyncModal() {
 function closeSyncModal() {
   document.getElementById('syncModal').classList.remove('show');
 }
+
+// ===== Token 设置 =====
+function openTokenModal() {
+  var token = localStorage.getItem('xx_github_token') || '';
+  var inp = prompt('请输入 GitHub Token（Classic类型，需勾选 repo 权限）：', token);
+  if (inp === null) return;
+  if (inp.trim()) {
+    localStorage.setItem('xx_github_token', inp.trim());
+    alert('✅ Token 已保存！\n现在可以自动同步了。');
+    cloudPush();
+  } else {
+    localStorage.removeItem('xx_github_token');
+    alert('Token 已清除，自动推送已关闭。\n（自动拉取仍然可用）');
+  }
+}
+
+// ===== 云端自动同步 =====
+var _cloudPushTimer = null;
+var _cloudPushing = false;
+var _cloudLastPush = 0;
+var _cloudDataSha = null;
+var _cloudLastPullTime = 0;
+var CLOUD_REPO = 'rain60s/rain60s.github.io';
+var CLOUD_FILE = 'planner-data.json';
+var CLOUD_API = 'https://api.github.com/repos/' + CLOUD_REPO + '/contents/' + CLOUD_FILE;
+// 首次使用时初始化Token（后续可在设置中修改）
+if (!localStorage.getItem('xx_github_token')) {
+  // 用户需点击"设置Token"按钮配置
+}
+
+function _getHeaders(write) {
+  var h = { 'Accept': 'application/vnd.github.v3+json' };
+  if (write) {
+    var t = localStorage.getItem('xx_github_token');
+    if (t) h['Authorization'] = 'token ' + t;
+  }
+  return h;
+}
+
+function _buildCloudData() {
+  return {
+    version: 1,
+    updatedAt: new Date().toISOString(),
+    tasks: loadTasks(),
+    habits: loadHabits(),
+    dailyLog: getDailyLog()
+  };
+}
+
+function _setSyncStatus(text, color) {
+  var el = document.getElementById('cloudSyncStatus');
+  if (el) { el.textContent = text; if (color) el.style.color = color; }
+}
+
+// 从云端拉取数据（页面加载时自动调用）
+function cloudPull() {
+  _setSyncStatus('☁️ 正在拉取云端数据...');
+  fetch(CLOUD_API + '?t=' + Date.now(), { headers: _getHeaders(false), cache: 'no-store' })
+    .then(function(r) {
+      if (r.status === 404) {
+        _setSyncStatus('☁️ 云端暂无数据，可正常使用', 'var(--text-dim)');
+        _cloudDataSha = null;
+        return null;
+      }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      if (!data) return;
+      var cloud = JSON.parse(atob(data.content));
+      _cloudDataSha = data.sha;
+      _cloudLastPullTime = Date.now();
+
+      // 如果本地数据为空（首次使用），直接用云端数据
+      var localTasks = loadTasks();
+      var hasLocalData = localStorage.getItem('xx_tasks_v2') || localStorage.getItem('xx_habits_v2');
+      if (!hasLocalData) {
+        if (cloud.tasks) saveTasks(cloud.tasks);
+        if (cloud.habits) saveHabits(cloud.habits);
+        if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
+        _tasksCache = null; _habitsCache = null;
+        render();
+        _setSyncStatus('☁️ 已从云端恢复数据', 'var(--green)');
+        return;
+      }
+
+      // 如果云端数据比本地新，提示用户
+      var cloudTime = new Date(cloud.updatedAt).getTime();
+      var localTime = parseInt(localStorage.getItem('xx_last_push') || '0');
+      if (cloudTime > localTime && cloudTime > _cloudLastPullTime) {
+        var t = new Date(cloud.updatedAt);
+        var timeStr = t.toLocaleString('zh-CN');
+        if (confirm('☁️ 检测到云端有更新数据（' + timeStr + '）\n\n是否用云端数据覆盖本地？\n（点取消保留本地数据）')) {
+          if (cloud.tasks) saveTasks(cloud.tasks);
+          if (cloud.habits) saveHabits(cloud.habits);
+          if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
+          _tasksCache = null; _habitsCache = null;
+          render();
+        }
+      }
+      _setSyncStatus('☁️ 已连接云端 ✓', 'var(--green)');
+    })
+    .catch(function(e) {
+      _setSyncStatus('☁️ 拉取失败: ' + e.message, 'var(--text-dim)');
+    });
+}
+
+// 推送数据到云端
+function cloudPush() {
+  var token = localStorage.getItem('xx_github_token');
+  if (!token) {
+    _setSyncStatus('☁️ 未设置Token，仅可拉取', 'var(--text-dim)');
+    return;
+  }
+  if (_cloudPushing) return;
+  _cloudPushing = true;
+  _setSyncStatus('⏳ 正在同步到云端...');
+
+  var payload = JSON.stringify(_buildCloudData());
+  var content = btoa(unescape(encodeURIComponent(payload)));
+
+  // 先获取当前SHA
+  fetch(CLOUD_API + '?t=' + Date.now(), { headers: _getHeaders(true), cache: 'no-store' })
+    .then(function(r) {
+      if (r.status === 404) return { sha: null };
+      if (!r.ok) throw new Error('获取SHA失败: ' + r.status);
+      return r.json();
+    })
+    .then(function(info) {
+      var body = {
+        message: 'sync: ' + new Date().toLocaleString('zh-CN'),
+        content: content
+      };
+      if (info.sha) body.sha = info.sha;
+
+      return fetch(CLOUD_API, {
+        method: 'PUT',
+        headers: _getHeaders(true),
+        body: JSON.stringify(body)
+      });
+    })
+    .then(function(r) {
+      if (!r.ok) throw new Error('推送失败: ' + r.status);
+      return r.json();
+    })
+    .then(function(result) {
+      _cloudDataSha = result.content.sha;
+      _cloudLastPush = Date.now();
+      localStorage.setItem('xx_last_push', String(_cloudLastPush));
+      _setSyncStatus('☁️ ' + new Date().toLocaleTimeString('zh-CN') + ' 已同步 ✓', 'var(--green)');
+      _cloudPushing = false;
+    })
+    .catch(function(e) {
+      _setSyncStatus('☁️ 同步失败: ' + e.message, 'var(--red)');
+      _cloudPushing = false;
+    });
+}
+
+// 手动同步按钮
+function cloudSyncNow() {
+  cloudPull();
+  setTimeout(function() { cloudPush(); }, 1000);
+}
+
+// 页面关闭前兜底推送
+window.addEventListener('beforeunload', function(e) {
+  var token = localStorage.getItem('xx_github_token');
+  if (!token) return;
+  // 用 sendBeacon 或同步 fetch 尝试推送
+  var payload = JSON.stringify(_buildCloudData());
+  var content = btoa(unescape(encodeURIComponent(payload)));
+  var body = JSON.stringify({
+    message: 'sync: ' + new Date().toLocaleString('zh-CN'),
+    content: content,
+    sha: _cloudDataSha
+  });
+  navigator.sendBeacon ? 
+    navigator.sendBeacon(CLOUD_API, new Blob([body], { type: 'application/json' })) :
+    null;
+});
 
 // ===== 导出/导入 =====
 function doExport() {
@@ -1288,7 +1476,7 @@ function render() {
 function getDailyLog() {
   try { return JSON.parse(localStorage.getItem('xx_daily_log_v1') || '{}'); } catch(e) { return {}; }
 }
-function saveDailyLog(log) { localStorage.setItem('xx_daily_log_v1', JSON.stringify(log)); }
+function saveDailyLog(log) { localStorage.setItem('xx_daily_log_v1', JSON.stringify(log)); updateSyncTime(); }
 function addLogEntry(title) {
   const log = getDailyLog();
   const key = today();
@@ -1536,6 +1724,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) openModal();
 });
 render();
+cloudPull(); // 页面加载时自动拉取云端数据
 </script>
 </body>
 </html>
