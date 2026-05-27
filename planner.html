@@ -933,7 +933,7 @@ function loadTasks() {
 function saveTasks(d) {
   _tasksCache = d;
   localStorage.setItem('xx_tasks_v2', JSON.stringify(d));
-  localStorage.setItem('xx_local_modified', new Date().toISOString());
+  localStorage.setItem('xx_local_modified', String(Date.now()));
   updateSyncTime();
 }
 function loadHabits() {
@@ -944,7 +944,7 @@ function loadHabits() {
 function saveHabits(d) {
   _habitsCache = d;
   localStorage.setItem('xx_habits_v2', JSON.stringify(d));
-  localStorage.setItem('xx_local_modified', new Date().toISOString());
+  localStorage.setItem('xx_local_modified', String(Date.now()));
   updateSyncTime();
 }
 
@@ -1085,15 +1085,15 @@ function cloudPull() {
         if (cloud.habits) saveHabits(cloud.habits);
         if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
         _tasksCache = null; _habitsCache = null;
-        localStorage.setItem('xx_local_modified', cloud.updatedAt || new Date().toISOString());
+        localStorage.setItem('xx_local_modified', String(new Date(cloud.updatedAt || 0).getTime()));
         render();
         _setSyncStatus('☁️ 已从云端恢复数据', 'var(--green)');
         return;
       }
 
       // 如果拉取后本地没有修改过（上次拉取后没改过），且云端比本地新，自动合并
-      var localModified = parseInt(localStorage.getItem('xx_local_modified') || '0');
-      var lastPull = parseInt(localStorage.getItem('xx_pull_timestamp') || '0');
+      var localModifiedStr = localStorage.getItem('xx_local_modified') || '0';
+      var localModified = isNaN(Number(localModifiedStr)) ? new Date(localModifiedStr).getTime() : Number(localModifiedStr);
       // 记录拉取前的本地修改时间
       localStorage.setItem('xx_local_modified_before_pull', String(localModified));
 
@@ -1129,7 +1129,8 @@ function cloudPush(force) {
   if (_cloudPushing) return;
 
   // 获取本地最后修改时间
-  var localModified = new Date(localStorage.getItem('xx_local_modified') || '0').getTime();
+  var localModifiedStr = localStorage.getItem('xx_local_modified') || '0';
+  var localModified = isNaN(Number(localModifiedStr)) ? new Date(localModifiedStr).getTime() : Number(localModifiedStr);
   var lastPushTime = parseInt(localStorage.getItem('xx_last_push') || '0');
 
   // 如果本地没有修改过（从上次拉取到现在没改），不需要推送
@@ -1222,7 +1223,7 @@ function cloudSyncNow() {
       if (cloud.habits) saveHabits(cloud.habits);
       if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
       _tasksCache = null; _habitsCache = null;
-      localStorage.setItem('xx_local_modified', cloud.updatedAt || new Date().toISOString());
+      localStorage.setItem('xx_local_modified', String(new Date(cloud.updatedAt || 0).getTime()));
       render();
       _setSyncStatus('☁️ 已拉取最新数据 ✓', 'var(--green)');
 
@@ -1296,7 +1297,8 @@ function autoRecoverData() {
 window.addEventListener('beforeunload', function(e) {
   var token = localStorage.getItem('xx_github_token');
   if (!token) return;
-  var localModified = new Date(localStorage.getItem('xx_local_modified') || '0').getTime();
+  var localModifiedStr = localStorage.getItem('xx_local_modified') || '0';
+  var localModified = isNaN(Number(localModifiedStr)) ? new Date(localModifiedStr).getTime() : Number(localModifiedStr);
   var lastPush = parseInt(localStorage.getItem('xx_last_push') || '0');
   // 本地没改过就不推
   if (localModified <= lastPush) return;
@@ -1602,7 +1604,7 @@ function render() {
 function getDailyLog() {
   try { return JSON.parse(localStorage.getItem('xx_daily_log_v1') || '{}'); } catch(e) { return {}; }
 }
-function saveDailyLog(log) { localStorage.setItem('xx_daily_log_v1', JSON.stringify(log)); localStorage.setItem('xx_local_modified', new Date().toISOString()); updateSyncTime(); }
+function saveDailyLog(log) { localStorage.setItem('xx_daily_log_v1', JSON.stringify(log)); localStorage.setItem('xx_local_modified', String(Date.now())); updateSyncTime(); }
 function addLogEntry(title) {
   const log = getDailyLog();
   const key = today();
