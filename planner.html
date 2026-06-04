@@ -383,7 +383,7 @@ body {
   border-bottom: 1px solid #f0f0ec;
 }
 .log-entry:last-child { border-bottom: none; }
-.log-entry-time { font-size: 12px; color: var(--text-dim); min-width: 36px; }
+.log-entry-time { font-size: 12px; color: var(--text-dim); min-width: 20px; font-weight: 600; }
 .log-entry-title { flex: 1; }
 .log-empty { text-align: center; padding: 32px; color: var(--text-dim); font-size: 14px; }
 .log-copy-btn {
@@ -1665,13 +1665,11 @@ function getDailyLog() {
   try { return JSON.parse(localStorage.getItem('xx_daily_log_v1') || '{}'); } catch(e) { return {}; }
 }
 function saveDailyLog(log) { localStorage.setItem('xx_daily_log_v1', JSON.stringify(log)); localStorage.setItem('xx_local_modified', String(Date.now())); updateSyncTime(); }
-function addLogEntry(title) {
+function addLogEntry(title, category) {
   const log = getDailyLog();
   const key = today();
   if (!log[key]) log[key] = [];
-  const now = new Date();
-  const hm = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-  log[key].push({ time: hm, title: title });
+  log[key].push({ title: title, category: category || '工作' });
   saveDailyLog(log);
 }
 function copyDailyLog() {
@@ -1679,8 +1677,21 @@ function copyDailyLog() {
   const key = today();
   const entries = log[key] || [];
   if (!entries.length) { alert('今天还没有完成任何任务～'); return; }
-  const lines = ['📋 ' + key + ' 今日完成（共 ' + entries.length + ' 项）', ''];
-  entries.forEach(function(e) { lines.push('✓ ' + e.time + '  ' + e.title); });
+  // 数据迁移
+  entries.forEach(function(e) { if (!e.category) e.category = '工作'; });
+  var workEntries = entries.filter(function(e) { return e.category === '工作'; });
+  var lifeEntries = entries.filter(function(e) { return e.category !== '工作'; });
+
+  var lines = ['📋 ' + key + ' 今日完成（共 ' + entries.length + ' 项）', ''];
+  if (workEntries.length) {
+    lines.push('🟦 工作');
+    workEntries.forEach(function(e, idx) { lines.push(idx + 1 + '. ' + e.title); });
+    lines.push('');
+  }
+  if (lifeEntries.length) {
+    lines.push('🟩 生活');
+    lifeEntries.forEach(function(e, idx) { lines.push(idx + 1 + '. ' + e.title); });
+  }
   const text = lines.join('\n');
   var btn = document.getElementById('sideCopyBtn');
   function showFeedback() {
@@ -1736,17 +1747,41 @@ function renderLogModal() {
   dayKeys.forEach(function(dateKey) {
     var entries = log[dateKey];
     if (!entries || !entries.length) return;
+    // 数据迁移：给没有 category 的条目补上"工作"
+    entries.forEach(function(e) { if (!e.category) e.category = '工作'; });
     var d = new Date(dateKey);
     var wd = ['日','一','二','三','四','五','六'];
     var dayLabel = dateKey + ' 星期' + wd[d.getDay()] + '（' + entries.length + '项）';
+
+    // 按分类分组
+    var workEntries = entries.filter(function(e) { return e.category === '工作'; });
+    var lifeEntries = entries.filter(function(e) { return e.category !== '工作'; });
+
     html += '<div class="log-day-block">';
     html += '<div class="log-day-title">' + dayLabel + '</div>';
-    entries.forEach(function(e) {
-      html += '<div class="log-entry">'
-        + '<span class="log-entry-time">' + e.time + '</span>'
-        + '<span class="log-entry-title">✓ ' + esc(e.title) + '</span>'
-        + '</div>';
-    });
+
+    // 工作区
+    if (workEntries.length) {
+      html += '<div style="font-size:12px;font-weight:600;color:var(--blue);margin:8px 0 4px;padding-left:2px;">🟦 工作</div>';
+      workEntries.forEach(function(e, idx) {
+        html += '<div class="log-entry">'
+          + '<span class="log-entry-time">' + (idx + 1) + '</span>'
+          + '<span class="log-entry-title">' + esc(e.title) + '</span>'
+          + '</div>';
+      });
+    }
+
+    // 生活区
+    if (lifeEntries.length) {
+      html += '<div style="font-size:12px;font-weight:600;color:var(--green);margin:8px 0 4px;padding-left:2px;">🟩 生活</div>';
+      lifeEntries.forEach(function(e, idx) {
+        html += '<div class="log-entry">'
+          + '<span class="log-entry-time">' + (idx + 1) + '</span>'
+          + '<span class="log-entry-title">' + esc(e.title) + '</span>'
+          + '</div>';
+      });
+    }
+
     html += '</div>';
   });
   document.getElementById('logModalContent').innerHTML = html;
@@ -1763,8 +1798,21 @@ function copyMonthLog() {
   dayKeys.forEach(function(dateKey) {
     var entries = log[dateKey];
     if (!entries || !entries.length) return;
+    // 数据迁移
+    entries.forEach(function(e) { if (!e.category) e.category = '工作'; });
     lines.push('── ' + dateKey + ' ──');
-    entries.forEach(function(e) { lines.push('✓ ' + e.time + '  ' + e.title); total++; });
+
+    var workEntries = entries.filter(function(e) { return e.category === '工作'; });
+    var lifeEntries = entries.filter(function(e) { return e.category !== '工作'; });
+
+    if (workEntries.length) {
+      lines.push('🟦 工作');
+      workEntries.forEach(function(e, idx) { lines.push(idx + 1 + '. ' + e.title); total++; });
+    }
+    if (lifeEntries.length) {
+      lines.push('🟩 生活');
+      lifeEntries.forEach(function(e, idx) { lines.push(idx + 1 + '. ' + e.title); total++; });
+    }
     lines.push('');
   });
   lines.push('共完成 ' + total + ' 项');
@@ -1789,7 +1837,7 @@ function toggleTask(id) {
   if (!t) return;
   t.done = !t.done;
   t.doneDate = t.done ? today() : null;
-  if (t.done) addLogEntry(t.title);
+  if (t.done) addLogEntry(t.title, t.category);
   if (t.done && t.recurrence && t.date) {
     const dt = new Date(t.date);
     if (t.recurrence === '每天') dt.setDate(dt.getDate()+1);
