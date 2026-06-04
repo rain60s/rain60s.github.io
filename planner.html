@@ -161,6 +161,28 @@ body {
   color: var(--green); text-decoration: line-through;
 }
 
+/* ===== 分类筛选栏 ===== */
+.filter-bar {
+  display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap;
+}
+.filter-btn {
+  padding: 5px 14px; border-radius: 16px;
+  border: 1.5px solid var(--border); background: none;
+  font-size: 13px; cursor: pointer; transition: 0.15s;
+  color: var(--text-dim); user-select: none;
+}
+.filter-btn:hover { border-color: var(--accent); color: var(--text); }
+.filter-btn.active {
+  background: var(--accent); color: #fff;
+  border-color: var(--accent); font-weight: 600;
+}
+.cat-tag {
+  font-size: 11px; padding: 1px 8px; border-radius: 10px; font-weight: 500;
+  display: inline-block; vertical-align: middle;
+}
+.cat-工作 { background: var(--blue-light); color: var(--blue); }
+.cat-生活 { background: var(--green-light); color: var(--green); }
+
 /* Section */
 .section { margin-bottom: 24px; }
 .section-title {
@@ -521,6 +543,7 @@ body {
 
   <div class="center">
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    <div class="filter-bar" id="filterBar"></div>
     <div id="taskSections"></div>
   </div>
 
@@ -544,6 +567,13 @@ body {
     <div class="form-group">
       <label>截止日期（可选）</label>
       <input type="date" id="taskDate">
+    </div>
+    <div class="form-group">
+      <label>分类</label>
+      <select id="taskCategory" style="width:100%;padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:15px;outline:none;">
+        <option value="工作">🟦 工作</option>
+        <option value="生活">🟩 生活</option>
+      </select>
     </div>
     <div class="form-group">
       <label>循环（可选）</label>
@@ -640,6 +670,15 @@ body {
 </div>
 
 <script>
+// ===== 分类 =====
+var CATEGORIES = ['工作', '生活'];
+var _activeFilter = '全部'; // 当前筛选
+
+function setFilter(cat) {
+  _activeFilter = cat;
+  render();
+}
+
 // ===== 农历数据 (1900-2100) =====
 var lunarInfo=[0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0a950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06aa0,0x1a6c4,0x0aae0,0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a4d0,0x0d150,0x0f252,0x0d520];
 var lunarMonth=['正','二','三','四','五','六','七','八','九','十','冬','腊'];
@@ -915,6 +954,7 @@ function dayTasksAdd() {
   document.getElementById('editId').value = '';
   document.getElementById('taskTitle').value = '';
   document.getElementById('taskDate').value = ds;
+  document.getElementById('taskCategory').value = '工作';
   document.getElementById('taskNote').value = '';
   document.getElementById('taskRecurrence').value = '';
   document.getElementById('modal').classList.add('show');
@@ -928,7 +968,14 @@ const today = () => { var d=new Date(); return d.getFullYear()+'-'+String(d.getM
 function loadTasks() {
   if (_tasksCache) return _tasksCache;
   const raw = localStorage.getItem('xx_tasks_v2');
-  return _tasksCache = raw ? JSON.parse(raw) : DEFAULT_TASKS;
+  var tasks = raw ? JSON.parse(raw) : DEFAULT_TASKS;
+  // 数据迁移：给没有 category 的任务补上"工作"
+  var changed = false;
+  tasks.forEach(function(t) {
+    if (!t.category) { t.category = '工作'; changed = true; }
+  });
+  if (changed) { localStorage.setItem('xx_tasks_v2', JSON.stringify(tasks)); }
+  return _tasksCache = tasks;
 }
 function saveTasks(d) {
   _tasksCache = d;
@@ -949,41 +996,41 @@ function saveHabits(d) {
 }
 
 const DEFAULT_TASKS = [
-  {id:'1',title:'汇总民生领域信访问题报纪检组（周五12时前）',date:'2026-04-17',note:'信访来源、问题主要内容、是否已解决、解决时间、预计解决时间',done:false,doneDate:null},
-  {id:'2',title:'反馈污排部整改复核环保督察工作',date:'2026-04-13',note:'协同',done:false,doneDate:null},
-  {id:'3',title:'省委巡视进展反馈',date:'2026-04-13',note:'',done:false,doneDate:null},
-  {id:'4',title:'首脑会议',date:'2026-04-16',note:'',done:false,doneDate:null},
-  {id:'5',title:'第八轮阶段性整改意见（张俏、陈辰、王绍伟）',date:'2026-04-16',note:'',done:false,doneDate:null},
-  {id:'6',title:'报送住建系统阶段整改',date:'2026-04-16',note:'孟大乾 13940554193，党政公文（3月17日件）',done:false,doneDate:null},
-  {id:'7',title:'营商环境建设对标改革任务清单',date:'2026-04-15',note:'2026年版（试行）',done:false,doneDate:null},
-  {id:'8',title:'七班晨间分享',date:'2026-04-16',note:'周四',done:false,doneDate:null},
-  {id:'9',title:'局长谈话（贺永存）',date:'2026-04-22',note:'每月22日',done:false,doneDate:null},
-  {id:'10',title:'四不两直，检查省委巡视',date:'2026-04-23',note:'',done:false,doneDate:null},
-  {id:'11',title:'报送整治吃喝圈子',date:'2026-04-25',note:'4月10日收材料',done:false,doneDate:null},
-  {id:'12',title:'首脑会议',date:'2026-04-28',note:'',done:false,doneDate:null},
-  {id:'13',title:'开班分享',date:'2026-04-30',note:'',done:false,doneDate:null},
-  {id:'14',title:'冠中冠分享',date:'2026-05-01',note:'',done:false,doneDate:null},
-  {id:'15',title:'首脑会议',date:'2026-05-06',note:'',done:false,doneDate:null},
-  {id:'16',title:'省委第八轮巡查整改',date:'2026-08-10',note:'',done:false,doneDate:null},
-  {id:'17',title:'本荷大作业改稿',date:'',note:'',done:false,doneDate:null},
-  {id:'18',title:'私信点评学员',date:'',note:'',done:false,doneDate:null},
-  {id:'19',title:'带天龙八步',date:'',note:'',done:false,doneDate:null},
-  {id:'20',title:'拉票',date:'',note:'',done:false,doneDate:null},
-  {id:'21',title:'学习脱口秀',date:'',note:'',done:false,doneDate:null},
-  {id:'22',title:'材料星',date:'',note:'',done:false,doneDate:null},
-  {id:'23',title:'小龙虾',date:'',note:'',done:false,doneDate:null},
-  {id:'24',title:'政府工作报告重点工作分解细化进展',date:'',note:'',done:false,doneDate:null},
-  {id:'25',title:'第八轮巡查整改方案修改，上平台',date:'',note:'',done:false,doneDate:null},
-  {id:'26',title:'《终身成长》PPT',date:'',note:'',done:false,doneDate:null},
-  {id:'27',title:'七班3个故事线索',date:'',note:'',done:false,doneDate:null},
-  {id:'28',title:'统战工作报告',date:'',note:'',done:false,doneDate:null},
-  {id:'29',title:'2025年度拟实现目标（一年后回看）',date:'2027-01-01',note:'https://kdocs.cn/l/ciGxqQf7QhgO',done:false,doneDate:null},
-  {id:'30',title:'故事力助教预约（曹廷凯/牛牛/王爱芳/永霞）',date:'',note:'',done:false,doneDate:null},
-  {id:'31',title:'故事力项目整体推进',date:'',note:'持续开展中',done:false,doneDate:null},
-  {id:'32',title:'了解爸身体情况',date:'',note:'',recurrence:'每周',done:false,doneDate:null},
-  {id:'33',title:'局长谈话（贺永存）',date:'2026-04-22',note:'每月22日',recurrence:'每月',done:false,doneDate:null},
-  {id:'34',title:'聂处长报告进度（贺处长）',date:'',note:'周一',recurrence:'每周',done:false,doneDate:null},
-  {id:'35',title:'调度第八巡察（局长谈话）',date:'',note:'',recurrence:'每周',done:false,doneDate:null},
+  {id:'1',title:'汇总民生领域信访问题报纪检组（周五12时前）',date:'2026-04-17',note:'信访来源、问题主要内容、是否已解决、解决时间、预计解决时间',done:false,doneDate:null,category:'工作'},
+  {id:'2',title:'反馈污排部整改复核环保督察工作',date:'2026-04-13',note:'协同',done:false,doneDate:null,category:'工作'},
+  {id:'3',title:'省委巡视进展反馈',date:'2026-04-13',note:'',done:false,doneDate:null,category:'工作'},
+  {id:'4',title:'首脑会议',date:'2026-04-16',note:'',done:false,doneDate:null,category:'工作'},
+  {id:'5',title:'第八轮阶段性整改意见（张俏、陈辰、王绍伟）',date:'2026-04-16',note:'',done:false,doneDate:null,category:'工作'},
+  {id:'6',title:'报送住建系统阶段整改',date:'2026-04-16',note:'孟大乾 13940554193，党政公文（3月17日件）',done:false,doneDate:null,category:'工作'},
+  {id:'7',title:'营商环境建设对标改革任务清单',date:'2026-04-15',note:'2026年版（试行）',done:false,doneDate:null,category:'工作'},
+  {id:'8',title:'七班晨间分享',date:'2026-04-16',note:'周四',done:false,doneDate:null,category:'工作'},
+  {id:'9',title:'局长谈话（贺永存）',date:'2026-04-22',note:'每月22日',done:false,doneDate:null,category:'工作'},
+  {id:'10',title:'四不两直，检查省委巡视',date:'2026-04-23',note:'',done:false,doneDate:null,category:'工作'},
+  {id:'11',title:'报送整治吃喝圈子',date:'2026-04-25',note:'4月10日收材料',done:false,doneDate:null,category:'工作'},
+  {id:'12',title:'首脑会议',date:'2026-04-28',note:'',done:false,doneDate:null,category:'工作'},
+  {id:'13',title:'开班分享',date:'2026-04-30',note:'',done:false,doneDate:null,category:'工作'},
+  {id:'14',title:'冠中冠分享',date:'2026-05-01',note:'',done:false,doneDate:null,category:'工作'},
+  {id:'15',title:'首脑会议',date:'2026-05-06',note:'',done:false,doneDate:null,category:'工作'},
+  {id:'16',title:'省委第八轮巡查整改',date:'2026-08-10',note:'',done:false,doneDate:null,category:'工作'},
+  {id:'17',title:'本荷大作业改稿',date:'',note:'',done:false,doneDate:null,category:'生活'},
+  {id:'18',title:'私信点评学员',date:'',note:'',done:false,doneDate:null,category:'生活'},
+  {id:'19',title:'带天龙八步',date:'',note:'',done:false,doneDate:null,category:'生活'},
+  {id:'20',title:'拉票',date:'',note:'',done:false,doneDate:null,category:'生活'},
+  {id:'21',title:'学习脱口秀',date:'',note:'',done:false,doneDate:null,category:'生活'},
+  {id:'22',title:'材料星',date:'',note:'',done:false,doneDate:null,category:'生活'},
+  {id:'23',title:'小龙虾',date:'',note:'',done:false,doneDate:null,category:'生活'},
+  {id:'24',title:'政府工作报告重点工作分解细化进展',date:'',note:'',done:false,doneDate:null,category:'工作'},
+  {id:'25',title:'第八轮巡查整改方案修改，上平台',date:'',note:'',done:false,doneDate:null,category:'工作'},
+  {id:'26',title:'《终身成长》PPT',date:'',note:'',done:false,doneDate:null,category:'生活'},
+  {id:'27',title:'七班3个故事线索',date:'',note:'',done:false,doneDate:null,category:'生活'},
+  {id:'28',title:'统战工作报告',date:'',note:'',done:false,doneDate:null,category:'工作'},
+  {id:'29',title:'2025年度拟实现目标（一年后回看）',date:'2027-01-01',note:'https://kdocs.cn/l/ciGxqQf7QhgO',done:false,doneDate:null,category:'生活'},
+  {id:'30',title:'故事力助教预约（曹廷凯/牛牛/王爱芳/永霞）',date:'',note:'',done:false,doneDate:null,category:'生活'},
+  {id:'31',title:'故事力项目整体推进',date:'',note:'持续开展中',done:false,doneDate:null,category:'生活'},
+  {id:'32',title:'了解爸身体情况',date:'',note:'',recurrence:'每周',done:false,doneDate:null,category:'生活'},
+  {id:'33',title:'局长谈话（贺永存）',date:'2026-04-22',note:'每月22日',recurrence:'每月',done:false,doneDate:null,category:'工作'},
+  {id:'34',title:'聂处长报告进度（贺处长）',date:'',note:'周一',recurrence:'每周',done:false,doneDate:null,category:'工作'},
+  {id:'35',title:'调度第八巡察（局长谈话）',date:'',note:'',recurrence:'每周',done:false,doneDate:null,category:'工作'},
 ];
 const DEFAULT_HABITS = [
   {id:'h1',icon:'🧘',name:'冥想',detail:'20分钟',active:false},
@@ -1420,11 +1467,12 @@ function esc(s) { const d=document.createElement('div'); d.textContent=s; return
 
 function renderTask(tk) {
   const noteHtml = tk.note ? '<div class="task-note">' + esc(tk.note) + '</div>' : '';
+  const catTag = tk.category ? '<span class="cat-tag cat-' + esc(tk.category) + '">' + esc(tk.category) + '</span>' : '';
   return '<div class="task ' + (tk.done?'done':'') + '" data-id="' + tk.id + '" draggable="true" ondragstart="onTaskDragStart(event,\'' + tk.id + '\')" ondragover="onTaskDragOver(event,this)" ondragleave="onTaskDragLeave(event,this)" ondrop="onTaskDrop(event,\'' + tk.id + '\')" ondragend="onTaskDragEnd(event)">'
     + '<div class="task-check ' + (tk.done?'checked':'') + '" onclick="toggleTask(\'' + tk.id + '\')"></div>'
     + '<div class="task-body">'
     + '<div class="task-title">' + esc(tk.title) + '</div>'
-    + '<div class="task-sub">' + dateTag(tk) + '</div>'
+    + '<div class="task-sub">' + catTag + ' ' + dateTag(tk) + '</div>'
     + noteHtml
     + '</div>'
     + '<div class="task-actions">'
@@ -1562,8 +1610,20 @@ function render() {
   }).join('');
   document.getElementById('sideHabitList').innerHTML = chips || '<span style="font-size:13px;color:var(--text-dim);">暂无，点击⚙️添加</span>';
 
-  // Tasks
-  var cat = categorize(tasks);
+  // Filter bar
+  var filterHtml = '<button class="filter-btn ' + (_activeFilter==='全部'?'active':'') + '" onclick="setFilter(\'全部\')">全部 ' + tasks.length + '</button>';
+  CATEGORIES.forEach(function(c) {
+    var cnt = tasks.filter(function(t) { return t.category === c; }).length;
+    filterHtml += '<button class="filter-btn ' + (_activeFilter===c?'active':'') + '" onclick="setFilter(\'' + c + '\')">' + c + ' ' + cnt + '</button>';
+  });
+  document.getElementById('filterBar').innerHTML = filterHtml;
+
+  // Tasks - 按分类筛选
+  var filteredTasks = tasks;
+  if (_activeFilter !== '全部') {
+    filteredTasks = tasks.filter(function(t) { return t.category === _activeFilter; });
+  }
+  var cat = categorize(filteredTasks);
   var todaySections = [
     { title: '🔴 今天', tasks: cat.urgent },
     { title: '🟡 本周', tasks: cat.week },
@@ -1756,6 +1816,7 @@ function editTask(id) {
   document.getElementById('editId').value = id;
   document.getElementById('taskTitle').value = t.title;
   document.getElementById('taskDate').value = t.date||'';
+  document.getElementById('taskCategory').value = t.category||'工作';
   document.getElementById('taskRecurrence').value = t.recurrence||'';
   document.getElementById('taskNote').value = t.note||'';
   document.getElementById('modal').classList.add('show');
@@ -1767,6 +1828,7 @@ function openModal() {
   document.getElementById('editId').value = '';
   document.getElementById('taskTitle').value = '';
   document.getElementById('taskDate').value = today();
+  document.getElementById('taskCategory').value = '工作';
   document.getElementById('taskNote').value = '';
   document.getElementById('taskRecurrence').value = '';
   document.getElementById('modal').classList.add('show');
@@ -1782,6 +1844,7 @@ function saveTask() {
   const obj = {
     title,
     date: document.getElementById('taskDate').value,
+    category: document.getElementById('taskCategory').value,
     recurrence: document.getElementById('taskRecurrence').value,
     note: document.getElementById('taskNote').value.trim(),
     done: false, doneDate: null,
