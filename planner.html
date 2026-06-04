@@ -1189,7 +1189,6 @@ function cloudPull() {
 var KDOCS_MCP = 'https://mcp-center.wps.cn/skill_hub/mcp';
 var KDOCS_FILE = 'ziiswFhSyrMDDHQvmCk2rx2tcn6gxiPde';
 var KDOCS_SHEET = 6;
-var PROXY_URL = 'http://127.0.0.1:17890/kdocs-mcp';
 
 function _kdocsRow(dateStr) {
   var d = new Date(dateStr);
@@ -1204,12 +1203,6 @@ function _kdocsRow(dateStr) {
 }
 
 async function syncToKDocs() {
-  // 检测代理是否可用
-  if (typeof _kdocsProxyOk !== 'undefined' && !_kdocsProxyOk) {
-    _setSyncStatus('\u26a0\ufe0f 日生记代理未启动', '#e67e22');
-    setTimeout(function(){ _setSyncStatus('',''); }, 3000);
-    return;
-  }
   try {
     var log = getDailyLog();
     var key = today();
@@ -1233,7 +1226,7 @@ async function syncToKDocs() {
     };
 
     // Step 1: MCP Initialize
-    var r1 = await fetch(PROXY_URL, {
+    var r1 = await fetch(KDOCS_MCP, {
       method: 'POST', headers: hdrs,
       body: JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',
         params:{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'planner-sync',version:'1.0.0'}}})
@@ -1242,13 +1235,13 @@ async function syncToKDocs() {
     if (sid) hdrs['Mcp-Session-Id'] = sid;
 
     // Step 2: initialized notification
-    fetch(PROXY_URL, {
+    fetch(KDOCS_MCP, {
       method: 'POST', headers: hdrs,
       body: JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'})
     }).catch(function(){});
 
     // Step 3: update_range_data
-    var r3 = await fetch(PROXY_URL, {
+    var r3 = await fetch(KDOCS_MCP, {
       method: 'POST', headers: hdrs,
       body: JSON.stringify({jsonrpc:'2.0',id:2,method:'tools/call',
         params:{name:'sheet.update_range_data',arguments:{
@@ -2081,17 +2074,6 @@ if (!localStorage.getItem('xx_kdocs_token')) {
   localStorage.setItem('xx_kdocs_token', 'qBLaNcb+yCOCGH4/w5lvk5H4JpsD3ROsCZLOy+vpguqdzMoTBrPaPCradYsl5HMm2xDyuJGtPWf0PvUbuBWhQh7CRzdLSCwc1rObccD8hudJcyV79C1uCMPp2pSt6nplytsaE2g76fT1iAwQWJSIMR/2FWg3QeJ/pHhXdfNrpM/Ik3IuTE2uc/Oz6CvqJKAb666vu1ie6Qu4GHStvg==');
 }
 
-// 检测 KDocs 代理是否在运行
-fetch('http://127.0.0.1:17890/kdocs-mcp', {method:'POST',headers:{'Content-Type':'application/json'},body:'{"jsonrpc":"2.0","id":-1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ping","version":"1.0"}}}'})
-  .then(function(r){ return r.json(); })
-  .then(function(){
-    console.log('KDocs proxy: OK');
-    _kdocsProxyOk = true;
-  })
-  .catch(function(){
-    console.warn('KDocs proxy: 未运行，日生记同步不可用');
-    _kdocsProxyOk = false;
-  });
 </script>
 </body>
 </html>
