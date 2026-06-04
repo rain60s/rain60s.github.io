@@ -183,6 +183,17 @@ body {
 .cat-工作 { background: var(--blue-light); color: var(--blue); }
 .cat-生活 { background: var(--green-light); color: var(--green); }
 
+/* 分类选择器（弹窗内） */
+.cat-pick {
+  padding: 7px 16px; border-radius: 18px; font-size: 14px; font-weight: 500;
+  cursor: pointer; border: 2px solid var(--border); background: none;
+  transition: 0.15s; user-select: none;
+}
+.cat-pick:hover { border-color: var(--accent); }
+.cat-pick.active { border-width: 2.5px; }
+.cat-pick-work.active { border-color: var(--blue); background: var(--blue-light); color: var(--blue); }
+.cat-pick-life.active { border-color: var(--green); background: var(--green-light); color: var(--green); }
+
 /* Section */
 .section { margin-bottom: 24px; }
 .section-title {
@@ -570,10 +581,11 @@ body {
     </div>
     <div class="form-group">
       <label>分类</label>
-      <select id="taskCategory" style="width:100%;padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:15px;outline:none;">
-        <option value="工作">🟦 工作</option>
-        <option value="生活">🟩 生活</option>
-      </select>
+      <div id="taskCategoryPicker" style="display:flex;gap:8px;margin-top:2px;">
+        <span class="cat-pick cat-pick-work active" onclick="pickCategory('工作')">🟦 工作</span>
+        <span class="cat-pick cat-pick-life" onclick="pickCategory('生活')">🟩 生活</span>
+      </div>
+      <input type="hidden" id="taskCategory" value="工作">
     </div>
     <div class="form-group">
       <label>循环（可选）</label>
@@ -677,6 +689,13 @@ var _activeFilter = '全部'; // 当前筛选
 function setFilter(cat) {
   _activeFilter = cat;
   render();
+}
+
+function pickCategory(cat) {
+  document.getElementById('taskCategory').value = cat;
+  document.querySelectorAll('.cat-pick').forEach(function(el) { el.classList.remove('active'); });
+  if (cat === '工作') document.querySelector('.cat-pick-work').classList.add('active');
+  else document.querySelector('.cat-pick-life').classList.add('active');
 }
 
 // ===== 农历数据 (1900-2100) =====
@@ -954,7 +973,7 @@ function dayTasksAdd() {
   document.getElementById('editId').value = '';
   document.getElementById('taskTitle').value = '';
   document.getElementById('taskDate').value = ds;
-  document.getElementById('taskCategory').value = '工作';
+  pickCategory('工作');
   document.getElementById('taskNote').value = '';
   document.getElementById('taskRecurrence').value = '';
   document.getElementById('modal').classList.add('show');
@@ -1864,7 +1883,7 @@ function editTask(id) {
   document.getElementById('editId').value = id;
   document.getElementById('taskTitle').value = t.title;
   document.getElementById('taskDate').value = t.date||'';
-  document.getElementById('taskCategory').value = t.category||'工作';
+  pickCategory(t.category||'工作');
   document.getElementById('taskRecurrence').value = t.recurrence||'';
   document.getElementById('taskNote').value = t.note||'';
   document.getElementById('modal').classList.add('show');
@@ -1876,7 +1895,7 @@ function openModal() {
   document.getElementById('editId').value = '';
   document.getElementById('taskTitle').value = '';
   document.getElementById('taskDate').value = today();
-  document.getElementById('taskCategory').value = '工作';
+  pickCategory('工作');
   document.getElementById('taskNote').value = '';
   document.getElementById('taskRecurrence').value = '';
   document.getElementById('modal').classList.add('show');
