@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ä¸»äººè®¡åˆ’</title>
+<title>Ö÷ÈË¼Æ»®</title>
 <style>
 :root {
   --bg: #f5f5f0;
@@ -44,7 +44,7 @@ body {
 /* Container */
 .container { max-width: 1400px; margin: 0 auto; padding: 0 16px; }
 
-/* ===== åŒæ­¥çŠ¶æ€æ  ===== */
+/* ===== Í¬²½×´Ì¬À¸ ===== */
 .sync-bar {
   background: var(--card); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 12px 16px;
@@ -79,7 +79,7 @@ body {
 }
 .sync-btn.primary:hover { background: #d35400; }
 
-/* ===== åŒæ­¥å¼•å¯¼å¼¹çª— ===== */
+/* ===== Í¬²½Òıµ¼µ¯´° ===== */
 .sync-modal-overlay {
   display: none; position: fixed; inset: 0;
   background: rgba(0,0,0,0.5); z-index: 200;
@@ -161,7 +161,7 @@ body {
   color: var(--green); text-decoration: line-through;
 }
 
-/* ===== åˆ†ç±»ç­›é€‰æ  ===== */
+/* ===== ·ÖÀàÉ¸Ñ¡À¸ ===== */
 .filter-bar {
   display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap;
 }
@@ -180,10 +180,10 @@ body {
   font-size: 11px; padding: 1px 8px; border-radius: 10px; font-weight: 500;
   display: inline-block; vertical-align: middle;
 }
-.cat-å·¥ä½œ { background: var(--blue-light); color: var(--blue); }
-.cat-ç”Ÿæ´» { background: var(--green-light); color: var(--green); }
+.cat-¹¤×÷ { background: var(--blue-light); color: var(--blue); }
+.cat-Éú»î { background: var(--green-light); color: var(--green); }
 
-/* åˆ†ç±»é€‰æ‹©å™¨ï¼ˆå¼¹çª—å†…ï¼‰ */
+/* ·ÖÀàÑ¡ÔñÆ÷£¨µ¯´°ÄÚ£© */
 .cat-pick {
   padding: 7px 16px; border-radius: 18px; font-size: 14px; font-weight: 500;
   cursor: pointer; border: 2px solid var(--border); background: none;
@@ -352,7 +352,7 @@ body {
 }
 .btn-add:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ===== å†å²æ—¥å¿—å¼¹çª— ===== */
+/* ===== ÀúÊ·ÈÕÖ¾µ¯´° ===== */
 .log-modal-overlay {
   display: none; position: fixed; inset: 0;
   background: rgba(0,0,0,0.5); z-index: 200;
@@ -405,7 +405,7 @@ body {
 }
 .log-copy-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ===== ä¸‰æ å¸ƒå±€ ===== */
+/* ===== ÈıÀ¸²¼¾Ö ===== */
 .layout { display: flex; max-width: 1400px; margin: 0 auto; min-height: calc(100vh - 80px); padding: 0 16px; gap: 0; }
 .sidebar {
   width: 380px; flex-shrink: 0;
@@ -427,7 +427,7 @@ body {
   padding: 12px 0 8px; margin-bottom: 8px; z-index: 2;
 }
 
-/* sidebar å†…çš„å°èŠ‚ */
+/* sidebar ÄÚµÄĞ¡½Ú */
 .side-section { margin-bottom: 20px; }
 .side-section-title {
   font-size: 14px; color: var(--text-dim); font-weight: 700;
@@ -456,7 +456,7 @@ body {
 .side-btn:hover { border-color: var(--accent); color: var(--accent); }
 
 /* Responsive */
-/* ===== æ—¥å† ===== */
+/* ===== ÈÕÀú ===== */
 .calendar { margin-bottom: 0; }
 .cal-nav {
   display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
@@ -518,36 +518,36 @@ body {
 <body>
 
 <div class="header">
-  <h1>ğŸ¦ <span>ä¸»äººè®¡åˆ’</span></h1>
+  <h1>?? <span>Ö÷ÈË¼Æ»®</span></h1>
   <div class="header-date" id="headerDate"></div>
 </div>
 
 <div class="layout">
   <div class="sidebar">
     <div class="side-section">
-      <div class="side-section-title" style="font-size:14px;">ğŸ“… ä¸‡å¹´å†</div>
+      <div class="side-section-title" style="font-size:14px;">?? ÍòÄêÀú</div>
       <div class="calendar" id="calendar"></div>
     </div>
 
     <div class="side-section">
-      <div class="side-section-title">ä»Šæ—¥ä¹ æƒ¯</div>
+      <div class="side-section-title">½ñÈÕÏ°¹ß</div>
       <div class="side-habits" id="sideHabitList"></div>
       <div style="font-size:13px;color:var(--text-dim);margin-top:6px;" id="sideHabitProgress"></div>
     </div>
 
     <div class="side-section">
-      <div class="side-section-title">å·¥å…·</div>
+      <div class="side-section-title">¹¤¾ß</div>
       <div class="side-btn-row" style="margin-bottom:6px;">
-        <button class="side-btn" onclick="openLogModal()">ğŸ“– å†å²æ—¥å¿—</button>
-        <button class="side-btn" id="sideCopyBtn" onclick="copyDailyLog()">ğŸ“‹ å¤åˆ¶æ¸…å•</button>
-        <button class="side-btn" onclick="cloudSyncNow()">â˜ï¸ ä»äº‘ç«¯æ›´æ–°</button>
+        <button class="side-btn" onclick="openLogModal()">?? ÀúÊ·ÈÕÖ¾</button>
+        <button class="side-btn" id="sideCopyBtn" onclick="copyDailyLog()">?? ¸´ÖÆÇåµ¥</button>
+        <button class="side-btn" onclick="cloudSyncNow()">?? ´ÓÔÆ¶Ë¸üĞÂ</button>
       </div>
       <div class="side-btn-row" style="margin-bottom:6px;">
-        <button class="side-btn" onclick="openTokenModal()">ğŸ”‘ è®¾ç½®Token</button>
-        <button class="side-btn" onclick="openSyncModal()">ğŸ“ æ‰‹åŠ¨å¤‡ä»½</button>
+        <button class="side-btn" onclick="openTokenModal()">?? ÉèÖÃToken</button>
+        <button class="side-btn" onclick="openSyncModal()">?? ÊÖ¶¯±¸·İ</button>
       </div>
       <div class="side-sync" style="font-size:11px;">
-        <span id="cloudSyncStatus">æ­£åœ¨è¿æ¥...</span>
+        <span id="cloudSyncStatus">ÕıÔÚÁ¬½Ó...</span>
       </div>
     </div>
   </div>
@@ -564,47 +564,47 @@ body {
 </div>
 
 <!-- FAB -->
-<button class="fab" onclick="openModal()">ï¼‹</button>
+<button class="fab" onclick="openModal()">£«</button>
 
 <!-- Task Modal -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
-    <h2 id="modalTitle">æ·»åŠ ä»»åŠ¡</h2>
+    <h2 id="modalTitle">Ìí¼ÓÈÎÎñ</h2>
     <input type="hidden" id="editId">
     <div class="form-group">
-      <label>ä»»åŠ¡åç§°</label>
-      <input type="text" id="taskTitle" placeholder="è¦åšä»€ä¹ˆï¼Ÿ" autofocus>
+      <label>ÈÎÎñÃû³Æ</label>
+      <input type="text" id="taskTitle" placeholder="Òª×öÊ²Ã´£¿" autofocus>
     </div>
     <div class="form-group">
-      <label>æˆªæ­¢æ—¥æœŸï¼ˆå¯é€‰ï¼‰</label>
+      <label>½ØÖ¹ÈÕÆÚ£¨¿ÉÑ¡£©</label>
       <input type="date" id="taskDate">
     </div>
     <div class="form-group">
-      <label>åˆ†ç±»</label>
+      <label>·ÖÀà</label>
       <div id="taskCategoryPicker" style="display:flex;gap:8px;margin-top:2px;">
-        <span class="cat-pick cat-pick-work active" onclick="pickCategory('å·¥ä½œ')">ğŸŸ¦ å·¥ä½œ</span>
-        <span class="cat-pick cat-pick-life" onclick="pickCategory('ç”Ÿæ´»')">ğŸŸ© ç”Ÿæ´»</span>
+        <span class="cat-pick cat-pick-work active" onclick="pickCategory('¹¤×÷')">?? ¹¤×÷</span>
+        <span class="cat-pick cat-pick-life" onclick="pickCategory('Éú»î')">?? Éú»î</span>
       </div>
-      <input type="hidden" id="taskCategory" value="å·¥ä½œ">
+      <input type="hidden" id="taskCategory" value="¹¤×÷">
     </div>
     <div class="form-group">
-      <label>å¾ªç¯ï¼ˆå¯é€‰ï¼‰</label>
+      <label>Ñ­»·£¨¿ÉÑ¡£©</label>
       <select id="taskRecurrence" style="width:100%;padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:15px;outline:none;">
-        <option value="">ä¸å¾ªç¯</option>
-        <option value="æ¯å¤©">ğŸ”„ æ¯å¤©</option>
-        <option value="æ¯å‘¨">ğŸ”„ æ¯å‘¨</option>
-        <option value="æ¯æœˆ">ğŸ”„ æ¯æœˆ</option>
-        <option value="æ¯å­£">ğŸ”„ æ¯å­£</option>
-        <option value="æ¯å¹´">ğŸ”„ æ¯å¹´</option>
+        <option value="">²»Ñ­»·</option>
+        <option value="Ã¿Ìì">?? Ã¿Ìì</option>
+        <option value="Ã¿ÖÜ">?? Ã¿ÖÜ</option>
+        <option value="Ã¿ÔÂ">?? Ã¿ÔÂ</option>
+        <option value="Ã¿¼¾">?? Ã¿¼¾</option>
+        <option value="Ã¿Äê">?? Ã¿Äê</option>
       </select>
     </div>
     <div class="form-group">
-      <label>å¤‡æ³¨ï¼ˆå¯é€‰ï¼‰</label>
-      <textarea id="taskNote" placeholder="è¡¥å……è¯´æ˜â€¦"></textarea>
+      <label>±¸×¢£¨¿ÉÑ¡£©</label>
+      <textarea id="taskNote" placeholder="²¹³äËµÃ÷¡­"></textarea>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-cancel" onclick="closeModal()">å–æ¶ˆ</button>
-      <button class="btn btn-primary" onclick="saveTask()">ä¿å­˜</button>
+      <button class="btn btn-cancel" onclick="closeModal()">È¡Ïû</button>
+      <button class="btn btn-primary" onclick="saveTask()">±£´æ</button>
     </div>
   </div>
 </div>
@@ -612,11 +612,11 @@ body {
 <!-- dayTasks Modal -->
 <div class="modal-overlay" id="dayTasksModal">
   <div class="modal" style="max-width:420px;">
-    <h2 id="dayTasksTitle">ä»Šæ—¥ä»»åŠ¡</h2>
+    <h2 id="dayTasksTitle">½ñÈÕÈÎÎñ</h2>
     <div id="dayTasksList" style="max-height:55vh;overflow-y:auto;margin:12px 0;"></div>
     <div class="modal-actions">
-      <button class="btn btn-cancel" onclick="closeDayTasksModal()">å…³é—­</button>
-      <button class="btn btn-primary" onclick="dayTasksAdd()">ï¼‹ æ·»åŠ ä»»åŠ¡</button>
+      <button class="btn btn-cancel" onclick="closeDayTasksModal()">¹Ø±Õ</button>
+      <button class="btn btn-primary" onclick="dayTasksAdd()">£« Ìí¼ÓÈÎÎñ</button>
     </div>
   </div>
 </div>
@@ -624,11 +624,11 @@ body {
 <!-- Habit Modal -->
 <div class="modal-overlay" id="habitModal">
   <div class="modal">
-    <h2>âš™ï¸ ç®¡ç†ä¹ æƒ¯</h2>
+    <h2>?? ¹ÜÀíÏ°¹ß</h2>
     <div id="habitModalList"></div>
     <div class="modal-actions">
-      <button class="btn btn-cancel" onclick="closeHabitModal()">å…³é—­</button>
-      <button class="btn btn-primary" onclick="saveHabitChanges()">ä¿å­˜</button>
+      <button class="btn btn-cancel" onclick="closeHabitModal()">¹Ø±Õ</button>
+      <button class="btn btn-primary" onclick="saveHabitChanges()">±£´æ</button>
     </div>
   </div>
 </div>
@@ -637,54 +637,54 @@ body {
 <div class="log-modal-overlay" id="logModal">
   <div class="log-modal">
     <div class="log-modal-header">
-      <h2>ğŸ“– å†å²æ—¥å¿—</h2>
-      <button class="sync-modal-close" onclick="closeLogModal()">å…³é—­</button>
+      <h2>?? ÀúÊ·ÈÕÖ¾</h2>
+      <button class="sync-modal-close" onclick="closeLogModal()">¹Ø±Õ</button>
     </div>
     <div class="log-month-nav">
-      <button onclick="logNavMonth(-1)">â€¹</button>
+      <button onclick="logNavMonth(-1)">?</button>
       <div class="log-month-label" id="logMonthLabel"></div>
-      <button onclick="logNavMonth(1)">â€º</button>
+      <button onclick="logNavMonth(1)">?</button>
     </div>
     <div id="logModalContent"></div>
-    <button class="log-copy-btn" id="logCopyMonthBtn" onclick="copyMonthLog()">ğŸ“‹ å¤åˆ¶æœ¬æœˆå…¨éƒ¨è®°å½•</button>
+    <button class="log-copy-btn" id="logCopyMonthBtn" onclick="copyMonthLog()">?? ¸´ÖÆ±¾ÔÂÈ«²¿¼ÇÂ¼</button>
   </div>
 </div>
 
 <!-- Manual Backup Modal -->
 <div class="sync-modal-overlay" id="syncModal">
   <div class="sync-modal">
-    <h2>ğŸ“ æ‰‹åŠ¨å¤‡ä»½ä¸æ¢å¤</h2>
-    <div class="sub">äº‘åŒæ­¥å·²è‡ªåŠ¨è¿è¡Œï¼Œè¿™é‡Œæä¾›æ‰‹åŠ¨å¤‡ä»½ä½œä¸ºé¢å¤–ä¿éšœ</div>
+    <h2>?? ÊÖ¶¯±¸·İÓë»Ö¸´</h2>
+    <div class="sub">ÔÆÍ¬²½ÒÑ×Ô¶¯ÔËĞĞ£¬ÕâÀïÌá¹©ÊÖ¶¯±¸·İ×÷Îª¶îÍâ±£ÕÏ</div>
 
     <div class="sync-step">
       <div class="sync-step-num">1</div>
       <div class="sync-step-body">
-        <div class="sync-step-title">å¯¼å‡ºæ•°æ®åˆ°æœ¬åœ°</div>
-        <div class="sync-step-desc">ä¸‹è½½ä¸€ä¸ª JSON æ–‡ä»¶ï¼Œå¯ä¿å­˜åˆ°ä»»æ„ä½ç½®ä½œä¸ºå¤‡ä»½ã€‚</div>
-        <button class="sync-step-btn upload" onclick="doExport()">ğŸ“¤ å¯¼å‡ºå¤‡ä»½æ–‡ä»¶</button>
+        <div class="sync-step-title">µ¼³öÊı¾İµ½±¾µØ</div>
+        <div class="sync-step-desc">ÏÂÔØÒ»¸ö JSON ÎÄ¼ş£¬¿É±£´æµ½ÈÎÒâÎ»ÖÃ×÷Îª±¸·İ¡£</div>
+        <button class="sync-step-btn upload" onclick="doExport()">?? µ¼³ö±¸·İÎÄ¼ş</button>
       </div>
     </div>
 
     <div class="sync-step">
       <div class="sync-step-num">2</div>
       <div class="sync-step-body">
-        <div class="sync-step-title">ä»å¤‡ä»½æ–‡ä»¶æ¢å¤</div>
-        <div class="sync-step-desc">é€‰æ‹©ä¹‹å‰å¯¼å‡ºçš„ JSON æ–‡ä»¶ï¼Œè¦†ç›–å½“å‰æ•°æ®ã€‚</div>
-        <button class="sync-step-btn download" onclick="doImport()">ğŸ“¥ é€‰æ‹©æ–‡ä»¶å¯¼å…¥</button>
+        <div class="sync-step-title">´Ó±¸·İÎÄ¼ş»Ö¸´</div>
+        <div class="sync-step-desc">Ñ¡ÔñÖ®Ç°µ¼³öµÄ JSON ÎÄ¼ş£¬¸²¸Çµ±Ç°Êı¾İ¡£</div>
+        <button class="sync-step-btn download" onclick="doImport()">?? Ñ¡ÔñÎÄ¼şµ¼Èë</button>
       </div>
     </div>
 
     <div class="sync-modal-footer">
-      <div class="tip">ğŸ’¡ æ—¥å¸¸ä½¿ç”¨æ— éœ€æ‰‹åŠ¨æ“ä½œï¼Œäº‘ç«¯ä¼šè‡ªåŠ¨åŒæ­¥<br>æ‰‹åŠ¨å¤‡ä»½ä»…ä½œä¸ºé¢å¤–çš„å®‰å…¨æªæ–½</div>
-      <button class="sync-modal-close" onclick="closeSyncModal()">å…³é—­</button>
+      <div class="tip">?? ÈÕ³£Ê¹ÓÃÎŞĞèÊÖ¶¯²Ù×÷£¬ÔÆ¶Ë»á×Ô¶¯Í¬²½<br>ÊÖ¶¯±¸·İ½ö×÷Îª¶îÍâµÄ°²È«´ëÊ©</div>
+      <button class="sync-modal-close" onclick="closeSyncModal()">¹Ø±Õ</button>
     </div>
   </div>
 </div>
 
 <script>
-// ===== åˆ†ç±» =====
-var CATEGORIES = ['å·¥ä½œ', 'ç”Ÿæ´»'];
-var _activeFilter = 'å…¨éƒ¨'; // å½“å‰ç­›é€‰
+// ===== ·ÖÀà =====
+var CATEGORIES = ['¹¤×÷', 'Éú»î'];
+var _activeFilter = 'È«²¿'; // µ±Ç°É¸Ñ¡
 
 function setFilter(cat) {
   _activeFilter = cat;
@@ -694,20 +694,20 @@ function setFilter(cat) {
 function pickCategory(cat) {
   document.getElementById('taskCategory').value = cat;
   document.querySelectorAll('.cat-pick').forEach(function(el) { el.classList.remove('active'); });
-  if (cat === 'å·¥ä½œ') document.querySelector('.cat-pick-work').classList.add('active');
+  if (cat === '¹¤×÷') document.querySelector('.cat-pick-work').classList.add('active');
   else document.querySelector('.cat-pick-life').classList.add('active');
 }
 
-// ===== å†œå†æ•°æ® (1900-2100) =====
+// ===== Å©ÀúÊı¾İ (1900-2100) =====
 var lunarInfo=[0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0a950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06aa0,0x1a6c4,0x0aae0,0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a4d0,0x0d150,0x0f252,0x0d520];
-var lunarMonth=['æ­£','äºŒ','ä¸‰','å››','äº”','å…­','ä¸ƒ','å…«','ä¹','å','å†¬','è…Š'];
-var lunarDay=['åˆä¸€','åˆäºŒ','åˆä¸‰','åˆå››','åˆäº”','åˆå…­','åˆä¸ƒ','åˆå…«','åˆä¹','åˆå','åä¸€','åäºŒ','åä¸‰','åå››','åäº”','åå…­','åä¸ƒ','åå…«','åä¹','äºŒå','å»¿ä¸€','å»¿äºŒ','å»¿ä¸‰','å»¿å››','å»¿äº”','å»¿å…­','å»¿ä¸ƒ','å»¿å…«','å»¿ä¹','ä¸‰å'];
+var lunarMonth=['Õı','¶ş','Èı','ËÄ','Îå','Áù','Æß','°Ë','¾Å','Ê®','¶¬','À°'];
+var lunarDay=['³õÒ»','³õ¶ş','³õÈı','³õËÄ','³õÎå','³õÁù','³õÆß','³õ°Ë','³õ¾Å','³õÊ®','Ê®Ò»','Ê®¶ş','Ê®Èı','Ê®ËÄ','Ê®Îå','Ê®Áù','Ê®Æß','Ê®°Ë','Ê®¾Å','¶şÊ®','Ø¥Ò»','Ø¥¶ş','Ø¥Èı','Ø¥ËÄ','Ø¥Îå','Ø¥Áù','Ø¥Æß','Ø¥°Ë','Ø¥¾Å','ÈıÊ®'];
 function lYearDays(y){var i,f=348;for(i=0x8000;i>0x8;i>>=1)f+=(lunarInfo[y-1900]&i)?1:0;return f+leapDays(y);}
 function leapMonth(y){return lunarInfo[y-1900]&0xf;}
 function leapDays(y){if(leapMonth(y))return(lunarInfo[y-1900]&0x10000)?30:29;return 0;}
 function monthDays(y,m){return(lunarInfo[y-1900]&(0x10000>>m))?30:29;}
 
-// å…¬å† â†’ å†œå†ï¼ˆä¿®å¤é—°æœˆå¤„ç†ï¼‰
+// ¹«Àú ¡ú Å©Àú£¨ĞŞ¸´ÈòÔÂ´¦Àí£©
 var _lunarCache = {};
 function solar2lunar(y,m,d){
   var ck = y+'-'+m+'-'+d;
@@ -734,9 +734,9 @@ function solar2lunar(y,m,d){
   return r;
 }
 
-// ===== 24èŠ‚æ°” (è¿‘ä¼¼ç®—æ³•) =====
+// ===== 24½ÚÆø (½üËÆËã·¨) =====
 var sTermInfo=[0,21208,42467,63836,85337,107014,128867,150921,173149,195551,218072,240693,263343,285989,308563,331033,353350,375494,397447,419210,440795,462224,483532,504758];
-var sTermNames=['å°å¯’','å¤§å¯’','ç«‹æ˜¥','é›¨æ°´','æƒŠè›°','æ˜¥åˆ†','æ¸…æ˜','è°·é›¨','ç«‹å¤','å°æ»¡','èŠ’ç§','å¤è‡³','å°æš‘','å¤§æš‘','ç«‹ç§‹','å¤„æš‘','ç™½éœ²','ç§‹åˆ†','å¯’éœ²','éœœé™','ç«‹å†¬','å°é›ª','å¤§é›ª','å†¬è‡³'];
+var sTermNames=['Ğ¡º®','´óº®','Á¢´º','ÓêË®','¾ªÕİ','´º·Ö','ÇåÃ÷','¹ÈÓê','Á¢ÏÄ','Ğ¡Âú','Ã¢ÖÖ','ÏÄÖÁ','Ğ¡Êî','´óÊî','Á¢Çï','´¦Êî','°×Â¶','Çï·Ö','º®Â¶','Ëª½µ','Á¢¶¬','Ğ¡Ñ©','´óÑ©','¶¬ÖÁ'];
 var _termCache=null;
 function buildTermMap(year){
   if(_termCache&&_termCache._year===year)return _termCache;
@@ -757,51 +757,51 @@ function getSolarTerm(y,m,d){
   return map[key]||'';
 }
 
-// ===== èŠ‚æ—¥æ•°æ® =====
+// ===== ½ÚÈÕÊı¾İ =====
 var solarFestivals={
-  '01-01':'å…ƒæ—¦','02-14':'æƒ…äººèŠ‚','03-08':'å¦‡å¥³èŠ‚','03-12':'æ¤æ ‘èŠ‚','03-15':'æ¶ˆè´¹è€…æ—¥',
-  '04-01':'æ„šäººèŠ‚','04-22':'åœ°çƒæ—¥','05-01':'åŠ³åŠ¨èŠ‚','05-04':'é’å¹´èŠ‚','05-12':'æŠ¤å£«èŠ‚',
-  '06-01':'å„¿ç«¥èŠ‚','07-01':'å»ºå…šèŠ‚','07-07':'ä¸ƒä¸ƒäº‹å˜','08-01':'å»ºå†›èŠ‚',
-  '09-10':'æ•™å¸ˆèŠ‚','09-18':'ä¹ä¸€å…«','10-01':'å›½åº†èŠ‚','10-31':'ä¸‡åœ£èŠ‚',
-  '11-09':'æ¶ˆé˜²æ—¥','12-13':'å…¬ç¥­æ—¥','12-24':'å¹³å®‰å¤œ','12-25':'åœ£è¯èŠ‚'
+  '01-01':'Ôªµ©','02-14':'ÇéÈË½Ú','03-08':'¸¾Å®½Ú','03-12':'Ö²Ê÷½Ú','03-15':'Ïû·ÑÕßÈÕ',
+  '04-01':'ÓŞÈË½Ú','04-22':'µØÇòÈÕ','05-01':'ÀÍ¶¯½Ú','05-04':'ÇàÄê½Ú','05-12':'»¤Ê¿½Ú',
+  '06-01':'¶ùÍ¯½Ú','07-01':'½¨µ³½Ú','07-07':'ÆßÆßÊÂ±ä','08-01':'½¨¾ü½Ú',
+  '09-10':'½ÌÊ¦½Ú','09-18':'¾ÅÒ»°Ë','10-01':'¹úÇì½Ú','10-31':'ÍòÊ¥½Ú',
+  '11-09':'Ïû·ÀÈÕ','12-13':'¹«¼ÀÈÕ','12-24':'Æ½°²Ò¹','12-25':'Ê¥µ®½Ú'
 };
 var lunarFestivals={
-  'æ­£æœˆåˆä¸€':'æ˜¥èŠ‚','æ­£æœˆåäº”':'å…ƒå®µèŠ‚','äº”æœˆåˆäº”':'ç«¯åˆèŠ‚','ä¸ƒæœˆåˆä¸ƒ':'ä¸ƒå¤•',
-  'ä¸ƒæœˆåäº”':'ä¸­å…ƒèŠ‚','å…«æœˆåäº”':'ä¸­ç§‹èŠ‚','ä¹æœˆåˆä¹':'é‡é˜³èŠ‚','è…Šæœˆåˆå…«':'è…Šå…«',
-  'è…Šæœˆå»¿ä¸‰':'å°å¹´(åŒ—)','è…Šæœˆå»¿å››':'å°å¹´(å—)','è…Šæœˆä¸‰å':'é™¤å¤•'
+  'ÕıÔÂ³õÒ»':'´º½Ú','ÕıÔÂÊ®Îå':'ÔªÏü½Ú','ÎåÔÂ³õÎå':'¶ËÎç½Ú','ÆßÔÂ³õÆß':'ÆßÏ¦',
+  'ÆßÔÂÊ®Îå':'ÖĞÔª½Ú','°ËÔÂÊ®Îå':'ÖĞÇï½Ú','¾ÅÔÂ³õ¾Å':'ÖØÑô½Ú','À°ÔÂ³õ°Ë':'À°°Ë',
+  'À°ÔÂØ¥Èı':'Ğ¡Äê(±±)','À°ÔÂØ¥ËÄ':'Ğ¡Äê(ÄÏ)','À°ÔÂÈıÊ®':'³ıÏ¦'
 };
 function getMothersDay(y){var d=new Date(y,4,1);d.setDate(1+(7-d.getDay())%7+7);return d;}
 function getFathersDay(y){var d=new Date(y,5,1);d.setDate(1+(7-d.getDay())%7+14);return d;}
 function getFloatFestival(y,m,d){
   var dt=new Date(y,m-1,d);
   var md=new Date(y,4,1);md.setDate(1+(7-md.getDay())%7+7);
-  if(dt.getTime()===md.getTime())return 'æ¯äº²èŠ‚';
+  if(dt.getTime()===md.getTime())return 'Ä¸Ç×½Ú';
   var fd=new Date(y,5,1);fd.setDate(1+(7-fd.getDay())%7+14);
-  if(dt.getTime()===fd.getTime())return 'çˆ¶äº²èŠ‚';
+  if(dt.getTime()===fd.getTime())return '¸¸Ç×½Ú';
   var td=new Date(y,10,1);td.setDate(1+(7-td.getDay())%7+21);
-  if(dt.getTime()===td.getTime())return 'æ„Ÿæ©èŠ‚';
+  if(dt.getTime()===td.getTime())return '¸Ğ¶÷½Ú';
   return '';
 }
 
-// ===== æ³•å®šèŠ‚å‡æ—¥ï¼ˆ2026å¹´ å›½åŠ¡é™¢å®‰æ’ï¼Œæ¥æºï¼šwww.gov.cnï¼‰=====
+// ===== ·¨¶¨½Ú¼ÙÈÕ£¨2026Äê ¹úÎñÔº°²ÅÅ£¬À´Ô´£ºwww.gov.cn£©=====
 var _legalHolidays = {
   rest: {
-    '01-01':'å…ƒæ—¦','01-02':'å…ƒæ—¦','01-03':'å…ƒæ—¦',
-    '02-15':'æ˜¥èŠ‚','02-16':'æ˜¥èŠ‚','02-17':'æ˜¥èŠ‚','02-18':'æ˜¥èŠ‚','02-19':'æ˜¥èŠ‚',
-    '02-20':'æ˜¥èŠ‚','02-21':'æ˜¥èŠ‚','02-22':'æ˜¥èŠ‚','02-23':'æ˜¥èŠ‚',
-    '04-04':'æ¸…æ˜','04-05':'æ¸…æ˜','04-06':'æ¸…æ˜',
-    '05-01':'åŠ³åŠ¨èŠ‚','05-02':'åŠ³åŠ¨èŠ‚','05-03':'åŠ³åŠ¨èŠ‚','05-04':'åŠ³åŠ¨èŠ‚','05-05':'åŠ³åŠ¨èŠ‚',
-    '06-19':'ç«¯åˆ','06-20':'ç«¯åˆ','06-21':'ç«¯åˆ',
-    '09-25':'ä¸­ç§‹','09-26':'ä¸­ç§‹','09-27':'ä¸­ç§‹',
-    '10-01':'å›½åº†','10-02':'å›½åº†','10-03':'å›½åº†','10-04':'å›½åº†',
-    '10-05':'å›½åº†','10-06':'å›½åº†','10-07':'å›½åº†'
+    '01-01':'Ôªµ©','01-02':'Ôªµ©','01-03':'Ôªµ©',
+    '02-15':'´º½Ú','02-16':'´º½Ú','02-17':'´º½Ú','02-18':'´º½Ú','02-19':'´º½Ú',
+    '02-20':'´º½Ú','02-21':'´º½Ú','02-22':'´º½Ú','02-23':'´º½Ú',
+    '04-04':'ÇåÃ÷','04-05':'ÇåÃ÷','04-06':'ÇåÃ÷',
+    '05-01':'ÀÍ¶¯½Ú','05-02':'ÀÍ¶¯½Ú','05-03':'ÀÍ¶¯½Ú','05-04':'ÀÍ¶¯½Ú','05-05':'ÀÍ¶¯½Ú',
+    '06-19':'¶ËÎç','06-20':'¶ËÎç','06-21':'¶ËÎç',
+    '09-25':'ÖĞÇï','09-26':'ÖĞÇï','09-27':'ÖĞÇï',
+    '10-01':'¹úÇì','10-02':'¹úÇì','10-03':'¹úÇì','10-04':'¹úÇì',
+    '10-05':'¹úÇì','10-06':'¹úÇì','10-07':'¹úÇì'
   },
   work: {
     '01-04':1,'02-14':1,'02-28':1,'05-09':1,'09-20':1,'10-10':1
   }
 };
 
-// ===== æ—¥å†æ¸²æŸ“ =====
+// ===== ÈÕÀúäÖÈ¾ =====
 var _calYear=0,_calMonth=0;
 
 function calNavMonth(delta){
@@ -827,7 +827,7 @@ function renderCalendar(){
   var today=new Date();
   var todayDS=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
 
-  // ç»Ÿè®¡æœªå®Œæˆä»»åŠ¡ï¼šæ—¥æœŸ â†’ æ•°é‡
+  // Í³¼ÆÎ´Íê³ÉÈÎÎñ£ºÈÕÆÚ ¡ú ÊıÁ¿
   var _taskCount={};
   var _allTasks=loadTasks();
   for(var ti=0;ti<_allTasks.length;ti++){
@@ -839,14 +839,14 @@ function renderCalendar(){
     }
   }
 
-  var wd=['ä¸€','äºŒ','ä¸‰','å››','äº”','å…­','æ—¥'];
+  var wd=['Ò»','¶ş','Èı','ËÄ','Îå','Áù','ÈÕ'];
 
   var html='';
   html+='<div class="cal-nav">';
-  html+='<button onclick="calNavMonth(-1)">â€¹</button>';
-  html+='<div class="cal-nav-label">'+_calYear+'å¹´ '+_calMonth+'æœˆ</div>';
-  html+='<button onclick="calNavMonth(1)">â€º</button>';
-  html+='<button class="cal-nav-today" onclick="calGoToday()">ä»Šå¤©</button>';
+  html+='<button onclick="calNavMonth(-1)">?</button>';
+  html+='<div class="cal-nav-label">'+_calYear+'Äê '+_calMonth+'ÔÂ</div>';
+  html+='<button onclick="calNavMonth(1)">?</button>';
+  html+='<button class="cal-nav-today" onclick="calGoToday()">½ñÌì</button>';
   html+='</div>';
 
   html+='<div class="cal-grid">';
@@ -884,35 +884,35 @@ function renderCalendar(){
 
     var lunar=solar2lunar(y,m,d);
     var lunarStr=lunar.dayStr;
-    if(lunar.dayStr==='åˆä¸€')lunarStr=lunar.monthStr+'æœˆ';
+    if(lunar.dayStr==='³õÒ»')lunarStr=lunar.monthStr+'ÔÂ';
 
-    // èŠ‚æ—¥/èŠ‚æ°”/æ³•å®šèŠ‚å‡æ—¥
+    // ½ÚÈÕ/½ÚÆø/·¨¶¨½Ú¼ÙÈÕ
     var festival='';
     var holidayTag='';
 
-    // å…ˆæŸ¥æ³•å®šèŠ‚å‡æ—¥
+    // ÏÈ²é·¨¶¨½Ú¼ÙÈÕ
     var hk=String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
     if(_legalHolidays.rest[hk]){
-      holidayTag='ä¼‘';
+      holidayTag='Ğİ';
       if(!festival)festival=_legalHolidays.rest[hk];
     } else if(_legalHolidays.work[hk]){
-      holidayTag='ç­';
+      holidayTag='°à';
     }
 
     var mmdd=String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
     if(solarFestivals[mmdd])festival=solarFestivals[mmdd];
     else{var ff=getFloatFestival(y,m,d);if(ff)festival=ff;}
     if(!festival){
-      var lk=lunar.monthStr+'æœˆ'+lunar.dayStr;
+      var lk=lunar.monthStr+'ÔÂ'+lunar.dayStr;
       if(lunarFestivals[lk])festival=lunarFestivals[lk];
       else{var term=getSolarTerm(y,m,d);if(term)festival=term;}
     }
     var festHtml='';
     if(festival)festHtml='<div class="cal-festival">'+festival+'</div>';
-    if(holidayTag)festHtml+='<div class="cal-holiday '+(holidayTag==='ä¼‘'?'rest':'work')+'">'+holidayTag+'</div>';
-    // ä»»åŠ¡å°åœ†ç‚¹
+    if(holidayTag)festHtml+='<div class="cal-holiday '+(holidayTag==='Ğİ'?'rest':'work')+'">'+holidayTag+'</div>';
+    // ÈÎÎñĞ¡Ô²µã
     var dotHtml='';
-    if(_taskCount[ds])dotHtml='<span class="cal-task-dot" title="'+_taskCount[ds]+'ä¸ªä»»åŠ¡"></span>';
+    if(_taskCount[ds])dotHtml='<span class="cal-task-dot" title="'+_taskCount[ds]+'¸öÈÎÎñ"></span>';
 
     html+='<div class="'+cellClass+'" onclick="calClickDay('+y+','+m+','+d+')">';
     html+='<div class="cal-solar">'+d+dotHtml+'</div>';
@@ -927,33 +927,33 @@ function renderCalendar(){
 
 function calClickDay(y,m,d) {
   var ds = y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-  // æ˜¾ç¤ºè¯¥æ—¥ä»»åŠ¡åˆ—è¡¨
+  // ÏÔÊ¾¸ÃÈÕÈÎÎñÁĞ±í
   showDayTasks(ds, y, m, d);
 }
 
 var _dayTasksDate = '';
 function showDayTasks(ds, y, m, d) {
   _dayTasksDate = ds;
-  document.getElementById('dayTasksTitle').textContent = y+'å¹´'+m+'æœˆ'+d+'æ—¥ ä»»åŠ¡';
+  document.getElementById('dayTasksTitle').textContent = y+'Äê'+m+'ÔÂ'+d+'ÈÕ ÈÎÎñ';
   var tasks = loadTasks();
   var todayStr = today();
   var dayTasks = tasks.filter(function(t) {
     if (ds === todayStr) {
-      // ä»Šå¤©ï¼šæ˜¾ç¤ºä»Šå¤©çš„ä»»åŠ¡ + æ‰€æœ‰è¿‡æœŸæœªå®Œæˆä»»åŠ¡
+      // ½ñÌì£ºÏÔÊ¾½ñÌìµÄÈÎÎñ + ËùÓĞ¹ıÆÚÎ´Íê³ÉÈÎÎñ
       return t.date === ds || (!t.done && t.date && t.date < todayStr);
     }
     return t.date === ds;
   });
   var html = '';
   if (!dayTasks.length) {
-    html = '<div style="text-align:center;color:var(--text-dim);padding:18px 0;font-size:13px;">è¿™å¤©è¿˜æ²¡æœ‰ä»»åŠ¡ï½</div>';
+    html = '<div style="text-align:center;color:var(--text-dim);padding:18px 0;font-size:13px;">ÕâÌì»¹Ã»ÓĞÈÎÎñ¡«</div>';
   } else {
     dayTasks.forEach(function(tk) {
       var noteHtml = tk.note ? '<div style="font-size:11px;color:var(--text-dim);margin-top:2px;">'+esc(tk.note)+'</div>' : '';
       html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);'+(tk.done?'opacity:0.45;':'')+'">'
         + '<div class="task-check '+(tk.done?'checked':'')+'" onclick="toggleTask(\''+tk.id+'\');showDayTasks(_dayTasksDate);"></div>'
         + '<div style="flex:1;font-size:14px;'+(tk.done?'text-decoration:line-through;':'')+'">'+esc(tk.title)+'</div>'
-        + '<button style="background:none;border:none;cursor:pointer;font-size:14px;" onclick="editTask(\''+tk.id+'\');closeDayTasksModal();">âœï¸</button>'
+        + '<button style="background:none;border:none;cursor:pointer;font-size:14px;" onclick="editTask(\''+tk.id+'\');closeDayTasksModal();">??</button>'
         + '</div>';
     });
   }
@@ -969,11 +969,11 @@ function dayTasksAdd() {
   closeDayTasksModal();
   var ds = _dayTasksDate;
   var parts = ds.split('-');
-  document.getElementById('modalTitle').textContent = 'æ·»åŠ ä»»åŠ¡ï¼ˆ'+parseInt(parts[1])+'æœˆ'+parseInt(parts[2])+'æ—¥ï¼‰';
+  document.getElementById('modalTitle').textContent = 'Ìí¼ÓÈÎÎñ£¨'+parseInt(parts[1])+'ÔÂ'+parseInt(parts[2])+'ÈÕ£©';
   document.getElementById('editId').value = '';
   document.getElementById('taskTitle').value = '';
   document.getElementById('taskDate').value = ds;
-  pickCategory('å·¥ä½œ');
+  pickCategory('¹¤×÷');
   document.getElementById('taskNote').value = '';
   document.getElementById('taskRecurrence').value = '';
   document.getElementById('modal').classList.add('show');
@@ -988,10 +988,10 @@ function loadTasks() {
   if (_tasksCache) return _tasksCache;
   const raw = localStorage.getItem('xx_tasks_v2');
   var tasks = raw ? JSON.parse(raw) : DEFAULT_TASKS;
-  // æ•°æ®è¿ç§»ï¼šç»™æ²¡æœ‰ category çš„ä»»åŠ¡è¡¥ä¸Š"å·¥ä½œ"
+  // Êı¾İÇ¨ÒÆ£º¸øÃ»ÓĞ category µÄÈÎÎñ²¹ÉÏ"¹¤×÷"
   var changed = false;
   tasks.forEach(function(t) {
-    if (!t.category) { t.category = 'å·¥ä½œ'; changed = true; }
+    if (!t.category) { t.category = '¹¤×÷'; changed = true; }
   });
   if (changed) { localStorage.setItem('xx_tasks_v2', JSON.stringify(tasks)); }
   return _tasksCache = tasks;
@@ -1015,52 +1015,52 @@ function saveHabits(d) {
 }
 
 const DEFAULT_TASKS = [
-  {id:'1',title:'æ±‡æ€»æ°‘ç”Ÿé¢†åŸŸä¿¡è®¿é—®é¢˜æŠ¥çºªæ£€ç»„ï¼ˆå‘¨äº”12æ—¶å‰ï¼‰',date:'2026-04-17',note:'ä¿¡è®¿æ¥æºã€é—®é¢˜ä¸»è¦å†…å®¹ã€æ˜¯å¦å·²è§£å†³ã€è§£å†³æ—¶é—´ã€é¢„è®¡è§£å†³æ—¶é—´',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'2',title:'åé¦ˆæ±¡æ’éƒ¨æ•´æ”¹å¤æ ¸ç¯ä¿ç£å¯Ÿå·¥ä½œ',date:'2026-04-13',note:'ååŒ',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'3',title:'çœå§”å·¡è§†è¿›å±•åé¦ˆ',date:'2026-04-13',note:'',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'4',title:'é¦–è„‘ä¼šè®®',date:'2026-04-16',note:'',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'5',title:'ç¬¬å…«è½®é˜¶æ®µæ€§æ•´æ”¹æ„è§ï¼ˆå¼ ä¿ã€é™ˆè¾°ã€ç‹ç»ä¼Ÿï¼‰',date:'2026-04-16',note:'',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'6',title:'æŠ¥é€ä½å»ºç³»ç»Ÿé˜¶æ®µæ•´æ”¹',date:'2026-04-16',note:'å­Ÿå¤§ä¹¾ 13940554193ï¼Œå…šæ”¿å…¬æ–‡ï¼ˆ3æœˆ17æ—¥ä»¶ï¼‰',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'7',title:'è¥å•†ç¯å¢ƒå»ºè®¾å¯¹æ ‡æ”¹é©ä»»åŠ¡æ¸…å•',date:'2026-04-15',note:'2026å¹´ç‰ˆï¼ˆè¯•è¡Œï¼‰',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'8',title:'ä¸ƒç­æ™¨é—´åˆ†äº«',date:'2026-04-16',note:'å‘¨å››',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'9',title:'å±€é•¿è°ˆè¯ï¼ˆè´ºæ°¸å­˜ï¼‰',date:'2026-04-22',note:'æ¯æœˆ22æ—¥',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'10',title:'å››ä¸ä¸¤ç›´ï¼Œæ£€æŸ¥çœå§”å·¡è§†',date:'2026-04-23',note:'',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'11',title:'æŠ¥é€æ•´æ²»åƒå–åœˆå­',date:'2026-04-25',note:'4æœˆ10æ—¥æ”¶ææ–™',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'12',title:'é¦–è„‘ä¼šè®®',date:'2026-04-28',note:'',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'13',title:'å¼€ç­åˆ†äº«',date:'2026-04-30',note:'',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'14',title:'å† ä¸­å† åˆ†äº«',date:'2026-05-01',note:'',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'15',title:'é¦–è„‘ä¼šè®®',date:'2026-05-06',note:'',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'16',title:'çœå§”ç¬¬å…«è½®å·¡æŸ¥æ•´æ”¹',date:'2026-08-10',note:'',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'17',title:'æœ¬è·å¤§ä½œä¸šæ”¹ç¨¿',date:'',note:'',done:false,doneDate:null,category:'ç”Ÿæ´»'},
-  {id:'18',title:'ç§ä¿¡ç‚¹è¯„å­¦å‘˜',date:'',note:'',done:false,doneDate:null,category:'ç”Ÿæ´»'},
-  {id:'19',title:'å¸¦å¤©é¾™å…«æ­¥',date:'',note:'',done:false,doneDate:null,category:'ç”Ÿæ´»'},
-  {id:'20',title:'æ‹‰ç¥¨',date:'',note:'',done:false,doneDate:null,category:'ç”Ÿæ´»'},
-  {id:'21',title:'å­¦ä¹ è„±å£ç§€',date:'',note:'',done:false,doneDate:null,category:'ç”Ÿæ´»'},
-  {id:'22',title:'ææ–™æ˜Ÿ',date:'',note:'',done:false,doneDate:null,category:'ç”Ÿæ´»'},
-  {id:'23',title:'å°é¾™è™¾',date:'',note:'',done:false,doneDate:null,category:'ç”Ÿæ´»'},
-  {id:'24',title:'æ”¿åºœå·¥ä½œæŠ¥å‘Šé‡ç‚¹å·¥ä½œåˆ†è§£ç»†åŒ–è¿›å±•',date:'',note:'',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'25',title:'ç¬¬å…«è½®å·¡æŸ¥æ•´æ”¹æ–¹æ¡ˆä¿®æ”¹ï¼Œä¸Šå¹³å°',date:'',note:'',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'26',title:'ã€Šç»ˆèº«æˆé•¿ã€‹PPT',date:'',note:'',done:false,doneDate:null,category:'ç”Ÿæ´»'},
-  {id:'27',title:'ä¸ƒç­3ä¸ªæ•…äº‹çº¿ç´¢',date:'',note:'',done:false,doneDate:null,category:'ç”Ÿæ´»'},
-  {id:'28',title:'ç»Ÿæˆ˜å·¥ä½œæŠ¥å‘Š',date:'',note:'',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'29',title:'2025å¹´åº¦æ‹Ÿå®ç°ç›®æ ‡ï¼ˆä¸€å¹´åå›çœ‹ï¼‰',date:'2027-01-01',note:'https://kdocs.cn/l/ciGxqQf7QhgO',done:false,doneDate:null,category:'ç”Ÿæ´»'},
-  {id:'30',title:'æ•…äº‹åŠ›åŠ©æ•™é¢„çº¦ï¼ˆæ›¹å»·å‡¯/ç‰›ç‰›/ç‹çˆ±èŠ³/æ°¸éœï¼‰',date:'',note:'',done:false,doneDate:null,category:'ç”Ÿæ´»'},
-  {id:'31',title:'æ•…äº‹åŠ›é¡¹ç›®æ•´ä½“æ¨è¿›',date:'',note:'æŒç»­å¼€å±•ä¸­',done:false,doneDate:null,category:'ç”Ÿæ´»'},
-  {id:'32',title:'äº†è§£çˆ¸èº«ä½“æƒ…å†µ',date:'',note:'',recurrence:'æ¯å‘¨',done:false,doneDate:null,category:'ç”Ÿæ´»'},
-  {id:'33',title:'å±€é•¿è°ˆè¯ï¼ˆè´ºæ°¸å­˜ï¼‰',date:'2026-04-22',note:'æ¯æœˆ22æ—¥',recurrence:'æ¯æœˆ',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'34',title:'è‚å¤„é•¿æŠ¥å‘Šè¿›åº¦ï¼ˆè´ºå¤„é•¿ï¼‰',date:'',note:'å‘¨ä¸€',recurrence:'æ¯å‘¨',done:false,doneDate:null,category:'å·¥ä½œ'},
-  {id:'35',title:'è°ƒåº¦ç¬¬å…«å·¡å¯Ÿï¼ˆå±€é•¿è°ˆè¯ï¼‰',date:'',note:'',recurrence:'æ¯å‘¨',done:false,doneDate:null,category:'å·¥ä½œ'},
+  {id:'1',title:'»ã×ÜÃñÉúÁìÓòĞÅ·ÃÎÊÌâ±¨¼Í¼ì×é£¨ÖÜÎå12Ê±Ç°£©',date:'2026-04-17',note:'ĞÅ·ÃÀ´Ô´¡¢ÎÊÌâÖ÷ÒªÄÚÈİ¡¢ÊÇ·ñÒÑ½â¾ö¡¢½â¾öÊ±¼ä¡¢Ô¤¼Æ½â¾öÊ±¼ä',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'2',title:'·´À¡ÎÛÅÅ²¿Õû¸Ä¸´ºË»·±£¶½²ì¹¤×÷',date:'2026-04-13',note:'Ğ­Í¬',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'3',title:'Ê¡Î¯Ñ²ÊÓ½øÕ¹·´À¡',date:'2026-04-13',note:'',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'4',title:'Ê×ÄÔ»áÒé',date:'2026-04-16',note:'',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'5',title:'µÚ°ËÂÖ½×¶ÎĞÔÕû¸ÄÒâ¼û£¨ÕÅÇÎ¡¢³Â³½¡¢ÍõÉÜÎ°£©',date:'2026-04-16',note:'',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'6',title:'±¨ËÍ×¡½¨ÏµÍ³½×¶ÎÕû¸Ä',date:'2026-04-16',note:'ÃÏ´óÇ¬ 13940554193£¬µ³Õş¹«ÎÄ£¨3ÔÂ17ÈÕ¼ş£©',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'7',title:'ÓªÉÌ»·¾³½¨Éè¶Ô±ê¸Ä¸ïÈÎÎñÇåµ¥',date:'2026-04-15',note:'2026Äê°æ£¨ÊÔĞĞ£©',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'8',title:'Æß°à³¿¼ä·ÖÏí',date:'2026-04-16',note:'ÖÜËÄ',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'9',title:'¾Ö³¤Ì¸»°£¨ºØÓÀ´æ£©',date:'2026-04-22',note:'Ã¿ÔÂ22ÈÕ',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'10',title:'ËÄ²»Á½Ö±£¬¼ì²éÊ¡Î¯Ñ²ÊÓ',date:'2026-04-23',note:'',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'11',title:'±¨ËÍÕûÖÎ³ÔºÈÈ¦×Ó',date:'2026-04-25',note:'4ÔÂ10ÈÕÊÕ²ÄÁÏ',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'12',title:'Ê×ÄÔ»áÒé',date:'2026-04-28',note:'',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'13',title:'¿ª°à·ÖÏí',date:'2026-04-30',note:'',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'14',title:'¹ÚÖĞ¹Ú·ÖÏí',date:'2026-05-01',note:'',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'15',title:'Ê×ÄÔ»áÒé',date:'2026-05-06',note:'',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'16',title:'Ê¡Î¯µÚ°ËÂÖÑ²²éÕû¸Ä',date:'2026-08-10',note:'',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'17',title:'±¾ºÉ´ó×÷Òµ¸Ä¸å',date:'',note:'',done:false,doneDate:null,category:'Éú»î'},
+  {id:'18',title:'Ë½ĞÅµãÆÀÑ§Ô±',date:'',note:'',done:false,doneDate:null,category:'Éú»î'},
+  {id:'19',title:'´øÌìÁú°Ë²½',date:'',note:'',done:false,doneDate:null,category:'Éú»î'},
+  {id:'20',title:'À­Æ±',date:'',note:'',done:false,doneDate:null,category:'Éú»î'},
+  {id:'21',title:'Ñ§Ï°ÍÑ¿ÚĞã',date:'',note:'',done:false,doneDate:null,category:'Éú»î'},
+  {id:'22',title:'²ÄÁÏĞÇ',date:'',note:'',done:false,doneDate:null,category:'Éú»î'},
+  {id:'23',title:'Ğ¡ÁúÏº',date:'',note:'',done:false,doneDate:null,category:'Éú»î'},
+  {id:'24',title:'Õş¸®¹¤×÷±¨¸æÖØµã¹¤×÷·Ö½âÏ¸»¯½øÕ¹',date:'',note:'',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'25',title:'µÚ°ËÂÖÑ²²éÕû¸Ä·½°¸ĞŞ¸Ä£¬ÉÏÆ½Ì¨',date:'',note:'',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'26',title:'¡¶ÖÕÉí³É³¤¡·PPT',date:'',note:'',done:false,doneDate:null,category:'Éú»î'},
+  {id:'27',title:'Æß°à3¸ö¹ÊÊÂÏßË÷',date:'',note:'',done:false,doneDate:null,category:'Éú»î'},
+  {id:'28',title:'Í³Õ½¹¤×÷±¨¸æ',date:'',note:'',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'29',title:'2025Äê¶ÈÄâÊµÏÖÄ¿±ê£¨Ò»Äêºó»Ø¿´£©',date:'2027-01-01',note:'https://kdocs.cn/l/ciGxqQf7QhgO',done:false,doneDate:null,category:'Éú»î'},
+  {id:'30',title:'¹ÊÊÂÁ¦Öú½ÌÔ¤Ô¼£¨²ÜÍ¢¿­/Å£Å£/Íõ°®·¼/ÓÀÏ¼£©',date:'',note:'',done:false,doneDate:null,category:'Éú»î'},
+  {id:'31',title:'¹ÊÊÂÁ¦ÏîÄ¿ÕûÌåÍÆ½ø',date:'',note:'³ÖĞø¿ªÕ¹ÖĞ',done:false,doneDate:null,category:'Éú»î'},
+  {id:'32',title:'ÁË½â°ÖÉíÌåÇé¿ö',date:'',note:'',recurrence:'Ã¿ÖÜ',done:false,doneDate:null,category:'Éú»î'},
+  {id:'33',title:'¾Ö³¤Ì¸»°£¨ºØÓÀ´æ£©',date:'2026-04-22',note:'Ã¿ÔÂ22ÈÕ',recurrence:'Ã¿ÔÂ',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'34',title:'Äô´¦³¤±¨¸æ½ø¶È£¨ºØ´¦³¤£©',date:'',note:'ÖÜÒ»',recurrence:'Ã¿ÖÜ',done:false,doneDate:null,category:'¹¤×÷'},
+  {id:'35',title:'µ÷¶ÈµÚ°ËÑ²²ì£¨¾Ö³¤Ì¸»°£©',date:'',note:'',recurrence:'Ã¿ÖÜ',done:false,doneDate:null,category:'¹¤×÷'},
 ];
 const DEFAULT_HABITS = [
-  {id:'h1',icon:'ğŸ§˜',name:'å†¥æƒ³',detail:'20åˆ†é’Ÿ',active:false},
-  {id:'h2',icon:'ğŸ“–',name:'é˜…è¯»',detail:'30åˆ†é’Ÿ',active:false},
-  {id:'h3',icon:'ğŸƒ',name:'è¿åŠ¨',detail:'30åˆ†é’Ÿ',active:false},
-  {id:'h4',icon:'âœï¸',name:'å¤ç›˜',detail:'æ¯æ—¥æ€»ç»“',active:false},
+  {id:'h1',icon:'??',name:'Ú¤Ïë',detail:'20·ÖÖÓ',active:false},
+  {id:'h2',icon:'??',name:'ÔÄ¶Á',detail:'30·ÖÖÓ',active:false},
+  {id:'h3',icon:'??',name:'ÔË¶¯',detail:'30·ÖÖÓ',active:false},
+  {id:'h4',icon:'??',name:'¸´ÅÌ',detail:'Ã¿ÈÕ×Ü½á',active:false},
 ];
 
-// ===== åŒæ­¥çŠ¶æ€ =====
+// ===== Í¬²½×´Ì¬ =====
 function updateSyncTime() {
-  // æ•°æ®å˜æ›´æ—¶è§¦å‘äº‘ç«¯è‡ªåŠ¨æ¨é€ï¼ˆé˜²æŠ–ï¼‰
+  // Êı¾İ±ä¸üÊ±´¥·¢ÔÆ¶Ë×Ô¶¯ÍÆËÍ£¨·À¶¶£©
   clearTimeout(_cloudPushTimer);
   _cloudPushTimer = setTimeout(function() { cloudPush(); }, 5000);
 }
@@ -1072,27 +1072,27 @@ function closeSyncModal() {
   document.getElementById('syncModal').classList.remove('show');
 }
 
-// ===== Token è®¾ç½® =====
+// ===== Token ÉèÖÃ =====
 function openTokenModal() {
   var token = localStorage.getItem('xx_github_token') || '';
-  var inp = prompt('è¯·è¾“å…¥ GitHub Tokenï¼ˆClassicç±»å‹ï¼Œéœ€å‹¾é€‰ repo æƒé™ï¼‰ï¼š', token);
+  var inp = prompt('ÇëÊäÈë GitHub Token£¨ClassicÀàĞÍ£¬Ğè¹´Ñ¡ repo È¨ÏŞ£©£º', token);
   if (inp === null) return;
   if (inp.trim()) {
     localStorage.setItem('xx_github_token', inp.trim());
-    alert('âœ… Token å·²ä¿å­˜ï¼\nç°åœ¨å¯ä»¥è‡ªåŠ¨åŒæ­¥äº†ã€‚');
+    alert('? Token ÒÑ±£´æ£¡\nÏÖÔÚ¿ÉÒÔ×Ô¶¯Í¬²½ÁË¡£');
     cloudPush();
   } else {
     localStorage.removeItem('xx_github_token');
-    alert('Token å·²æ¸…é™¤ï¼Œè‡ªåŠ¨æ¨é€å·²å…³é—­ã€‚\nï¼ˆè‡ªåŠ¨æ‹‰å–ä»ç„¶å¯ç”¨ï¼‰');
+    alert('Token ÒÑÇå³ı£¬×Ô¶¯ÍÆËÍÒÑ¹Ø±Õ¡£\n£¨×Ô¶¯À­È¡ÈÔÈ»¿ÉÓÃ£©');
   }
 }
 
-// ===== äº‘ç«¯è‡ªåŠ¨åŒæ­¥ =====
+// ===== ÔÆ¶Ë×Ô¶¯Í¬²½ =====
 var _cloudPushTimer = null;
 var _cloudPushing = false;
 var _cloudLastPush = 0;
 var _cloudDataSha = null;
-var _cloudUpdatedAt = null; // äº‘ç«¯æ•°æ®çš„æ—¶é—´æˆ³
+var _cloudUpdatedAt = null; // ÔÆ¶ËÊı¾İµÄÊ±¼ä´Á
 var CLOUD_REPO = 'rain60s/rain60s.github.io';
 var CLOUD_FILE = 'planner-data.json';
 var CLOUD_API = 'https://api.github.com/repos/' + CLOUD_REPO + '/contents/' + CLOUD_FILE;
@@ -1121,13 +1121,13 @@ function _setSyncStatus(text, color) {
   if (el) { el.textContent = text; if (color) el.style.color = color; }
 }
 
-// ä»äº‘ç«¯æ‹‰å–æ•°æ®ï¼ˆé¡µé¢åŠ è½½æ—¶è‡ªåŠ¨è°ƒç”¨ï¼‰
+// ´ÓÔÆ¶ËÀ­È¡Êı¾İ£¨Ò³Ãæ¼ÓÔØÊ±×Ô¶¯µ÷ÓÃ£©
 function cloudPull() {
-  _setSyncStatus('â˜ï¸ æ­£åœ¨æ‹‰å–äº‘ç«¯æ•°æ®...');
+  _setSyncStatus('?? ÕıÔÚÀ­È¡ÔÆ¶ËÊı¾İ...');
   fetch(CLOUD_API + '?t=' + Date.now(), { headers: _getHeaders(false), cache: 'no-store' })
     .then(function(r) {
       if (r.status === 404) {
-        _setSyncStatus('â˜ï¸ äº‘ç«¯æš‚æ— æ•°æ®ï¼Œå¯æ­£å¸¸ä½¿ç”¨', 'var(--text-dim)');
+        _setSyncStatus('?? ÔÆ¶ËÔİÎŞÊı¾İ£¬¿ÉÕı³£Ê¹ÓÃ', 'var(--text-dim)');
         _cloudDataSha = null;
         _cloudUpdatedAt = null;
         return null;
@@ -1141,10 +1141,10 @@ function cloudPull() {
       _cloudDataSha = data.sha;
       _cloudUpdatedAt = cloud.updatedAt ? new Date(cloud.updatedAt).getTime() : 0;
 
-      // è®°ä½æ‹‰å–æ—¶çš„æœ¬åœ°ä¿®æ”¹æ—¶é—´ï¼Œç”¨äºåç»­åˆ¤æ–­
+      // ¼Ç×¡À­È¡Ê±µÄ±¾µØĞŞ¸ÄÊ±¼ä£¬ÓÃÓÚºóĞøÅĞ¶Ï
       localStorage.setItem('xx_pull_timestamp', String(Date.now()));
 
-      // å¦‚æœæœ¬åœ°æ•°æ®ä¸ºç©ºï¼ˆé¦–æ¬¡ä½¿ç”¨ï¼‰ï¼Œç›´æ¥ç”¨äº‘ç«¯æ•°æ®
+      // Èç¹û±¾µØÊı¾İÎª¿Õ£¨Ê×´ÎÊ¹ÓÃ£©£¬Ö±½ÓÓÃÔÆ¶ËÊı¾İ
       var hasLocalData = localStorage.getItem('xx_tasks_v2') || localStorage.getItem('xx_habits_v2');
       if (!hasLocalData) {
         if (cloud.tasks) saveTasks(cloud.tasks);
@@ -1153,46 +1153,50 @@ function cloudPull() {
         _tasksCache = null; _habitsCache = null;
         localStorage.setItem('xx_local_modified', String(new Date(cloud.updatedAt || 0).getTime()));
         render();
-        _setSyncStatus('â˜ï¸ å·²ä»äº‘ç«¯æ¢å¤æ•°æ®', 'var(--green)');
+        _setSyncStatus('?? ÒÑ´ÓÔÆ¶Ë»Ö¸´Êı¾İ', 'var(--green)');
         return;
       }
 
-      // å¦‚æœæ‹‰å–åæœ¬åœ°æ²¡æœ‰ä¿®æ”¹è¿‡ï¼ˆä¸Šæ¬¡æ‹‰å–åæ²¡æ”¹è¿‡ï¼‰ï¼Œä¸”äº‘ç«¯æ¯”æœ¬åœ°æ–°ï¼Œè‡ªåŠ¨åˆå¹¶
+      // Èç¹ûÀ­È¡ºó±¾µØÃ»ÓĞĞŞ¸Ä¹ı£¨ÉÏ´ÎÀ­È¡ºóÃ»¸Ä¹ı£©£¬ÇÒÔÆ¶Ë±È±¾µØĞÂ£¬×Ô¶¯ºÏ²¢
       var localModifiedStr = localStorage.getItem('xx_local_modified') || '0';
       var localModified = isNaN(Number(localModifiedStr)) ? new Date(localModifiedStr).getTime() : Number(localModifiedStr);
-      // è®°å½•æ‹‰å–å‰çš„æœ¬åœ°ä¿®æ”¹æ—¶é—´
+      // ¼ÇÂ¼À­È¡Ç°µÄ±¾µØĞŞ¸ÄÊ±¼ä
       localStorage.setItem('xx_local_modified_before_pull', String(localModified));
 
       if (_cloudUpdatedAt > localModified) {
         var t = new Date(cloud.updatedAt);
         var timeStr = t.toLocaleString('zh-CN');
-        if (confirm('â˜ï¸ æ£€æµ‹åˆ°äº‘ç«¯æœ‰æ›´æ–°æ•°æ®ï¼ˆ' + timeStr + 'ï¼‰\n\næ˜¯å¦ç”¨äº‘ç«¯æ•°æ®è¦†ç›–æœ¬åœ°ï¼Ÿ\nï¼ˆç‚¹å–æ¶ˆä¿ç•™æœ¬åœ°æ•°æ®ï¼‰')) {
+        if (confirm('?? ¼ì²âµ½ÔÆ¶ËÓĞ¸üĞÂÊı¾İ£¨' + timeStr + '£©\n\nÊÇ·ñÓÃÔÆ¶ËÊı¾İ¸²¸Ç±¾µØ£¿\n£¨µãÈ¡Ïû±£Áô±¾µØÊı¾İ£©')) {
           if (cloud.tasks) saveTasks(cloud.tasks);
           if (cloud.habits) saveHabits(cloud.habits);
           if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
           _tasksCache = null; _habitsCache = null;
           render();
-          _setSyncStatus('â˜ï¸ å·²åŒæ­¥äº‘ç«¯æ•°æ® âœ“', 'var(--green)');
+          _setSyncStatus('?? ÒÑÍ¬²½ÔÆ¶ËÊı¾İ ?', 'var(--green)');
         } else {
-          _setSyncStatus('â˜ï¸ å·²ä¿ç•™æœ¬åœ°æ•°æ®ï¼ˆäº‘ç«¯æ›´æ–°æœªé‡‡çº³ï¼‰', '#e67e22');
+          _setSyncStatus('?? ÒÑ±£Áô±¾µØÊı¾İ£¨ÔÆ¶Ë¸üĞÂÎ´²ÉÄÉ£©', '#e67e22');
         }
       } else {
-        _setSyncStatus('â˜ï¸ å·²è¿æ¥äº‘ç«¯ âœ“', 'var(--green)');
+        _setSyncStatus('?? ÒÑÁ¬½ÓÔÆ¶Ë ?', 'var(--green)');
       }
     })
     .catch(function(e) {
-      _setSyncStatus('â˜ï¸ æ‹‰å–å¤±è´¥: ' + e.message, 'var(--text-dim)');
+      _setSyncStatus('?? À­È¡Ê§°Ü: ' + e.message, 'var(--text-dim)');
     });
 }
 
-// ===== KDocs æ—¥ç”Ÿè®°åŒæ­¥ =====
+// ===== KDocs ÈÕÉú¼ÇÍ¬²½ =====
 var KDOCS_MCP = 'https://mcp-center.wps.cn/skill_hub/mcp';
 var KDOCS_FILE = 'ziiswFhSyrMDDHQvmCk2rx2tcn6gxiPde';
 var KDOCS_SHEET = 6;
+var PROXY_URL = 'http://127.0.0.1:17890/kdocs-mcp';
 
 function _kdocsRow(dateStr) {
   var d = new Date(dateStr);
-  var md = [31,28,31,30,31,30,31,31,30,31,30,31];
+  // ÈòÄêÅĞ¶Ï£ºÄÜ±»4Õû³ıÇÒ²»ÄÜ±»100Õû³ı£¬»òÄÜ±»400Õû³ı
+  var y = d.getFullYear();
+  var isLeap = (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
+  var md = [31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
   var row = 0;
   for (var m = 0; m < d.getMonth(); m++) row += md[m];
   row += d.getDate();
@@ -1200,18 +1204,24 @@ function _kdocsRow(dateStr) {
 }
 
 async function syncToKDocs() {
+  // ¼ì²â´úÀíÊÇ·ñ¿ÉÓÃ
+  if (typeof _kdocsProxyOk !== 'undefined' && !_kdocsProxyOk) {
+    _setSyncStatus('\u26a0\ufe0f ÈÕÉú¼Ç´úÀíÎ´Æô¶¯', '#e67e22');
+    setTimeout(function(){ _setSyncStatus('',''); }, 3000);
+    return;
+  }
   try {
     var log = getDailyLog();
     var key = today();
     var entries = log[key] || [];
     if (!entries.length) return;
-    // è¿ç§»æ—§æ•°æ®
-    entries.forEach(function(e) { if (!e.category) e.category = 'å·¥ä½œ'; });
+    // Ç¨ÒÆ¾ÉÊı¾İ
+    entries.forEach(function(e) { if (!e.category) e.category = '¹¤×÷'; });
 
-    var formatted = entries.map(function(e, i) { return (i+1) + '.' + e.title; }).join('ï¼›') + 'ï¼›';
+    var formatted = entries.map(function(e, i) { return (i+1) + '.' + e.title; }).join('£»') + '£»';
     var row = _kdocsRow(key);
 
-    // è¯»å– tokenï¼ˆä» localStorageï¼Œé¦–æ¬¡ä»æ–‡ä»¶åŠ è½½ï¼‰
+    // ¶ÁÈ¡ token£¨´Ó localStorage£¬Ê×´Î´ÓÎÄ¼ş¼ÓÔØ£©
     var token = localStorage.getItem('xx_kdocs_token');
     if (!token) return;
 
@@ -1223,7 +1233,7 @@ async function syncToKDocs() {
     };
 
     // Step 1: MCP Initialize
-    var r1 = await fetch(KDOCS_MCP, {
+    var r1 = await fetch(PROXY_URL, {
       method: 'POST', headers: hdrs,
       body: JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',
         params:{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'planner-sync',version:'1.0.0'}}})
@@ -1232,13 +1242,13 @@ async function syncToKDocs() {
     if (sid) hdrs['Mcp-Session-Id'] = sid;
 
     // Step 2: initialized notification
-    fetch(KDOCS_MCP, {
+    fetch(PROXY_URL, {
       method: 'POST', headers: hdrs,
       body: JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'})
     }).catch(function(){});
 
     // Step 3: update_range_data
-    var r3 = await fetch(KDOCS_MCP, {
+    var r3 = await fetch(PROXY_URL, {
       method: 'POST', headers: hdrs,
       body: JSON.stringify({jsonrpc:'2.0',id:2,method:'tools/call',
         params:{name:'sheet.update_range_data',arguments:{
@@ -1251,50 +1261,50 @@ async function syncToKDocs() {
     if (res.result && res.result.content && res.result.content[0]) {
       var inner = JSON.parse(res.result.content[0].text);
       if (inner.code === 0) {
-        _setSyncStatus('âœ… å·²åŒæ­¥åˆ°æ—¥ç”Ÿè®°', '#27ae60');
+        _setSyncStatus('\u2705 \u5df2\u540c\u6b65\u5230\u65e5\u751f\u8bb0', '#27ae60');
         setTimeout(function(){ _setSyncStatus('',''); }, 3000);
       } else {
-        _setSyncStatus('âš ï¸ æ—¥ç”Ÿè®°åŒæ­¥å¤±è´¥: ' + (inner.message||''), '#e67e22');
+        _setSyncStatus('\u26a0\ufe0f \u65e5\u751f\u8bb0\u540c\u6b65\u5931\u8d25: ' + (inner.message||''), '#e67e22');
       }
     }
   } catch(e) {
     console.error('KDocs sync error:', e);
-    _setSyncStatus('âš ï¸ æ—¥ç”Ÿè®°åŒæ­¥å¼‚å¸¸', '#e67e22');
+    _setSyncStatus('\u26a0\ufe0f \u65e5\u751f\u8bb0\u540c\u6b65\u5f02\u5e38', '#e67e22');
     setTimeout(function(){ _setSyncStatus('',''); }, 3000);
   }
 }
 
-// æ¨é€æ•°æ®åˆ°äº‘ç«¯ï¼ˆå¸¦å†²çªæ£€æµ‹ï¼‰
+// ÍÆËÍÊı¾İµ½ÔÆ¶Ë£¨´ø³åÍ»¼ì²â£©
 function cloudPush(force) {
   var token = localStorage.getItem('xx_github_token');
   if (!token) {
-    _setSyncStatus('â˜ï¸ æœªè®¾ç½®Tokenï¼Œä»…å¯æ‹‰å–', 'var(--text-dim)');
+    _setSyncStatus('?? Î´ÉèÖÃToken£¬½ö¿ÉÀ­È¡', 'var(--text-dim)');
     return;
   }
   if (_cloudPushing) return;
 
-  // è·å–æœ¬åœ°æœ€åä¿®æ”¹æ—¶é—´
+  // »ñÈ¡±¾µØ×îºóĞŞ¸ÄÊ±¼ä
   var localModifiedStr = localStorage.getItem('xx_local_modified') || '0';
   var localModified = isNaN(Number(localModifiedStr)) ? new Date(localModifiedStr).getTime() : Number(localModifiedStr);
   var lastPushTime = parseInt(localStorage.getItem('xx_last_push') || '0');
 
-  // å¦‚æœæœ¬åœ°æ²¡æœ‰ä¿®æ”¹è¿‡ï¼ˆä»ä¸Šæ¬¡æ‹‰å–åˆ°ç°åœ¨æ²¡æ”¹ï¼‰ï¼Œä¸éœ€è¦æ¨é€
+  // Èç¹û±¾µØÃ»ÓĞĞŞ¸Ä¹ı£¨´ÓÉÏ´ÎÀ­È¡µ½ÏÖÔÚÃ»¸Ä£©£¬²»ĞèÒªÍÆËÍ
   if (!force && localModified <= lastPushTime) {
-    return; // é™é»˜è·³è¿‡
+    return; // ¾²Ä¬Ìø¹ı
   }
 
   _cloudPushing = true;
-  _setSyncStatus('â³ æ­£åœ¨åŒæ­¥åˆ°äº‘ç«¯...');
+  _setSyncStatus('? ÕıÔÚÍ¬²½µ½ÔÆ¶Ë...');
 
-  // å…ˆæ‹‰å–äº‘ç«¯æœ€æ–°æ•°æ®æ£€æŸ¥å†²çª
+  // ÏÈÀ­È¡ÔÆ¶Ë×îĞÂÊı¾İ¼ì²é³åÍ»
   fetch(CLOUD_API + '?t=' + Date.now(), { headers: _getHeaders(true), cache: 'no-store' })
     .then(function(r) {
       if (r.status === 404) return { sha: null, cloudTime: 0 };
-      if (!r.ok) throw new Error('è·å–äº‘ç«¯çŠ¶æ€å¤±è´¥: ' + r.status);
+      if (!r.ok) throw new Error('»ñÈ¡ÔÆ¶Ë×´Ì¬Ê§°Ü: ' + r.status);
       return r.json();
     })
     .then(function(info) {
-      // è§£æäº‘ç«¯æ•°æ®çš„æ—¶é—´æˆ³
+      // ½âÎöÔÆ¶ËÊı¾İµÄÊ±¼ä´Á
       var cloudTime = 0;
       if (info.sha) {
         try {
@@ -1303,14 +1313,14 @@ function cloudPush(force) {
         } catch(e) {}
       }
 
-      // å†²çªæ£€æµ‹ï¼šå¦‚æœäº‘ç«¯æ•°æ®æ¯”æœ¬åœ°æ–°ï¼Œä¸æ¨é€
+      // ³åÍ»¼ì²â£ºÈç¹ûÔÆ¶ËÊı¾İ±È±¾µØĞÂ£¬²»ÍÆËÍ
       if (!force && cloudTime > localModified) {
-        _setSyncStatus('âš ï¸ äº‘ç«¯æœ‰æ›´æ–°ï¼Œè¯·å…ˆç‚¹å‡»ã€Œä»äº‘ç«¯æ›´æ–°ã€æ‹‰å–', '#e67e22');
+        _setSyncStatus('?? ÔÆ¶ËÓĞ¸üĞÂ£¬ÇëÏÈµã»÷¡¸´ÓÔÆ¶Ë¸üĞÂ¡¹À­È¡', '#e67e22');
         _cloudPushing = false;
-        return null; // ä¸­æ–­æ¨é€
+        return null; // ÖĞ¶ÏÍÆËÍ
       }
 
-      // æ­£å¸¸æ¨é€
+      // Õı³£ÍÆËÍ
       var payload = JSON.stringify(_buildCloudData());
       var content = btoa(unescape(encodeURIComponent(payload)));
 
@@ -1328,7 +1338,7 @@ function cloudPush(force) {
     })
     .then(function(r) {
       if (r === null) return null;
-      if (!r.ok) throw new Error('æ¨é€å¤±è´¥: ' + r.status);
+      if (!r.ok) throw new Error('ÍÆËÍÊ§°Ü: ' + r.status);
       return r.json();
     })
     .then(function(result) {
@@ -1337,24 +1347,24 @@ function cloudPush(force) {
       _cloudLastPush = Date.now();
       _cloudUpdatedAt = Date.now();
       localStorage.setItem('xx_last_push', String(_cloudLastPush));
-      _setSyncStatus('â˜ï¸ ' + new Date().toLocaleTimeString('zh-CN') + ' å·²åŒæ­¥ âœ“', 'var(--green)');
+      _setSyncStatus('?? ' + new Date().toLocaleTimeString('zh-CN') + ' ÒÑÍ¬²½ ?', 'var(--green)');
       _cloudPushing = false;
     })
     .catch(function(e) {
-      _setSyncStatus('â˜ï¸ åŒæ­¥å¤±è´¥: ' + e.message, 'var(--red)');
+      _setSyncStatus('?? Í¬²½Ê§°Ü: ' + e.message, 'var(--red)');
       _cloudPushing = false;
     });
 }
 
-// æ‰‹åŠ¨åŒæ­¥æŒ‰é’®ï¼šå…ˆæ‹‰å–å†æ¨é€
+// ÊÖ¶¯Í¬²½°´Å¥£ºÏÈÀ­È¡ÔÙÍÆËÍ
 function cloudSyncNow() {
-  _setSyncStatus('â³ æ­£åœ¨åŒæ­¥...');
+  _setSyncStatus('? ÕıÔÚÍ¬²½...');
   var token = localStorage.getItem('xx_github_token');
-  // æ‹‰å–
+  // À­È¡
   fetch(CLOUD_API + '?t=' + Date.now(), { headers: _getHeaders(false), cache: 'no-store' })
     .then(function(r) {
       if (r.status === 404) return null;
-      if (!r.ok) throw new Error('æ‹‰å–å¤±è´¥: ' + r.status);
+      if (!r.ok) throw new Error('À­È¡Ê§°Ü: ' + r.status);
       return r.json();
     })
     .then(function(data) {
@@ -1363,26 +1373,26 @@ function cloudSyncNow() {
       _cloudDataSha = data.sha;
       _cloudUpdatedAt = cloud.updatedAt ? new Date(cloud.updatedAt).getTime() : 0;
 
-      // ç”¨äº‘ç«¯æ•°æ®è¦†ç›–æœ¬åœ°
+      // ÓÃÔÆ¶ËÊı¾İ¸²¸Ç±¾µØ
       if (cloud.tasks) saveTasks(cloud.tasks);
       if (cloud.habits) saveHabits(cloud.habits);
       if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
       _tasksCache = null; _habitsCache = null;
       localStorage.setItem('xx_local_modified', String(new Date(cloud.updatedAt || 0).getTime()));
       render();
-      _setSyncStatus('â˜ï¸ å·²æ‹‰å–æœ€æ–°æ•°æ® âœ“', 'var(--green)');
+      _setSyncStatus('?? ÒÑÀ­È¡×îĞÂÊı¾İ ?', 'var(--green)');
 
-      // æ‹‰å–æˆåŠŸåä¸éœ€è¦å†æ¨é€ï¼ˆå› ä¸ºå·²ç»æ˜¯æœ€æ–°çš„äº†ï¼‰
+      // À­È¡³É¹¦ºó²»ĞèÒªÔÙÍÆËÍ£¨ÒòÎªÒÑ¾­ÊÇ×îĞÂµÄÁË£©
     })
     .catch(function(e) {
-      _setSyncStatus('â˜ï¸ åŒæ­¥å¤±è´¥: ' + e.message, 'var(--red)');
+      _setSyncStatus('?? Í¬²½Ê§°Ü: ' + e.message, 'var(--red)');
     });
 }
 
-// ===== æ•°æ®ä¹±ç ä¿®å¤ =====
+// ===== Êı¾İÂÒÂëĞŞ¸´ =====
 function _isMojibake(str) {
   if (typeof str !== 'string') return false;
-  // æ£€æµ‹å¸¸è§çš„ UTF-8 è¢«è¯¯è¯»ä¸º Latin1 çš„æ¨¡å¼ï¼šè¿ç»­ 3 ä¸ª U+0080-U+00FF å­—ç¬¦
+  // ¼ì²â³£¼ûµÄ UTF-8 ±»Îó¶ÁÎª Latin1 µÄÄ£Ê½£ºÁ¬Ğø 3 ¸ö U+0080-U+00FF ×Ö·û
   return /[\u00c0-\u00df][\u0080-\u00bf]{2}|[\u00e0-\u00ef][\u0080-\u00bf]{2}/.test(str);
 }
 
@@ -1390,10 +1400,10 @@ function _recoverString(str) {
   if (typeof str !== 'string') return str;
   try {
     var fixed = decodeURIComponent(escape(str));
-    // å¦‚æœä¿®å¤åæ²¡æœ‰ä¹±ç äº†ï¼Œè¿”å›ä¿®å¤åçš„
+    // Èç¹ûĞŞ¸´ºóÃ»ÓĞÂÒÂëÁË£¬·µ»ØĞŞ¸´ºóµÄ
     return _isMojibake(fixed) ? str : fixed;
   } catch(e) {
-    return str; // ä¿®å¤å¤±è´¥ä¿ç•™åŸæ ·
+    return str; // ĞŞ¸´Ê§°Ü±£ÁôÔ­Ñù
   }
 }
 
@@ -1426,11 +1436,11 @@ function autoRecoverData() {
   check(tasks); check(habits); check(dailyLog);
 
   if (hasMojibake) {
-    if (confirm('âš ï¸ æ£€æµ‹åˆ°æ•°æ®å­˜åœ¨ä¹±ç ï¼ˆå¯èƒ½æ˜¯ä¸Šæ¬¡åŒæ­¥å¯¼è‡´ï¼‰\n\næ˜¯å¦è‡ªåŠ¨ä¿®å¤ï¼Ÿ\nï¼ˆä¿®å¤åä¼šåˆ·æ–°é¡µé¢ï¼‰')) {
+    if (confirm('?? ¼ì²âµ½Êı¾İ´æÔÚÂÒÂë£¨¿ÉÄÜÊÇÉÏ´ÎÍ¬²½µ¼ÖÂ£©\n\nÊÇ·ñ×Ô¶¯ĞŞ¸´£¿\n£¨ĞŞ¸´ºó»áË¢ĞÂÒ³Ãæ£©')) {
       saveTasks(_recoverObject(tasks));
       saveHabits(_recoverObject(habits));
       saveDailyLog(_recoverObject(dailyLog));
-      alert('âœ… æ•°æ®å·²ä¿®å¤ï¼Œé¡µé¢å³å°†åˆ·æ–°');
+      alert('? Êı¾İÒÑĞŞ¸´£¬Ò³Ãæ¼´½«Ë¢ĞÂ');
       location.reload();
       return true;
     }
@@ -1438,14 +1448,14 @@ function autoRecoverData() {
   return false;
 }
 
-// é¡µé¢å…³é—­å‰å…œåº•æ¨é€ï¼ˆä»…åœ¨æœ¬åœ°æœ‰ä¿®æ”¹æ—¶ï¼‰
+// Ò³Ãæ¹Ø±ÕÇ°¶µµ×ÍÆËÍ£¨½öÔÚ±¾µØÓĞĞŞ¸ÄÊ±£©
 window.addEventListener('beforeunload', function(e) {
   var token = localStorage.getItem('xx_github_token');
   if (!token) return;
   var localModifiedStr = localStorage.getItem('xx_local_modified') || '0';
   var localModified = isNaN(Number(localModifiedStr)) ? new Date(localModifiedStr).getTime() : Number(localModifiedStr);
   var lastPush = parseInt(localStorage.getItem('xx_last_push') || '0');
-  // æœ¬åœ°æ²¡æ”¹è¿‡å°±ä¸æ¨
+  // ±¾µØÃ»¸Ä¹ı¾Í²»ÍÆ
   if (localModified <= lastPush) return;
 
   var payload = JSON.stringify(_buildCloudData());
@@ -1460,7 +1470,7 @@ window.addEventListener('beforeunload', function(e) {
   }
 });
 
-// ===== å¯¼å‡º/å¯¼å…¥ =====
+// ===== µ¼³ö/µ¼Èë =====
 function doExport() {
   var exportObj = {
     tasks: loadTasks(),
@@ -1472,10 +1482,10 @@ function doExport() {
   const blob = new Blob([JSON.stringify(exportObj, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'ä¸»äººè®¡åˆ’_' + today() + '.json';
+  a.download = 'Ö÷ÈË¼Æ»®_' + today() + '.json';
   a.click();
   var el = document.getElementById('sideSyncInfo');
-  if (el) { el.textContent = 'âœ… å·²å¯¼å‡ºå¤‡ä»½æ–‡ä»¶'; el.style.color = 'var(--green)'; }
+  if (el) { el.textContent = '? ÒÑµ¼³ö±¸·İÎÄ¼ş'; el.style.color = 'var(--green)'; }
   setTimeout(function() { if (el) el.style.color = ''; }, 3000);
 }
 
@@ -1489,8 +1499,8 @@ function importData(ev) {
   r.onload = (e) => {
     try {
       const d = JSON.parse(e.target.result);
-      if (!d.tasks && !d.habits) { alert('æ–‡ä»¶æ ¼å¼æœ‰è¯¯ï¼Œè¯·é€‰æ‹©æ­£ç¡®çš„å¯¼å‡ºæ–‡ä»¶'); return; }
-      var msg = 'å¯¼å…¥åä¼šè¦†ç›–å½“å‰æ‰€æœ‰æ•°æ®ï¼ˆä»»åŠ¡ã€ä¹ æƒ¯ã€å†å²æ—¥å¿—ï¼‰ï¼Œç¡®å®šç»§ç»­å—ï¼Ÿ';
+      if (!d.tasks && !d.habits) { alert('ÎÄ¼ş¸ñÊ½ÓĞÎó£¬ÇëÑ¡ÔñÕıÈ·µÄµ¼³öÎÄ¼ş'); return; }
+      var msg = 'µ¼Èëºó»á¸²¸Çµ±Ç°ËùÓĞÊı¾İ£¨ÈÎÎñ¡¢Ï°¹ß¡¢ÀúÊ·ÈÕÖ¾£©£¬È·¶¨¼ÌĞøÂğ£¿';
       if (!confirm(msg)) return;
       if (d.tasks) saveTasks(d.tasks);
       if (d.habits) saveHabits(d.habits);
@@ -1498,14 +1508,14 @@ function importData(ev) {
       render();
       closeSyncModal();
       var si = document.getElementById('sideSyncInfo');
-      if (si) { si.textContent = 'âœ… å¯¼å…¥æˆåŠŸï¼'; si.style.color = 'var(--green)'; }
+      if (si) { si.textContent = '? µ¼Èë³É¹¦£¡'; si.style.color = 'var(--green)'; }
       setTimeout(function() { if (si) si.style.color = ''; }, 3000);
-    } catch(err) { alert('æ–‡ä»¶æ ¼å¼æœ‰è¯¯ï¼Œè¯·é€‰æ‹©æ­£ç¡®çš„å¯¼å‡ºæ–‡ä»¶'); }
+    } catch(err) { alert('ÎÄ¼ş¸ñÊ½ÓĞÎó£¬ÇëÑ¡ÔñÕıÈ·µÄµ¼³öÎÄ¼ş'); }
   };
   r.readAsText(f); ev.target.value = '';
 }
 
-// ===== å·¥å…·å‡½æ•° =====
+// ===== ¹¤¾ßº¯Êı =====
 function daysDiff(dateStr) {
   if (!dateStr) return Infinity;
   const t = new Date(today()), d = new Date(dateStr);
@@ -1519,15 +1529,15 @@ function endOfWeek() {
 }
 
 function dateTag(task) {
-  if (task.recurrence) return '<span class="task-tag tag-recurring">ğŸ”„ ' + task.recurrence + '</span>';
+  if (task.recurrence) return '<span class="task-tag tag-recurring">?? ' + task.recurrence + '</span>';
   const diff = daysDiff(task.date);
   if (!task.date) return '';
-  if (diff < 0) return '<span class="task-tag tag-overdue">å·²è¿‡æœŸ' + Math.abs(diff) + 'å¤©</span>';
-  if (diff === 0) return '<span class="task-tag tag-today">ä»Šå¤©</span>';
-  if (diff === 1) return '<span class="task-tag tag-tomorrow">æ˜å¤©</span>';
-  if (diff <= 7) return '<span class="task-tag tag-week">' + diff + 'å¤©å</span>';
+  if (diff < 0) return '<span class="task-tag tag-overdue">ÒÑ¹ıÆÚ' + Math.abs(diff) + 'Ìì</span>';
+  if (diff === 0) return '<span class="task-tag tag-today">½ñÌì</span>';
+  if (diff === 1) return '<span class="task-tag tag-tomorrow">Ã÷Ìì</span>';
+  if (diff <= 7) return '<span class="task-tag tag-week">' + diff + 'Ììºó</span>';
   const m = new Date(task.date).getMonth()+1, d = new Date(task.date).getDate();
-  return '<span class="task-tag tag-future">' + m + 'æœˆ' + d + 'æ—¥</span>';
+  return '<span class="task-tag tag-future">' + m + 'ÔÂ' + d + 'ÈÕ</span>';
 }
 
 function tomorrow() {
@@ -1541,7 +1551,7 @@ function categorize(tasks) {
   const r = {urgent:[], tomorrow:[], week:[], later:[], done:[]};
   tasks.forEach(tk => {
     if (tk.done) { r.done.push(tk); return; }
-    if (tk.recurrence === 'æ¯å¤©') {
+    if (tk.recurrence === 'Ã¿Ìì') {
       if (!tk.date || tk.date <= t) { r.urgent.push(tk); return; }
       if (tk.date === tmr) { r.tomorrow.push(tk); return; }
       r.later.push(tk); return;
@@ -1555,7 +1565,7 @@ function categorize(tasks) {
   return r;
 }
 
-// ===== å¯åŠ¨ =====
+// ===== Æô¶¯ =====
 render();
 updateSyncTime();
 renderCalendar();
@@ -1574,14 +1584,14 @@ function renderTask(tk) {
     + noteHtml
     + '</div>'
     + '<div class="task-actions">'
-    + '<button class="task-btn" onclick="editTask(\'' + tk.id + '\')" title="ç¼–è¾‘">âœï¸</button>'
-    + '<button class="task-btn" onclick="deleteTask(\'' + tk.id + '\')" title="åˆ é™¤">ğŸ—‘</button>'
+    + '<button class="task-btn" onclick="editTask(\'' + tk.id + '\')" title="±à¼­">??</button>'
+    + '<button class="task-btn" onclick="deleteTask(\'' + tk.id + '\')" title="É¾³ı">??</button>'
     + '</div></div>';
 }
 
 function renderList(tasks) {
-  if (!tasks.length) return '<div class="empty">âœ¨ æš‚æ— </div>';
-  // æŒ‰ order æ’åºï¼ˆå…ˆ slice é¿å…åŸåœ°ä¿®æ”¹ç¼“å­˜æ•°ç»„ï¼‰
+  if (!tasks.length) return '<div class="empty">? ÔİÎŞ</div>';
+  // °´ order ÅÅĞò£¨ÏÈ slice ±ÜÃâÔ­µØĞŞ¸Ä»º´æÊı×é£©
   return tasks.slice().sort((a,b) => {
     var aHas = a.order != null, bHas = b.order != null;
     if (aHas && bHas) return a.order - b.order;
@@ -1594,7 +1604,7 @@ function renderList(tasks) {
   }).map(renderTask).join('');
 }
 
-// ===== ä¹ æƒ¯æ‹–æ‹½æ’åº =====
+// ===== Ï°¹ßÍÏ×§ÅÅĞò =====
 var dragHabitIdx = null;
 var habitDragged = false;
 function onHabitDragStart(e, idx) {
@@ -1632,10 +1642,10 @@ function onHabitDragEnd(e) {
   });
 }
 
-// ===== ä»»åŠ¡æ‹–æ‹½æ’åº =====
+// ===== ÈÎÎñÍÏ×§ÅÅĞò =====
 var dragTaskId = null;
 var taskDragged = false;
-var dropInsertBefore = true; // dragover æ—¶å®æ—¶è®°å½•æ’å…¥ä½ç½®
+var dropInsertBefore = true; // dragover Ê±ÊµÊ±¼ÇÂ¼²åÈëÎ»ÖÃ
 function onTaskDragStart(e, taskId) {
   dragTaskId = taskId;
   taskDragged = false;
@@ -1666,7 +1676,7 @@ function onTaskDrop(e, targetId) {
   taskDragged = true;
   var srcId = dragTaskId;
   if (!srcId || srcId === targetId) { onTaskDragEnd(e); return; }
-  // æ“ä½œåŸå§‹æ•°ç»„çš„å‰¯æœ¬ï¼Œé¿å…ç¼“å­˜æ±¡æŸ“
+  // ²Ù×÷Ô­Ê¼Êı×éµÄ¸±±¾£¬±ÜÃâ»º´æÎÛÈ¾
   var tasks = JSON.parse(JSON.stringify(loadTasks()));
   var srcIdx = tasks.findIndex(function(t) { return t.id === srcId; });
   var tgtIdx = tasks.findIndex(function(t) { return t.id === targetId; });
@@ -1680,7 +1690,7 @@ function onTaskDrop(e, targetId) {
   }
   tasks.forEach(function(t, idx) { t.order = idx; });
   saveTasks(tasks);
-  _tasksCache = null; // â˜… æ¸…é™¤ç¼“å­˜ï¼Œç¡®ä¿ä¸‹æ¬¡ render ä» localStorage é‡æ–°è¯»å–
+  _tasksCache = null; // ¡ï Çå³ı»º´æ£¬È·±£ÏÂ´Î render ´Ó localStorage ÖØĞÂ¶ÁÈ¡
   onTaskDragEnd(e);
   render();
 }
@@ -1695,48 +1705,48 @@ function onTaskDragEnd(e) {
 function render() {
   const tasks = loadTasks(), habits = loadHabits();
   const now = new Date();
-  const wd = ['æ—¥','ä¸€','äºŒ','ä¸‰','å››','äº”','å…­'];
+  const wd = ['ÈÕ','Ò»','¶ş','Èı','ËÄ','Îå','Áù'];
   document.getElementById('headerDate').textContent =
-    now.getFullYear() + 'å¹´' + (now.getMonth()+1) + 'æœˆ' + now.getDate() + 'æ—¥ æ˜ŸæœŸ' + wd[now.getDay()];
+    now.getFullYear() + 'Äê' + (now.getMonth()+1) + 'ÔÂ' + now.getDate() + 'ÈÕ ĞÇÆÚ' + wd[now.getDay()];
 
   // Habits
   const active = habits.filter(h=>h.active).length;
   document.getElementById('sideHabitProgress').innerHTML =
-    active ? active + '/' + habits.length + ' âœ¨ Â· <span style="cursor:pointer;text-decoration:underline;font-size:13px;" onclick="openHabitModal()" title="ç®¡ç†ä¹ æƒ¯">âš™ï¸ ç®¡ç†</span>' : '0/' + habits.length + ' Â· <span style="cursor:pointer;text-decoration:underline;font-size:13px;" onclick="openHabitModal()" title="ç®¡ç†ä¹ æƒ¯">âš™ï¸ ç®¡ç†</span>';
+    active ? active + '/' + habits.length + ' ? ¡¤ <span style="cursor:pointer;text-decoration:underline;font-size:13px;" onclick="openHabitModal()" title="¹ÜÀíÏ°¹ß">?? ¹ÜÀí</span>' : '0/' + habits.length + ' ¡¤ <span style="cursor:pointer;text-decoration:underline;font-size:13px;" onclick="openHabitModal()" title="¹ÜÀíÏ°¹ß">?? ¹ÜÀí</span>';
   const chips = habits.map(function(h, idx) {
     return '<div class="side-habit-chip ' + (h.active?'active':'') + '" draggable="true" data-idx="' + idx + '" ondragstart="onHabitDragStart(event,' + idx + ')" ondragover="onHabitDragOver(event,this)" ondragleave="onHabitDragLeave(event,this)" ondrop="onHabitDrop(event,' + idx + ')" ondragend="onHabitDragEnd(event)" onclick="toggleHabit(\'' + h.id + '\')">' + h.icon + ' ' + esc(h.name) + '</div>'
   }).join('');
-  document.getElementById('sideHabitList').innerHTML = chips || '<span style="font-size:13px;color:var(--text-dim);">æš‚æ— ï¼Œç‚¹å‡»âš™ï¸æ·»åŠ </span>';
+  document.getElementById('sideHabitList').innerHTML = chips || '<span style="font-size:13px;color:var(--text-dim);">ÔİÎŞ£¬µã»÷??Ìí¼Ó</span>';
 
   // Filter bar
-  var filterHtml = '<button class="filter-btn ' + (_activeFilter==='å…¨éƒ¨'?'active':'') + '" onclick="setFilter(\'å…¨éƒ¨\')">å…¨éƒ¨ ' + tasks.length + '</button>';
+  var filterHtml = '<button class="filter-btn ' + (_activeFilter==='È«²¿'?'active':'') + '" onclick="setFilter(\'È«²¿\')">È«²¿ ' + tasks.length + '</button>';
   CATEGORIES.forEach(function(c) {
     var cnt = tasks.filter(function(t) { return t.category === c; }).length;
     filterHtml += '<button class="filter-btn ' + (_activeFilter===c?'active':'') + '" onclick="setFilter(\'' + c + '\')">' + c + ' ' + cnt + '</button>';
   });
   document.getElementById('filterBar').innerHTML = filterHtml;
 
-  // Tasks - æŒ‰åˆ†ç±»ç­›é€‰
+  // Tasks - °´·ÖÀàÉ¸Ñ¡
   var filteredTasks = tasks;
-  if (_activeFilter !== 'å…¨éƒ¨') {
+  if (_activeFilter !== 'È«²¿') {
     filteredTasks = tasks.filter(function(t) { return t.category === _activeFilter; });
   }
   var cat = categorize(filteredTasks);
   var todaySections = [
-    { title: 'ğŸ”´ ä»Šå¤©', tasks: cat.urgent },
-    { title: 'ğŸŸ¡ æœ¬å‘¨', tasks: cat.week },
-    { title: 'ğŸ”µ ä»¥åå†è¯´', tasks: cat.later },
-    { title: 'âœ… å·²å®Œæˆ', tasks: cat.done },
+    { title: '?? ½ñÌì', tasks: cat.urgent },
+    { title: '?? ±¾ÖÜ', tasks: cat.week },
+    { title: '?? ÒÔºóÔÙËµ', tasks: cat.later },
+    { title: '? ÒÑÍê³É', tasks: cat.done },
   ];
   var logEntries = (getDailyLog()[today()] || []).length;
 
   // Render today sections (center)
   document.getElementById('taskSections').innerHTML = todaySections.map(function(s) {
-    if (s.title === 'âœ… å·²å®Œæˆ' && !s.tasks.length && !logEntries) return '';
-    if (s.title === 'âœ… å·²å®Œæˆ') {
+    if (s.title === '? ÒÑÍê³É' && !s.tasks.length && !logEntries) return '';
+    if (s.title === '? ÒÑÍê³É') {
       return '<div class="section">'
         + '<div class="section-title">'
-        + '<span>âœ… å·²å®Œæˆ <span style="font-weight:400;color:var(--text-dim)">' + s.tasks.length + '</span></span>'
+        + '<span>? ÒÑÍê³É <span style="font-weight:400;color:var(--text-dim)">' + s.tasks.length + '</span></span>'
         + '</div>'
         + (s.tasks.length ? '<div>' + renderList(s.tasks) + '</div>' : '')
         + '</div>';
@@ -1748,13 +1758,13 @@ function render() {
 
   // Render tomorrow (right)
   var tmrHtml = '<div class="section">'
-    + '<div class="section-title">ğŸŸ  æ˜å¤© <span style="font-weight:400;color:var(--text-dim)">' + cat.tomorrow.length + '</span></div>'
+    + '<div class="section-title">?? Ã÷Ìì <span style="font-weight:400;color:var(--text-dim)">' + cat.tomorrow.length + '</span></div>'
     + '<div>' + renderList(cat.tomorrow) + '</div></div>';
   document.getElementById('tomorrowSection').innerHTML = tmrHtml;
 
   // Calendar
   try { renderCalendar(); } catch(e) {
-    document.getElementById('calendar').innerHTML = '<div style="padding:8px;font-size:11px;color:var(--red);">âš ï¸ ' + e.message + '</div>';
+    document.getElementById('calendar').innerHTML = '<div style="padding:8px;font-size:11px;color:var(--red);">?? ' + e.message + '</div>';
   }
 }
 
@@ -1767,33 +1777,33 @@ function addLogEntry(title, category) {
   const log = getDailyLog();
   const key = today();
   if (!log[key]) log[key] = [];
-  log[key].push({ title: title, category: category || 'å·¥ä½œ' });
+  log[key].push({ title: title, category: category || '¹¤×÷' });
   saveDailyLog(log);
 }
 function copyDailyLog() {
   const log = getDailyLog();
   const key = today();
   const entries = log[key] || [];
-  if (!entries.length) { alert('ä»Šå¤©è¿˜æ²¡æœ‰å®Œæˆä»»ä½•ä»»åŠ¡ï½'); return; }
-  // æ•°æ®è¿ç§»
-  entries.forEach(function(e) { if (!e.category) e.category = 'å·¥ä½œ'; });
-  var workEntries = entries.filter(function(e) { return e.category === 'å·¥ä½œ'; });
-  var lifeEntries = entries.filter(function(e) { return e.category !== 'å·¥ä½œ'; });
+  if (!entries.length) { alert('½ñÌì»¹Ã»ÓĞÍê³ÉÈÎºÎÈÎÎñ¡«'); return; }
+  // Êı¾İÇ¨ÒÆ
+  entries.forEach(function(e) { if (!e.category) e.category = '¹¤×÷'; });
+  var workEntries = entries.filter(function(e) { return e.category === '¹¤×÷'; });
+  var lifeEntries = entries.filter(function(e) { return e.category !== '¹¤×÷'; });
 
-  var lines = ['ğŸ“‹ ' + key + ' ä»Šæ—¥å®Œæˆï¼ˆå…± ' + entries.length + ' é¡¹ï¼‰', ''];
+  var lines = ['?? ' + key + ' ½ñÈÕÍê³É£¨¹² ' + entries.length + ' Ïî£©', ''];
   if (workEntries.length) {
-    lines.push('ğŸŸ¦ å·¥ä½œ');
+    lines.push('?? ¹¤×÷');
     workEntries.forEach(function(e, idx) { lines.push(idx + 1 + '. ' + e.title); });
     lines.push('');
   }
   if (lifeEntries.length) {
-    lines.push('ğŸŸ© ç”Ÿæ´»');
+    lines.push('?? Éú»î');
     lifeEntries.forEach(function(e, idx) { lines.push(idx + 1 + '. ' + e.title); });
   }
   const text = lines.join('\n');
   var btn = document.getElementById('sideCopyBtn');
   function showFeedback() {
-    if (btn) { btn.textContent = 'âœ… å·²å¤åˆ¶ï¼'; setTimeout(function(){ btn.textContent = 'ğŸ“‹ å¤åˆ¶æ¸…å•'; }, 1500); }
+    if (btn) { btn.textContent = '? ÒÑ¸´ÖÆ£¡'; setTimeout(function(){ btn.textContent = '?? ¸´ÖÆÇåµ¥'; }, 1500); }
   }
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(showFeedback);
@@ -1805,7 +1815,7 @@ function copyDailyLog() {
   }
 }
 
-// ===== å†å²æ—¥å¿—å¼¹çª— =====
+// ===== ÀúÊ·ÈÕÖ¾µ¯´° =====
 var _logViewYear = 0, _logViewMonth = 0;
 
 function openLogModal() {
@@ -1830,12 +1840,12 @@ function logNavMonth(delta) {
 function renderLogModal() {
   var log = getDailyLog();
   var ym = _logViewYear + '-' + String(_logViewMonth).padStart(2,'0');
-  document.getElementById('logMonthLabel').textContent = _logViewYear + 'å¹´' + _logViewMonth + 'æœˆ';
+  document.getElementById('logMonthLabel').textContent = _logViewYear + 'Äê' + _logViewMonth + 'ÔÂ';
 
   var dayKeys = Object.keys(log).filter(function(k){ return k.startsWith(ym); }).sort().reverse();
 
   if (!dayKeys.length) {
-    document.getElementById('logModalContent').innerHTML = '<div class="log-empty">æœ¬æœˆæš‚æ— å®Œæˆè®°å½•</div>';
+    document.getElementById('logModalContent').innerHTML = '<div class="log-empty">±¾ÔÂÔİÎŞÍê³É¼ÇÂ¼</div>';
     document.getElementById('logCopyMonthBtn').style.display = 'none';
     return;
   }
@@ -1845,22 +1855,22 @@ function renderLogModal() {
   dayKeys.forEach(function(dateKey) {
     var entries = log[dateKey];
     if (!entries || !entries.length) return;
-    // æ•°æ®è¿ç§»ï¼šç»™æ²¡æœ‰ category çš„æ¡ç›®è¡¥ä¸Š"å·¥ä½œ"
-    entries.forEach(function(e) { if (!e.category) e.category = 'å·¥ä½œ'; });
+    // Êı¾İÇ¨ÒÆ£º¸øÃ»ÓĞ category µÄÌõÄ¿²¹ÉÏ"¹¤×÷"
+    entries.forEach(function(e) { if (!e.category) e.category = '¹¤×÷'; });
     var d = new Date(dateKey);
-    var wd = ['æ—¥','ä¸€','äºŒ','ä¸‰','å››','äº”','å…­'];
-    var dayLabel = dateKey + ' æ˜ŸæœŸ' + wd[d.getDay()] + 'ï¼ˆ' + entries.length + 'é¡¹ï¼‰';
+    var wd = ['ÈÕ','Ò»','¶ş','Èı','ËÄ','Îå','Áù'];
+    var dayLabel = dateKey + ' ĞÇÆÚ' + wd[d.getDay()] + '£¨' + entries.length + 'Ïî£©';
 
-    // æŒ‰åˆ†ç±»åˆ†ç»„
-    var workEntries = entries.filter(function(e) { return e.category === 'å·¥ä½œ'; });
-    var lifeEntries = entries.filter(function(e) { return e.category !== 'å·¥ä½œ'; });
+    // °´·ÖÀà·Ö×é
+    var workEntries = entries.filter(function(e) { return e.category === '¹¤×÷'; });
+    var lifeEntries = entries.filter(function(e) { return e.category !== '¹¤×÷'; });
 
     html += '<div class="log-day-block">';
     html += '<div class="log-day-title">' + dayLabel + '</div>';
 
-    // å·¥ä½œåŒº
+    // ¹¤×÷Çø
     if (workEntries.length) {
-      html += '<div style="font-size:12px;font-weight:600;color:var(--blue);margin:8px 0 4px;padding-left:2px;">ğŸŸ¦ å·¥ä½œ</div>';
+      html += '<div style="font-size:12px;font-weight:600;color:var(--blue);margin:8px 0 4px;padding-left:2px;">?? ¹¤×÷</div>';
       workEntries.forEach(function(e, idx) {
         html += '<div class="log-entry">'
           + '<span class="log-entry-time">' + (idx + 1) + '</span>'
@@ -1869,9 +1879,9 @@ function renderLogModal() {
       });
     }
 
-    // ç”Ÿæ´»åŒº
+    // Éú»îÇø
     if (lifeEntries.length) {
-      html += '<div style="font-size:12px;font-weight:600;color:var(--green);margin:8px 0 4px;padding-left:2px;">ğŸŸ© ç”Ÿæ´»</div>';
+      html += '<div style="font-size:12px;font-weight:600;color:var(--green);margin:8px 0 4px;padding-left:2px;">?? Éú»î</div>';
       lifeEntries.forEach(function(e, idx) {
         html += '<div class="log-entry">'
           + '<span class="log-entry-time">' + (idx + 1) + '</span>'
@@ -1889,43 +1899,43 @@ function copyMonthLog() {
   var log = getDailyLog();
   var ym = _logViewYear + '-' + String(_logViewMonth).padStart(2,'0');
   var dayKeys = Object.keys(log).filter(function(k){ return k.startsWith(ym); }).sort();
-  if (!dayKeys.length) { alert('æœ¬æœˆæš‚æ— è®°å½•'); return; }
+  if (!dayKeys.length) { alert('±¾ÔÂÔİÎŞ¼ÇÂ¼'); return; }
 
   var total = 0;
-  var lines = ['ğŸ“– ' + _logViewYear + 'å¹´' + _logViewMonth + 'æœˆ å®Œæˆè®°å½•', ''];
+  var lines = ['?? ' + _logViewYear + 'Äê' + _logViewMonth + 'ÔÂ Íê³É¼ÇÂ¼', ''];
   dayKeys.forEach(function(dateKey) {
     var entries = log[dateKey];
     if (!entries || !entries.length) return;
-    // æ•°æ®è¿ç§»
-    entries.forEach(function(e) { if (!e.category) e.category = 'å·¥ä½œ'; });
-    lines.push('â”€â”€ ' + dateKey + ' â”€â”€');
+    // Êı¾İÇ¨ÒÆ
+    entries.forEach(function(e) { if (!e.category) e.category = '¹¤×÷'; });
+    lines.push('©¤©¤ ' + dateKey + ' ©¤©¤');
 
-    var workEntries = entries.filter(function(e) { return e.category === 'å·¥ä½œ'; });
-    var lifeEntries = entries.filter(function(e) { return e.category !== 'å·¥ä½œ'; });
+    var workEntries = entries.filter(function(e) { return e.category === '¹¤×÷'; });
+    var lifeEntries = entries.filter(function(e) { return e.category !== '¹¤×÷'; });
 
     if (workEntries.length) {
-      lines.push('ğŸŸ¦ å·¥ä½œ');
+      lines.push('?? ¹¤×÷');
       workEntries.forEach(function(e, idx) { lines.push(idx + 1 + '. ' + e.title); total++; });
     }
     if (lifeEntries.length) {
-      lines.push('ğŸŸ© ç”Ÿæ´»');
+      lines.push('?? Éú»î');
       lifeEntries.forEach(function(e, idx) { lines.push(idx + 1 + '. ' + e.title); total++; });
     }
     lines.push('');
   });
-  lines.push('å…±å®Œæˆ ' + total + ' é¡¹');
+  lines.push('¹²Íê³É ' + total + ' Ïî');
   var text = lines.join('\n');
 
   var btn = document.getElementById('logCopyMonthBtn');
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(function() {
-      if (btn) { btn.textContent = 'âœ… å·²å¤åˆ¶ï¼'; setTimeout(function(){ btn.textContent = 'ğŸ“‹ å¤åˆ¶æœ¬æœˆå…¨éƒ¨è®°å½•'; }, 1500); }
+      if (btn) { btn.textContent = '? ÒÑ¸´ÖÆ£¡'; setTimeout(function(){ btn.textContent = '?? ¸´ÖÆ±¾ÔÂÈ«²¿¼ÇÂ¼'; }, 1500); }
     });
   } else {
     var ta = document.createElement('textarea');
     ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
     document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-    if (btn) { btn.textContent = 'âœ… å·²å¤åˆ¶ï¼'; setTimeout(function(){ btn.textContent = 'ğŸ“‹ å¤åˆ¶æœ¬æœˆå…¨éƒ¨è®°å½•'; }, 1500); }
+    if (btn) { btn.textContent = '? ÒÑ¸´ÖÆ£¡'; setTimeout(function(){ btn.textContent = '?? ¸´ÖÆ±¾ÔÂÈ«²¿¼ÇÂ¼'; }, 1500); }
   }
 }
 
@@ -1939,11 +1949,11 @@ function toggleTask(id) {
   if (t.done) syncToKDocs();
   if (t.done && t.recurrence && t.date) {
     const dt = new Date(t.date);
-    if (t.recurrence === 'æ¯å¤©') dt.setDate(dt.getDate()+1);
-    else if (t.recurrence === 'æ¯å‘¨') dt.setDate(dt.getDate()+7);
-    else if (t.recurrence === 'æ¯æœˆ') dt.setMonth(dt.getMonth()+1);
-    else if (t.recurrence === 'æ¯å­£') dt.setMonth(dt.getMonth()+3);
-    else if (t.recurrence === 'æ¯å¹´') dt.setFullYear(dt.getFullYear()+1);
+    if (t.recurrence === 'Ã¿Ìì') dt.setDate(dt.getDate()+1);
+    else if (t.recurrence === 'Ã¿ÖÜ') dt.setDate(dt.getDate()+7);
+    else if (t.recurrence === 'Ã¿ÔÂ') dt.setMonth(dt.getMonth()+1);
+    else if (t.recurrence === 'Ã¿¼¾') dt.setMonth(dt.getMonth()+3);
+    else if (t.recurrence === 'Ã¿Äê') dt.setFullYear(dt.getFullYear()+1);
     t.date = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
     t.done = false;
     t.doneDate = null;
@@ -1959,11 +1969,11 @@ function deleteTask(id) {
 function editTask(id) {
   const t = loadTasks().find(x=>x.id===id);
   if (!t) return;
-  document.getElementById('modalTitle').textContent = 'ç¼–è¾‘';
+  document.getElementById('modalTitle').textContent = '±à¼­';
   document.getElementById('editId').value = id;
   document.getElementById('taskTitle').value = t.title;
   document.getElementById('taskDate').value = t.date||'';
-  pickCategory(t.category||'å·¥ä½œ');
+  pickCategory(t.category||'¹¤×÷');
   document.getElementById('taskRecurrence').value = t.recurrence||'';
   document.getElementById('taskNote').value = t.note||'';
   document.getElementById('modal').classList.add('show');
@@ -1971,11 +1981,11 @@ function editTask(id) {
 }
 
 function openModal() {
-  document.getElementById('modalTitle').textContent = 'æ·»åŠ ä»»åŠ¡';
+  document.getElementById('modalTitle').textContent = 'Ìí¼ÓÈÎÎñ';
   document.getElementById('editId').value = '';
   document.getElementById('taskTitle').value = '';
   document.getElementById('taskDate').value = today();
-  pickCategory('å·¥ä½œ');
+  pickCategory('¹¤×÷');
   document.getElementById('taskNote').value = '';
   document.getElementById('taskRecurrence').value = '';
   document.getElementById('modal').classList.add('show');
@@ -2027,21 +2037,21 @@ function closeHabitModal() {
 }
 
 function renderHabitModal() {
-  const icons = ['ğŸ§˜','ğŸ“–','ğŸƒ','âœï¸','ğŸ’¤','ğŸ’§','ğŸ§¹','ğŸ','ğŸµ','ğŸ’¡','ğŸ“','ğŸ§˜â€â™€ï¸','ğŸš´','ğŸŠ','ğŸ¨','ğŸŒ¿','ğŸ’Š','âœ¨'];
+  const icons = ['??','??','??','??','??','??','??','??','??','??','??','???¡â?','??','??','??','??','??','?'];
   let html = '';
-  html += '<div style="font-size:12px;color:var(--text-dim);margin:10px 0 6px;font-weight:600;">ğŸ“Œ å›ºå®šä¹ æƒ¯</div>';
+  html += '<div style="font-size:12px;color:var(--text-dim);margin:10px 0 6px;font-weight:600;">?? ¹Ì¶¨Ï°¹ß</div>';
   html += tempHabits.map((h, i) =>
     '<div class="habit-row" data-idx="' + i + '">'
     + '<div class="habit-row-icon"><select onchange="tempHabits[' + i + '].icon=this.value;renderHabitModal()" style="font-size:18px;border:none;background:none;cursor:pointer;outline:none;">'
     + icons.map(ic => '<option value="' + ic + '"' + (h.icon===ic?' selected':'') + '>' + ic + '</option>').join('')
     + '</select></div>'
     + '<div class="habit-row-info">'
-    + '<input type="text" value="' + esc(h.name) + '" onchange="tempHabits[' + i + '].name=this.value" placeholder="ä¹ æƒ¯åç§°" style="font-size:15px;border:none;background:none;outline:none;width:100%;padding:2px 0;">'
-    + '<input type="text" value="' + esc(h.detail||'') + '" onchange="tempHabits[' + i + '].detail=this.value" placeholder="è¡¥å……è¯´æ˜" style="font-size:12px;color:var(--text-dim);border:none;background:none;outline:none;width:100%;padding:2px 0;">'
+    + '<input type="text" value="' + esc(h.name) + '" onchange="tempHabits[' + i + '].name=this.value" placeholder="Ï°¹ßÃû³Æ" style="font-size:15px;border:none;background:none;outline:none;width:100%;padding:2px 0;">'
+    + '<input type="text" value="' + esc(h.detail||'') + '" onchange="tempHabits[' + i + '].detail=this.value" placeholder="²¹³äËµÃ÷" style="font-size:12px;color:var(--text-dim);border:none;background:none;outline:none;width:100%;padding:2px 0;">'
     + '</div>'
-    + '<button class="habit-row-del" onclick="tempHabits.splice(' + i + ',1);renderHabitModal()" title="åˆ é™¤">ğŸ—‘</button></div>'
+    + '<button class="habit-row-del" onclick="tempHabits.splice(' + i + ',1);renderHabitModal()" title="É¾³ı">??</button></div>'
   ).join('');
-  html += '<button class="btn-add" onclick="tempHabits.push({id:\'h\'+Date.now(),icon:\'âœ¨\',name:\'\',detail:\'\',active:false});renderHabitModal()">ï¼‹ æ·»åŠ å›ºå®šä¹ æƒ¯</button>';
+  html += '<button class="btn-add" onclick="tempHabits.push({id:\'h\'+Date.now(),icon:\'?\',name:\'\',detail:\'\',active:false});renderHabitModal()">£« Ìí¼Ó¹Ì¶¨Ï°¹ß</button>';
 
   document.getElementById('habitModalList').innerHTML = html;
 }
@@ -2062,14 +2072,26 @@ document.addEventListener('keydown', e => {
   if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) openModal();
 });
 render();
-// å…ˆæ£€æµ‹ä¿®å¤æœ¬åœ°ä¹±ç ï¼Œå†æ‹‰å–äº‘ç«¯
+// ÏÈ¼ì²âĞŞ¸´±¾µØÂÒÂë£¬ÔÙÀ­È¡ÔÆ¶Ë
 if (!autoRecoverData()) {
-  cloudPull(); // é¡µé¢åŠ è½½æ—¶è‡ªåŠ¨æ‹‰å–äº‘ç«¯æ•°æ®
+  cloudPull(); // Ò³Ãæ¼ÓÔØÊ±×Ô¶¯À­È¡ÔÆ¶ËÊı¾İ
 }
-// KDocs åŒæ­¥ tokenï¼šé¦–æ¬¡ç”±å¤–éƒ¨æ³¨å…¥ï¼Œä¹‹åä» localStorage è¯»å–
+// KDocs Í¬²½ token£ºÊ×´ÎÓÉÍâ²¿×¢Èë£¬Ö®ºó´Ó localStorage ¶ÁÈ¡
 if (!localStorage.getItem('xx_kdocs_token')) {
   localStorage.setItem('xx_kdocs_token', 'qBLaNcb+yCOCGH4/w5lvk5H4JpsD3ROsCZLOy+vpguqdzMoTBrPaPCradYsl5HMm2xDyuJGtPWf0PvUbuBWhQh7CRzdLSCwc1rObccD8hudJcyV79C1uCMPp2pSt6nplytsaE2g76fT1iAwQWJSIMR/2FWg3QeJ/pHhXdfNrpM/Ik3IuTE2uc/Oz6CvqJKAb666vu1ie6Qu4GHStvg==');
 }
+
+// ¼ì²â KDocs ´úÀíÊÇ·ñÔÚÔËĞĞ
+fetch('http://127.0.0.1:17890/kdocs-mcp', {method:'POST',headers:{'Content-Type':'application/json'},body:'{"jsonrpc":"2.0","id":-1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ping","version":"1.0"}}}'})
+  .then(function(r){ return r.json(); })
+  .then(function(){
+    console.log('KDocs proxy: OK');
+    _kdocsProxyOk = true;
+  })
+  .catch(function(){
+    console.warn('KDocs proxy: Î´ÔËĞĞ£¬ÈÕÉú¼ÇÍ¬²½²»¿ÉÓÃ');
+    _kdocsProxyOk = false;
+  });
 </script>
 </body>
 </html>
