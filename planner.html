@@ -1258,12 +1258,18 @@ function cloudPush(force) {
       _cloudLastPush = Date.now();
       _cloudUpdatedAt = Date.now();
       localStorage.setItem('xx_last_push', String(_cloudLastPush));
-      _setSyncStatus('☁️ ' + new Date().toLocaleTimeString('zh-CN') + ' 已同步 ✓', 'var(--green)');
+      _setSyncStatus('✅ ' + new Date().toLocaleTimeString('zh-CN') + ' 已上传成功 ✓', 'var(--green)');
       _cloudPushing = false;
     })
     .catch(function(e) {
-      _setSyncStatus('☁️ 同步失败: ' + e.message, 'var(--red)');
       _cloudPushing = false;
+      _setSyncStatus('❌ 上传失败！网络可能不通，下次联网后点「同步」重试', 'var(--red)');
+      // 3秒后恢复提示
+      setTimeout(function() {
+        if (document.getElementById('cloudSyncStatus') && document.getElementById('cloudSyncStatus').textContent.indexOf('上传失败') !== -1) {
+          _setSyncStatus('⚠️ 有未上传的修改，联网后请点「同步」', '#e67e22');
+        }
+      }, 5000);
     });
 }
 
@@ -1296,7 +1302,13 @@ function cloudSyncNow() {
       // 拉取成功后不需要再推送（因为已经是最新的了）
     })
     .catch(function(e) {
-      _setSyncStatus('☁️ 同步失败: ' + e.message, 'var(--red)');
+      _setSyncStatus('❌ 同步失败！网络可能不通，下次联网后点「同步」重试', 'var(--red)');
+      // 5秒后恢复提示
+      setTimeout(function() {
+        if (document.getElementById('cloudSyncStatus') && document.getElementById('cloudSyncStatus').textContent.indexOf('同步失败') !== -1) {
+          _setSyncStatus('⚠️ 有未同步的修改，联网后请点「同步」', '#e67e22');
+        }
+      }, 5000);
     });
 }
 
