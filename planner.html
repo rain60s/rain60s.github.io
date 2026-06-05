@@ -1696,6 +1696,13 @@ function getDailyLog() {
   try { return JSON.parse(localStorage.getItem('xx_daily_log_v1') || '{}'); } catch(e) { return {}; }
 }
 function saveDailyLog(log) { localStorage.setItem('xx_daily_log_v1', JSON.stringify(log)); localStorage.setItem('xx_local_modified', String(Date.now())); updateSyncTime(); }
+function removeLogEntry(title, dateKey) {
+  const log = getDailyLog();
+  const key = dateKey || today();
+  if (!log[key]) return;
+  const idx = log[key].findIndex(function(e) { return e.title === title; });
+  if (idx !== -1) { log[key].splice(idx, 1); if (!log[key].length) delete log[key]; saveDailyLog(log); }
+}
 function addLogEntry(title, category) {
   const log = getDailyLog();
   const key = today();
@@ -1869,6 +1876,7 @@ function toggleTask(id) {
   t.done = !t.done;
   t.doneDate = t.done ? today() : null;
   if (t.done) addLogEntry(t.title, t.category);
+  else removeLogEntry(t.title, t.doneDate || today());
   if (t.done && t.recurrence && t.date) {
     const dt = new Date(t.date);
     if (t.recurrence === '每天') dt.setDate(dt.getDate()+1);
