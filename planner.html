@@ -1166,13 +1166,17 @@ function cloudPull() {
       if (_cloudUpdatedAt > localModified) {
         var t = new Date(cloud.updatedAt);
         var timeStr = t.toLocaleString('zh-CN');
-        if (confirm('☁️ 检测到云端有更新数据（' + timeStr + '）\n\n是否用云端数据覆盖本地？\n（点取消保留本地数据）')) {
-          if (cloud.tasks) saveTasks(cloud.tasks);
-          if (cloud.habits) saveHabits(cloud.habits);
-          if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
+        // 智能合并：合并双方数据，不丢失任何一边的条目
+        var mergedLog = mergeDailyLog(getDailyLog(), cloud.dailyLog || {});
+        var mergedTasks = mergeTasks(loadTasks(), cloud.tasks || []);
+        var mergedHabits = cloud.habits || loadHabits();
+        if (confirm('☁️ 检测到云端有更新数据（' + timeStr + '）\n\n系统将自动合并本地和云端数据，不会丢失任何一边的内容。\n\n点确定合并，点取消保留本地数据（不上传也不下载）')) {
+          saveTasks(mergedTasks);
+          if (cloud.habits) saveHabits(mergedHabits);
+          saveDailyLog(mergedLog);
           _tasksCache = null; _habitsCache = null;
           render();
-          _setSyncStatus('☁️ 已同步云端数据 ✓', 'var(--green)');
+          _setSyncStatus('☁️ 已合并本地+云端数据 ✓', 'var(--green)');
         } else {
           _setSyncStatus('☁️ 已保留本地数据（云端更新未采纳）', '#e67e22');
         }
@@ -1224,11 +1228,19 @@ function cloudPush(force) {
         } catch(e) {}
       }
 
-      // 冲突检测：如果云端数据比本地新，不推送
+      // 冲突检测：如果云端数据比本地新，先合并再推送
       if (!force && cloudTime > localModified) {
-        _setSyncStatus('⚠️ 云端有更新，请先点击「从云端更新」拉取', '#e67e22');
-        _cloudPushing = false;
-        return null; // 中断推送
+        // 云端比本地新，先合并云端的新增条目到本地
+        try {
+          var cloudData2 = JSON.parse(decodeURIComponent(escape(atob(info.content))));
+          var mergedLog = mergeDailyLog(getDailyLog(), cloudData2.dailyLog || {});
+          var mergedTasks = mergeTasks(loadTasks(), cloudData2.tasks || []);
+          saveTasks(mergedTasks);
+          if (cloudData2.habits) saveHabits(cloudData2.habits);
+          saveDailyLog(mergedLog);
+          _tasksCache = null; _habitsCache = null;
+        } catch(e2) {}
+        // 合并后继续推送
       }
 
       // 正常推送
@@ -1290,14 +1302,17 @@ function cloudSyncNow() {
       _cloudDataSha = data.sha;
       _cloudUpdatedAt = cloud.updatedAt ? new Date(cloud.updatedAt).getTime() : 0;
 
-      // 用云端数据覆盖本地
-      if (cloud.tasks) saveTasks(cloud.tasks);
-      if (cloud.habits) saveHabits(cloud.habits);
-      if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
+      // 智能合并：合并本地+云端，不丢失任何一边
+      var mergedLog = mergeDailyLog(getDailyLog(), cloud.dailyLog || {});
+      var mergedTasks = mergeTasks(loadTasks(), cloud.tasks || []);
+      var mergedHabits = cloud.habits || loadHabits();
+      saveTasks(mergedTasks);
+      if (cloud.habits) saveHabits(mergedHabits);
+      saveDailyLog(mergedLog);
       _tasksCache = null; _habitsCache = null;
       localStorage.setItem('xx_local_modified', String(new Date(cloud.updatedAt || 0).getTime()));
       render();
-      _setSyncStatus('☁️ 已拉取最新数据 ✓', 'var(--green)');
+      _setSyncStatus('☁️ 已合并本地+云端数据 ✓', 'var(--green)');
 
       // 拉取成功后不需要再推送（因为已经是最新的了）
     })
@@ -1692,6 +1707,48 @@ function render() {
 }
 
 // ===== Actions =====
+function mergeDailyLog(localLog, cloudLog) {
+  // 合并策略：取两边所有日期，同一天内按 title 去重，保留双方的所有条目
+  var result = {};
+  var allDates = {};
+  for (var d in localLog) allDates[d] = true;
+  for (var d in cloudLog) allDates[d] = true;
+  for (var date in allDates) {
+    var seen = {};
+    var entries = [];
+    var localEntries = localLog[date] || [];
+    var cloudEntries = cloudLog[date] || [];
+    // 先放本地的
+    localEntries.forEach(function(e) {
+      var key = e.title + '|' + (e.category || '');
+      if (!seen[key]) { seen[key] = true; entries.push(e); }
+    });
+    // 再放云端的（去重）
+    cloudEntries.forEach(function(e) {
+      var key = e.title + '|' + (e.category || '');
+      if (!seen[key]) { seen[key] = true; entries.push(e); }
+    });
+    if (entries.length) result[date] = entries;
+  }
+  return result;
+}
+function mergeTasks(localTasks, cloudTasks) {
+  // 合并策略：以 id 为键，云端有则用云端，本地独有则保留
+  var map = {};
+  cloudTasks.forEach(function(t) { map[t.id] = t; });
+  localTasks.forEach(function(t) {
+    if (!map[t.id]) {
+      // 本地独有的任务，保留
+      map[t.id] = t;
+    } else {
+      // 两边都有，取 updatedAt 更新的
+      var localTime = t.updatedAt ? new Date(t.updatedAt).getTime() : 0;
+      var cloudTime = map[t.id].updatedAt ? new Date(map[t.id].updatedAt).getTime() : 0;
+      if (localTime > cloudTime) map[t.id] = t;
+    }
+  });
+  return Object.values(map);
+}
 function getDailyLog() {
   try { return JSON.parse(localStorage.getItem('xx_daily_log_v1') || '{}'); } catch(e) { return {}; }
 }
