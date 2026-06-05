@@ -2058,7 +2058,27 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeModal(); closeHabitModal(); closeSyncModal(); }
   if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) openModal();
 });
+// 自动清理测试数据
+function autoCleanTestData() {
+  var testTitles = {'测试333':1,'测试444':1,'测试555':1,'测试666':1,'测试777':1,'test8888':1,'测试写入文档':1,'测试222':1};
+  // Clean tasks
+  var tasks = loadTasks();
+  var orig = tasks.length;
+  tasks = tasks.filter(function(t) { return !testTitles[t.title]; });
+  if (tasks.length !== orig) saveTasks(tasks);
+  // Clean dailyLog
+  var log = getDailyLog();
+  var changed = false;
+  for (var d in log) {
+    var origLen = log[d].length;
+    log[d] = log[d].filter(function(e) { return !testTitles[e.title]; });
+    if (log[d].length !== origLen) changed = true;
+    if (!log[d].length) delete log[d];
+  }
+  if (changed) saveDailyLog(log);
+}
 render();
+autoCleanTestData();
 // 先检测修复本地乱码，再拉取云端
 if (!autoRecoverData()) {
   cloudPull(); // 页面加载时自动拉取云端数据
