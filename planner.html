@@ -1185,85 +1185,6 @@ function cloudPull() {
     });
 }
 
-// ===== KDocs 日生记同步 =====
-var KDOCS_MCP = 'https://mcp-center.wps.cn/skill_hub/mcp';
-var KDOCS_FILE = 'ziiswFhSyrMDDHQvmCk2rx2tcn6gxiPde';
-var KDOCS_SHEET = 6;
-
-function _kdocsRow(dateStr) {
-  var d = new Date(dateStr);
-  var md = [31,28,31,30,31,30,31,31,30,31,30,31];
-  var row = 0;
-  for (var m = 0; m < d.getMonth(); m++) row += md[m];
-  row += d.getDate();
-  return row;
-}
-
-async function syncToKDocs() {
-  try {
-    var log = getDailyLog();
-    var key = today();
-    var entries = log[key] || [];
-    if (!entries.length) return;
-    // 迁移旧数据
-    entries.forEach(function(e) { if (!e.category) e.category = '工作'; });
-
-    var formatted = entries.map(function(e, i) { return (i+1) + '.' + e.title; }).join('；') + '；';
-    var row = _kdocsRow(key);
-
-    // 读取 token（从 localStorage，首次从文件加载）
-    var token = localStorage.getItem('xx_kdocs_token');
-    if (!token) return;
-
-    var hdrs = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + token,
-      'X-Request-Source': 'workbuddy',
-      'X-Skill-Version': '1.4.12'
-    };
-
-    // Step 1: MCP Initialize
-    var r1 = await fetch(KDOCS_MCP, {
-      method: 'POST', headers: hdrs,
-      body: JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',
-        params:{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'planner-sync',version:'1.0.0'}}})
-    });
-    var sid = r1.headers.get('Mcp-Session-Id');
-    if (sid) hdrs['Mcp-Session-Id'] = sid;
-
-    // Step 2: initialized notification
-    fetch(KDOCS_MCP, {
-      method: 'POST', headers: hdrs,
-      body: JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'})
-    }).catch(function(){});
-
-    // Step 3: update_range_data
-    var r3 = await fetch(KDOCS_MCP, {
-      method: 'POST', headers: hdrs,
-      body: JSON.stringify({jsonrpc:'2.0',id:2,method:'tools/call',
-        params:{name:'sheet.update_range_data',arguments:{
-          file_id: KDOCS_FILE, sheetId: KDOCS_SHEET,
-          rangeData:[{opType:'formula',rowFrom:row,rowTo:row,colFrom:2,colTo:2,
-            formula:'= "'+formatted+'"'}]
-        }}})
-    });
-    var res = await r3.json();
-    if (res.result && res.result.content && res.result.content[0]) {
-      var inner = JSON.parse(res.result.content[0].text);
-      if (inner.code === 0) {
-        _setSyncStatus('✅ 已同步到日生记', '#27ae60');
-        setTimeout(function(){ _setSyncStatus('',''); }, 3000);
-      } else {
-        _setSyncStatus('⚠️ 日生记同步失败: ' + (inner.message||''), '#e67e22');
-      }
-    }
-  } catch(e) {
-    console.error('KDocs sync error:', e);
-    _setSyncStatus('⚠️ 日生记同步异常', '#e67e22');
-    setTimeout(function(){ _setSyncStatus('',''); }, 3000);
-  }
-}
-
 // 推送数据到云端（带冲突检测）
 function cloudPush(force) {
   var token = localStorage.getItem('xx_github_token');
@@ -1936,7 +1857,6 @@ function toggleTask(id) {
   t.done = !t.done;
   t.doneDate = t.done ? today() : null;
   if (t.done) addLogEntry(t.title, t.category);
-  if (t.done) syncToKDocs();
   if (t.done && t.recurrence && t.date) {
     const dt = new Date(t.date);
     if (t.recurrence === '每天') dt.setDate(dt.getDate()+1);
@@ -2066,10 +1986,7 @@ render();
 if (!autoRecoverData()) {
   cloudPull(); // 页面加载时自动拉取云端数据
 }
-// KDocs 同步 token：首次由外部注入，之后从 localStorage 读取
-if (!localStorage.getItem('xx_kdocs_token')) {
-  localStorage.setItem('xx_kdocs_token', 'qBLaNcb+yCOCGH4/w5lvk5H4JpsD3ROsCZLOy+vpguqdzMoTBrPaPCradYsl5HMm2xDyuJGtPWf0PvUbuBWhQh7CRzdLSCwc1rObccD8hudJcyV79C1uCMPp2pSt6nplytsaE2g76fT1iAwQWJSIMR/2FWg3QeJ/pHhXdfNrpM/Ik3IuTE2uc/Oz6CvqJKAb666vu1ie6Qu4GHStvg==');
-}
+
 </script>
 </body>
 </html>
