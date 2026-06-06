@@ -1859,9 +1859,11 @@ function renderLogModal() {
     if (workEntries.length) {
       html += '<div style="font-size:12px;font-weight:600;color:var(--blue);margin:8px 0 4px;padding-left:2px;">🟦 工作</div>';
       workEntries.forEach(function(e, idx) {
-        html += '<div class="log-entry">'
-          + '<span class="log-entry-time">' + (idx + 1) + '</span>'
-          + '<span class="log-entry-title">' + esc(e.title) + '</span>'
+        html += '<div class="log-entry" style="display:flex;align-items:center;justify-content:space-between;">'
+          + '<span><span class="log-entry-time">' + (idx + 1) + '</span>'
+          + '<span class="log-entry-title">' + esc(e.title) + '</span></span>'
+          + '<button onclick="deleteLogEntry(' + JSON.stringify(dateKey) + ',' + JSON.stringify(e.title) + ')" '
+          + 'style="border:none;background:none;cursor:pointer;color:#aaa;font-size:14px;padding:0 4px;flex-shrink:0;" title="删除此条">✕</button>'
           + '</div>';
       });
     }
@@ -1870,9 +1872,11 @@ function renderLogModal() {
     if (lifeEntries.length) {
       html += '<div style="font-size:12px;font-weight:600;color:var(--green);margin:8px 0 4px;padding-left:2px;">🟩 生活</div>';
       lifeEntries.forEach(function(e, idx) {
-        html += '<div class="log-entry">'
-          + '<span class="log-entry-time">' + (idx + 1) + '</span>'
-          + '<span class="log-entry-title">' + esc(e.title) + '</span>'
+        html += '<div class="log-entry" style="display:flex;align-items:center;justify-content:space-between;">'
+          + '<span><span class="log-entry-time">' + (idx + 1) + '</span>'
+          + '<span class="log-entry-title">' + esc(e.title) + '</span></span>'
+          + '<button onclick="deleteLogEntry(' + JSON.stringify(dateKey) + ',' + JSON.stringify(e.title) + ')" '
+          + 'style="border:none;background:none;cursor:pointer;color:#aaa;font-size:14px;padding:0 4px;flex-shrink:0;" title="删除此条">✕</button>'
           + '</div>';
       });
     }
@@ -1880,6 +1884,17 @@ function renderLogModal() {
     html += '</div>';
   });
   document.getElementById('logModalContent').innerHTML = html;
+}
+
+function deleteLogEntry(dateKey, title) {
+  var log = getDailyLog();
+  if (!log[dateKey]) return;
+  var idx = log[dateKey].findIndex(function(e) { return e.title === title; });
+  if (idx === -1) return;
+  log[dateKey].splice(idx, 1);
+  if (!log[dateKey].length) delete log[dateKey];
+  saveDailyLog(log);
+  renderLogModal(); // 刷新弹窗
 }
 
 function copyMonthLog() {
