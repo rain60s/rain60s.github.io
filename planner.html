@@ -1862,7 +1862,7 @@ function renderLogModal() {
         html += '<div class="log-entry" style="display:flex;align-items:center;justify-content:space-between;">'
           + '<span><span class="log-entry-time">' + (idx + 1) + '</span>'
           + '<span class="log-entry-title">' + esc(e.title) + '</span></span>'
-          + '<button onclick="deleteLogEntry(' + JSON.stringify(dateKey) + ',' + JSON.stringify(e.title) + ')" '
+          + '<button class="del-log-btn" data-date="' + esc(dateKey) + '" data-title="' + esc(e.title) + '" '
           + 'style="border:none;background:none;cursor:pointer;color:#aaa;font-size:14px;padding:0 4px;flex-shrink:0;" title="删除此条">✕</button>'
           + '</div>';
       });
@@ -1875,7 +1875,7 @@ function renderLogModal() {
         html += '<div class="log-entry" style="display:flex;align-items:center;justify-content:space-between;">'
           + '<span><span class="log-entry-time">' + (idx + 1) + '</span>'
           + '<span class="log-entry-title">' + esc(e.title) + '</span></span>'
-          + '<button onclick="deleteLogEntry(' + JSON.stringify(dateKey) + ',' + JSON.stringify(e.title) + ')" '
+          + '<button class="del-log-btn" data-date="' + esc(dateKey) + '" data-title="' + esc(e.title) + '" '
           + 'style="border:none;background:none;cursor:pointer;color:#aaa;font-size:14px;padding:0 4px;flex-shrink:0;" title="删除此条">✕</button>'
           + '</div>';
       });
@@ -1883,7 +1883,14 @@ function renderLogModal() {
 
     html += '</div>';
   });
-  document.getElementById('logModalContent').innerHTML = html;
+  var container = document.getElementById('logModalContent');
+  container.innerHTML = html;
+  // 事件委托：用 data-date / data-title 避免 onclick 字符串转义问题
+  container.addEventListener('click', function(ev) {
+    var btn = ev.target.closest('.del-log-btn');
+    if (!btn) return;
+    deleteLogEntry(btn.getAttribute('data-date'), btn.getAttribute('data-title'));
+  });
 }
 
 function deleteLogEntry(dateKey, title) {
