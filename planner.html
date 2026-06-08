@@ -455,7 +455,24 @@ body {
 }
 .side-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* Responsive */
+/* ===== 云端更新警告条 ===== */
+.cloud-warning {
+  display: none; background: #fff3e0; border-bottom: 2px solid var(--accent);
+  padding: 10px 16px; text-align: center; font-size: 13px;
+  animation: slideDown 0.3s ease;
+}
+.cloud-warning.show { display: block; }
+.cloud-warning-btn {
+  margin-left: 12px; padding: 4px 14px; border-radius: 6px;
+  border: none; background: var(--accent); color: #fff;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.cloud-warning-btn:hover { background: #d35400; }
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 /* ===== 日历 ===== */
 .calendar { margin-bottom: 0; }
 .cal-nav {
@@ -517,6 +534,11 @@ body {
 </head>
 <body>
 
+<div class="cloud-warning" id="cloudWarning">
+  ⚠️ 云端有更新数据，建议先从云端拉取最新数据
+  <button class="cloud-warning-btn" onclick="cloudSyncNow()">立即拉取</button>
+  <button class="cloud-warning-btn" style="background:var(--text-dim);margin-left:4px;" onclick="dismissCloudWarning()">知道了</button>
+</div>
 <div class="header">
   <h1>🦐 <span>主人计划</span></h1>
   <div class="header-date" id="headerDate"></div>
@@ -1093,6 +1115,9 @@ var _cloudPushing = false;
 var _cloudLastPush = 0;
 var _cloudDataSha = null;
 var _cloudUpdatedAt = null; // 云端数据的时间戳
+var _lastCloudCheckTime = 0;
+var _cloudIsStale = false; // 云端是否有更新数据（本地未同步）
+var CLOUD_CHECK_INTERVAL = 5 * 60 * 1000; // 5分钟检查间隔
 var CLOUD_REPO = 'rain60s/rain60s.github.io';
 var CLOUD_FILE = 'planner-data.json';
 var CLOUD_API = 'https://api.github.com/repos/' + CLOUD_REPO + '/contents/' + CLOUD_FILE;
@@ -1119,6 +1144,98 @@ function _buildCloudData() {
 function _setSyncStatus(text, color) {
   var el = document.getElementById('cloudSyncStatus');
   if (el) { el.textContent = text; if (color) el.style.color = color; }
+}
+
+// 更新云端更新警告条的显示
+function _updateStaleWarning() {
+  var el = document.getElementById('cloudWarning');
+  if (el) { if (_cloudIsStale) el.classList.add('show'); else el.classList.remove('show'); }
+}
+
+function dismissCloudWarning() {
+  _cloudIsStale = false;
+  _updateStaleWarning();
+}
+
+// 检查云端是否有更新数据（轻量检查，比对SHA和时间戳）
+function checkCloudFreshness(callback) {
+  fetch(CLOUD_API + '?t=' + Date.now(), { headers: _getHeaders(false), cache: 'no-store' })
+    .then(function(r) {
+      if (!r.ok) return null;
+      return r.json();
+    })
+    .then(function(data) {
+      _lastCloudCheckTime = Date.now();
+      if (!data) {
+        if (callback) callback(false);
+        return;
+      }
+      var newSha = data.sha;
+      var cloudTime = 0;
+      try {
+        var cloudData = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+        cloudTime = cloudData.updatedAt ? new Date(cloudData.updatedAt).getTime() : 0;
+      } catch(e) {}
+
+      var lastPush = parseInt(localStorage.getItem('xx_last_push') || '0');
+
+      // 云端比我们上次推送的时间新，且SHA不同 → 云端有更新
+      if (cloudTime > lastPush && newSha !== _cloudDataSha) {
+        _cloudIsStale = true;
+        _cloudDataSha = newSha;
+        _cloudUpdatedAt = cloudTime;
+        _updateStaleWarning();
+        _setSyncStatus('⚠️ 云端有更新数据，建议先拉取', '#e67e22');
+        if (callback) callback(true);
+      } else {
+        _cloudIsStale = false;
+        _cloudDataSha = newSha;
+        _updateStaleWarning();
+        if (callback) callback(false);
+      }
+    })
+    .catch(function(e) {
+      if (callback) callback(false);
+    });
+}
+
+// 推送后验证：读取云端数据确认上传真正成功
+function _verifyPush(expectedSha) {
+  fetch(CLOUD_API + '?t=' + Date.now(), { headers: _getHeaders(false), cache: 'no-store' })
+    .then(function(r) {
+      if (!r.ok) throw new Error('verify failed');
+      return r.json();
+    })
+    .then(function(data) {
+      if (data.sha === expectedSha) {
+        _setSyncStatus('✅ ' + new Date().toLocaleTimeString('zh-CN') + ' 已验证上传成功 ✓', 'var(--green)');
+      } else {
+        _setSyncStatus('⚠️ 上传后云端数据不符，建议手动同步确认', '#e67e22');
+      }
+    })
+    .catch(function(e) {
+      _setSyncStatus('✅ ' + new Date().toLocaleTimeString('zh-CN') + ' 已上传（未能验证）', 'var(--green)');
+    });
+}
+
+// 本地操作前的冲突检测守卫：如果云端有更新数据，先提醒用户
+function _guardLocalChange(action) {
+  if (!_cloudIsStale) {
+    action();
+    return;
+  }
+  // 云端有更新数据，提醒用户
+  if (confirm('⚠️ 检测到云端有更新数据！\n\n建议先从云端拉取最新数据后再操作，避免数据丢失。\n\n· 点「确定」→ 继续当前操作（可能覆盖云端数据）\n· 点「取消」→ 先从云端拉取最新数据')) {
+    // 用户选择继续操作
+    _cloudIsStale = false;
+    _updateStaleWarning();
+    action();
+  } else {
+    // 用户选择先拉取
+    _cloudIsStale = false;
+    _updateStaleWarning();
+    cloudSyncNow();
+  }
 }
 
 // 从云端拉取数据（页面加载时自动调用）
@@ -1166,21 +1283,25 @@ function cloudPull() {
       if (_cloudUpdatedAt > localModified) {
         var t = new Date(cloud.updatedAt);
         var timeStr = t.toLocaleString('zh-CN');
-        // 页面加载自动检测：智能合并（保留两边独有数据）
-        var mergedLog = mergeDailyLog(getDailyLog(), cloud.dailyLog || {});
-        var mergedTasks = mergeTasks(loadTasks(), cloud.tasks || []);
-        var mergedHabits = cloud.habits || loadHabits();
-        if (confirm('☁️ 检测到云端有更新数据（' + timeStr + '）\n\n系统将合并本地和云端数据，保留双方独有的内容。\n\n点确定合并，点取消保留本地数据（不上传也不下载）')) {
-          saveTasks(mergedTasks);
-          if (cloud.habits) saveHabits(mergedHabits);
-          saveDailyLog(mergedLog);
+        // 页面加载自动检测：云端为唯一可信数据源，用云端覆盖本地
+        if (confirm('☁️ 检测到云端有更新数据（' + timeStr + '）\n\n建议使用云端数据覆盖本地，以确保数据一致。\n\n· 点「确定」→ 用云端数据覆盖本地\n· 点「取消」→ 保留本地数据（可能导致后续冲突）')) {
+          if (cloud.tasks) saveTasks(cloud.tasks);
+          if (cloud.habits) saveHabits(cloud.habits);
+          if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
           _tasksCache = null; _habitsCache = null;
+          localStorage.setItem('xx_local_modified', String(_cloudUpdatedAt));
           render();
-          _setSyncStatus('☁️ 已合并本地+云端数据 ✓', 'var(--green)');
+          _cloudIsStale = false;
+          _updateStaleWarning();
+          _setSyncStatus('☁️ 已从云端更新数据 ✓', 'var(--green)');
         } else {
-          _setSyncStatus('☁️ 已保留本地数据（云端更新未采纳）', '#e67e22');
+          _cloudIsStale = true;
+          _updateStaleWarning();
+          _setSyncStatus('⚠️ 本地数据与云端不同步，建议尽快更新', '#e67e22');
         }
       } else {
+        _cloudIsStale = false;
+        _updateStaleWarning();
         _setSyncStatus('☁️ 已连接云端 ✓', 'var(--green)');
       }
     })
@@ -1228,19 +1349,13 @@ function cloudPush(force) {
         } catch(e) {}
       }
 
-      // 冲突检测：如果云端数据比本地新，先合并再推送
+      // 冲突检测：如果云端数据比本地新，中止推送并提醒用户
       if (!force && cloudTime > localModified) {
-        // 云端比本地新，先合并云端的新增条目到本地
-        try {
-          var cloudData2 = JSON.parse(decodeURIComponent(escape(atob(info.content))));
-          var mergedLog = mergeDailyLog(getDailyLog(), cloudData2.dailyLog || {});
-          var mergedTasks = mergeTasks(loadTasks(), cloudData2.tasks || []);
-          saveTasks(mergedTasks);
-          if (cloudData2.habits) saveHabits(cloudData2.habits);
-          saveDailyLog(mergedLog);
-          _tasksCache = null; _habitsCache = null;
-        } catch(e2) {}
-        // 合并后继续推送
+        _cloudIsStale = true;
+        _updateStaleWarning();
+        _cloudPushing = false;
+        _setSyncStatus('⚠️ 云端有更新数据，推送已暂停。请先拉取最新数据', '#e67e22');
+        return null; // 中止推送
       }
 
       // 正常推送
@@ -1270,8 +1385,12 @@ function cloudPush(force) {
       _cloudLastPush = Date.now();
       _cloudUpdatedAt = Date.now();
       localStorage.setItem('xx_last_push', String(_cloudLastPush));
-      _setSyncStatus('✅ ' + new Date().toLocaleTimeString('zh-CN') + ' 已上传成功 ✓', 'var(--green)');
+      _cloudIsStale = false;
+      _updateStaleWarning();
+      _setSyncStatus('⏳ 上传完成，正在验证...', 'var(--blue)');
       _cloudPushing = false;
+      // 验证上传是否真正成功（读取云端SHA比对）
+      _verifyPush(result.content.sha);
     })
     .catch(function(e) {
       _cloudPushing = false;
@@ -1285,11 +1404,14 @@ function cloudPush(force) {
     });
 }
 
-// 手动同步按钮：先拉取再推送
+// 手动同步按钮：从云端拉取最新数据覆盖本地
 function cloudSyncNow() {
   _setSyncStatus('⏳ 正在同步...');
-  var token = localStorage.getItem('xx_github_token');
-  // 拉取
+
+  // 先检查本地是否有未推送的修改
+  var localModified = parseInt(localStorage.getItem('xx_local_modified') || '0');
+  var lastPush = parseInt(localStorage.getItem('xx_last_push') || '0');
+
   fetch(CLOUD_API + '?t=' + Date.now(), { headers: _getHeaders(false), cache: 'no-store' })
     .then(function(r) {
       if (r.status === 404) return null;
@@ -1297,37 +1419,37 @@ function cloudSyncNow() {
       return r.json();
     })
     .then(function(data) {
-      if (!data) { cloudPush(true); return; }
+      if (!data) {
+        // 云端无数据，推送本地数据
+        cloudPush(true);
+        return;
+      }
+
       var cloud = JSON.parse(decodeURIComponent(escape(atob(data.content))));
       _cloudDataSha = data.sha;
       _cloudUpdatedAt = cloud.updatedAt ? new Date(cloud.updatedAt).getTime() : 0;
 
-      // 手动同步：用云端数据覆盖本地（用户主动点击，意味着想要最新云端数据）
+      // 如果本地有未推送的修改，提醒用户
+      if (localModified > lastPush) {
+        if (!confirm('⚠️ 本地有未同步到云端的修改！\n\n从云端更新会覆盖本地修改。\n\n· 点「确定」→ 用云端数据覆盖（本地未推送的修改将丢失）\n· 点「取消」→ 取消本次操作')) {
+          _setSyncStatus('☁️ 已取消同步', 'var(--text-dim)');
+          return;
+        }
+      }
+
+      // 用云端数据覆盖本地（云端为唯一可信数据源）
       if (cloud.tasks) saveTasks(cloud.tasks);
       if (cloud.habits) saveHabits(cloud.habits);
       if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
       _tasksCache = null; _habitsCache = null;
-      localStorage.setItem('xx_local_modified', String(new Date(cloud.updatedAt || 0).getTime()));
+      localStorage.setItem('xx_local_modified', String(_cloudUpdatedAt));
       render();
+      _cloudIsStale = false;
+      _updateStaleWarning();
       _setSyncStatus('☁️ 已从云端拉取最新数据 ✓', 'var(--green)');
-
-      // 拉取成功后检查本地是否有云端没有的修改，如果有则推送
-      var localHasNew = false;
-      var localLog = getDailyLog();
-      var cloudLog = cloud.dailyLog || {};
-      for (var d in localLog) {
-        if (!cloudLog[d] || localLog[d].length > (cloudLog[d] || []).length) {
-          localHasNew = true; break;
-        }
-      }
-      if (localHasNew) {
-        _setSyncStatus('☁️ 已拉取云端数据，检测到本地有新内容，正在推送...', 'var(--blue)');
-        setTimeout(function() { cloudPush(true); }, 500);
-      }
     })
     .catch(function(e) {
       _setSyncStatus('❌ 同步失败！网络可能不通，下次联网后点「同步」重试', 'var(--red)');
-      // 5秒后恢复提示
       setTimeout(function() {
         if (document.getElementById('cloudSyncStatus') && document.getElementById('cloudSyncStatus').textContent.indexOf('同步失败') !== -1) {
           _setSyncStatus('⚠️ 有未同步的修改，联网后请点「同步」', '#e67e22');
@@ -1903,14 +2025,16 @@ function renderLogModal() {
 }
 
 function deleteLogEntry(dateKey, title) {
-  var log = getDailyLog();
-  if (!log[dateKey]) return;
-  var idx = log[dateKey].findIndex(function(e) { return e.title === title; });
-  if (idx === -1) return;
-  log[dateKey].splice(idx, 1);
-  if (!log[dateKey].length) delete log[dateKey];
-  saveDailyLog(log);
-  renderLogModal(); // 刷新弹窗
+  _guardLocalChange(function() {
+    var log = getDailyLog();
+    if (!log[dateKey]) return;
+    var idx = log[dateKey].findIndex(function(e) { return e.title === title; });
+    if (idx === -1) return;
+    log[dateKey].splice(idx, 1);
+    if (!log[dateKey].length) delete log[dateKey];
+    saveDailyLog(log);
+    renderLogModal(); // 刷新弹窗
+  });
 }
 
 function copyMonthLog() {
@@ -1959,29 +2083,33 @@ function copyMonthLog() {
 
 function toggleTask(id) {
   if (taskDragged) { taskDragged = false; return; }
-  const d = loadTasks(), t = d.find(x=>x.id===id);
-  if (!t) return;
-  t.done = !t.done;
-  t.doneDate = t.done ? today() : null;
-  if (t.done) addLogEntry(t.title, t.category);
-  else removeLogEntry(t.title, t.doneDate || today());
-  if (t.done && t.recurrence && t.date) {
-    const dt = new Date(t.date);
-    if (t.recurrence === '每天') dt.setDate(dt.getDate()+1);
-    else if (t.recurrence === '每周') dt.setDate(dt.getDate()+7);
-    else if (t.recurrence === '每月') dt.setMonth(dt.getMonth()+1);
-    else if (t.recurrence === '每季') dt.setMonth(dt.getMonth()+3);
-    else if (t.recurrence === '每年') dt.setFullYear(dt.getFullYear()+1);
-    t.date = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
-    t.done = false;
-    t.doneDate = null;
-  }
-  saveTasks(d); render();
+  _guardLocalChange(function() {
+    const d = loadTasks(), t = d.find(x=>x.id===id);
+    if (!t) return;
+    t.done = !t.done;
+    t.doneDate = t.done ? today() : null;
+    if (t.done) addLogEntry(t.title, t.category);
+    else removeLogEntry(t.title, t.doneDate || today());
+    if (t.done && t.recurrence && t.date) {
+      const dt = new Date(t.date);
+      if (t.recurrence === '每天') dt.setDate(dt.getDate()+1);
+      else if (t.recurrence === '每周') dt.setDate(dt.getDate()+7);
+      else if (t.recurrence === '每月') dt.setMonth(dt.getMonth()+1);
+      else if (t.recurrence === '每季') dt.setMonth(dt.getMonth()+3);
+      else if (t.recurrence === '每年') dt.setFullYear(dt.getFullYear()+1);
+      t.date = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+      t.done = false;
+      t.doneDate = null;
+    }
+    saveTasks(d); render();
+  });
 }
 
 function deleteTask(id) {
-  const d = loadTasks().filter(t=>t.id!==id);
-  saveTasks(d); render();
+  _guardLocalChange(function() {
+    const d = loadTasks().filter(t=>t.id!==id);
+    saveTasks(d); render();
+  });
 }
 
 function editTask(id) {
@@ -2015,30 +2143,34 @@ function closeModal() { document.getElementById('modal').classList.remove('show'
 function saveTask() {
   const title = document.getElementById('taskTitle').value.trim();
   if (!title) { document.getElementById('taskTitle').style.borderColor='var(--red)'; return; }
-  const editId = document.getElementById('editId').value;
-  const obj = {
-    title,
-    date: document.getElementById('taskDate').value,
-    category: document.getElementById('taskCategory').value,
-    recurrence: document.getElementById('taskRecurrence').value,
-    note: document.getElementById('taskNote').value.trim(),
-    done: false, doneDate: null,
-  };
-  const d = loadTasks();
-  if (editId) {
-    const idx = d.findIndex(t=>t.id===editId);
-    if (idx !== -1) d[idx] = {...d[idx], ...obj};
-  } else {
-    obj.id = Date.now().toString();
-    d.push(obj);
-  }
-  saveTasks(d); closeModal(); render();
+  _guardLocalChange(function() {
+    const editId = document.getElementById('editId').value;
+    const obj = {
+      title,
+      date: document.getElementById('taskDate').value,
+      category: document.getElementById('taskCategory').value,
+      recurrence: document.getElementById('taskRecurrence').value,
+      note: document.getElementById('taskNote').value.trim(),
+      done: false, doneDate: null,
+    };
+    const d = loadTasks();
+    if (editId) {
+      const idx = d.findIndex(t=>t.id===editId);
+      if (idx !== -1) d[idx] = {...d[idx], ...obj};
+    } else {
+      obj.id = Date.now().toString();
+      d.push(obj);
+    }
+    saveTasks(d); closeModal(); render();
+  });
 }
 
 function toggleHabit(id) {
   if (habitDragged) { habitDragged = false; return; }
-  const d = loadHabits(), h = d.find(x=>x.id===id);
-  if (h) { h.active = !h.active; saveHabits(d); render(); }
+  _guardLocalChange(function() {
+    const d = loadHabits(), h = d.find(x=>x.id===id);
+    if (h) { h.active = !h.active; saveHabits(d); render(); }
+  });
 }
 
 // ===== Habit Management =====
@@ -2075,10 +2207,12 @@ function renderHabitModal() {
 }
 
 function saveHabitChanges() {
-  const valid = tempHabits.filter(h => h.name.trim());
-  saveHabits(valid);
-  closeHabitModal();
-  render();
+  _guardLocalChange(function() {
+    const valid = tempHabits.filter(h => h.name.trim());
+    saveHabits(valid);
+    closeHabitModal();
+    render();
+  });
 }
 
 // Events
@@ -2114,6 +2248,8 @@ autoCleanTestData();
 if (!autoRecoverData()) {
   cloudPull(); // 页面加载时自动拉取云端数据
 }
+// 定期检查云端是否有更新数据（每5分钟后台检查）
+setInterval(function() { checkCloudFreshness(); }, CLOUD_CHECK_INTERVAL);
 
 </script>
 </body>
