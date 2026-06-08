@@ -1166,11 +1166,11 @@ function cloudPull() {
       if (_cloudUpdatedAt > localModified) {
         var t = new Date(cloud.updatedAt);
         var timeStr = t.toLocaleString('zh-CN');
-        // 智能合并：合并双方数据，不丢失任何一边的条目
+        // 页面加载自动检测：智能合并（保留两边独有数据）
         var mergedLog = mergeDailyLog(getDailyLog(), cloud.dailyLog || {});
         var mergedTasks = mergeTasks(loadTasks(), cloud.tasks || []);
         var mergedHabits = cloud.habits || loadHabits();
-        if (confirm('☁️ 检测到云端有更新数据（' + timeStr + '）\n\n系统将自动合并本地和云端数据，不会丢失任何一边的内容。\n\n点确定合并，点取消保留本地数据（不上传也不下载）')) {
+        if (confirm('☁️ 检测到云端有更新数据（' + timeStr + '）\n\n系统将合并本地和云端数据，保留双方独有的内容。\n\n点确定合并，点取消保留本地数据（不上传也不下载）')) {
           saveTasks(mergedTasks);
           if (cloud.habits) saveHabits(mergedHabits);
           saveDailyLog(mergedLog);
@@ -1302,19 +1302,28 @@ function cloudSyncNow() {
       _cloudDataSha = data.sha;
       _cloudUpdatedAt = cloud.updatedAt ? new Date(cloud.updatedAt).getTime() : 0;
 
-      // 智能合并：合并本地+云端，不丢失任何一边
-      var mergedLog = mergeDailyLog(getDailyLog(), cloud.dailyLog || {});
-      var mergedTasks = mergeTasks(loadTasks(), cloud.tasks || []);
-      var mergedHabits = cloud.habits || loadHabits();
-      saveTasks(mergedTasks);
-      if (cloud.habits) saveHabits(mergedHabits);
-      saveDailyLog(mergedLog);
+      // 手动同步：用云端数据覆盖本地（用户主动点击，意味着想要最新云端数据）
+      if (cloud.tasks) saveTasks(cloud.tasks);
+      if (cloud.habits) saveHabits(cloud.habits);
+      if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
       _tasksCache = null; _habitsCache = null;
       localStorage.setItem('xx_local_modified', String(new Date(cloud.updatedAt || 0).getTime()));
       render();
-      _setSyncStatus('☁️ 已合并本地+云端数据 ✓', 'var(--green)');
+      _setSyncStatus('☁️ 已从云端拉取最新数据 ✓', 'var(--green)');
 
-      // 拉取成功后不需要再推送（因为已经是最新的了）
+      // 拉取成功后检查本地是否有云端没有的修改，如果有则推送
+      var localHasNew = false;
+      var localLog = getDailyLog();
+      var cloudLog = cloud.dailyLog || {};
+      for (var d in localLog) {
+        if (!cloudLog[d] || localLog[d].length > (cloudLog[d] || []).length) {
+          localHasNew = true; break;
+        }
+      }
+      if (localHasNew) {
+        _setSyncStatus('☁️ 已拉取云端数据，检测到本地有新内容，正在推送...', 'var(--blue)');
+        setTimeout(function() { cloudPush(true); }, 500);
+      }
     })
     .catch(function(e) {
       _setSyncStatus('❌ 同步失败！网络可能不通，下次联网后点「同步」重试', 'var(--red)');
