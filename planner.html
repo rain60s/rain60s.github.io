@@ -396,6 +396,40 @@ body {
 .log-entry:last-child { border-bottom: none; }
 .log-entry-time { font-size: 12px; color: var(--text-dim); min-width: 20px; font-weight: 600; }
 .log-entry-title { flex: 1; }
+.log-entry-actions { display: flex; gap: 2px; flex-shrink: 0; }
+.log-act-btn {
+  border: none; background: none; cursor: pointer; color: #bbb;
+  font-size: 13px; padding: 0 4px; border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.log-act-btn:hover { color: var(--accent); background: rgba(0,0,0,0.04); }
+.log-act-btn.del:hover { color: var(--red); }
+.log-add-day-btn {
+  border: none; background: none; cursor: pointer; color: #bbb;
+  font-size: 13px; padding: 2px 6px; border-radius: 4px; margin-left: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+.log-add-day-btn:hover { color: var(--accent); background: rgba(0,0,0,0.04); }
+/* 编辑行内表单 */
+.log-edit-form {
+  display: flex; gap: 6px; align-items: center; padding: 6px 4px;
+  border-bottom: 1px solid #f0f0ec; background: #fefefe;
+}
+.log-edit-form input, .log-edit-form select {
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 4px 8px; font-size: 13px; outline: none;
+}
+.log-edit-form input:focus, .log-edit-form select:focus { border-color: var(--accent); }
+.log-edit-form input[type=text] { flex: 1; }
+.log-edit-form select { width: 72px; }
+.log-edit-ok, .log-edit-cancel {
+  border: none; border-radius: 6px; padding: 4px 10px;
+  font-size: 12px; cursor: pointer; font-weight: 600;
+}
+.log-edit-ok { background: var(--accent); color: #fff; }
+.log-edit-ok:hover { background: #d35400; }
+.log-edit-cancel { background: #eee; color: #666; }
+.log-edit-cancel:hover { background: #ddd; }
 .log-empty { text-align: center; padding: 32px; color: var(--text-dim); font-size: 14px; }
 .log-copy-btn {
   margin-top: 16px; width: 100%; padding: 10px;
@@ -1984,7 +2018,10 @@ function renderLogModal() {
     var lifeEntries = entries.filter(function(e) { return e.category !== '工作'; });
 
     html += '<div class="log-day-block">';
-    html += '<div class="log-day-title">' + dayLabel + '</div>';
+    html += '<div class="log-day-title" style="display:flex;align-items:center;justify-content:space-between;">'
+      + '<span>' + dayLabel + '</span>'
+      + '<button class="log-add-day-btn" data-adddate="' + esc(dateKey) + '" title="添加条目到这天">＋ 添加</button>'
+      + '</div>';
 
     // 工作区
     if (workEntries.length) {
@@ -1993,8 +2030,10 @@ function renderLogModal() {
         html += '<div class="log-entry" style="display:flex;align-items:center;justify-content:space-between;">'
           + '<span><span class="log-entry-time">' + (idx + 1) + '</span>'
           + '<span class="log-entry-title">' + esc(e.title) + '</span></span>'
-          + '<button class="del-log-btn" data-date="' + esc(dateKey) + '" data-title="' + esc(e.title) + '" '
-          + 'style="border:none;background:none;cursor:pointer;color:#aaa;font-size:14px;padding:0 4px;flex-shrink:0;" title="删除此条">✕</button>'
+          + '<span class="log-entry-actions">'
+          + '<button class="log-act-btn edit-log-btn" data-date="' + esc(dateKey) + '" data-title="' + esc(e.title) + '" data-cat="' + esc(e.category) + '" title="编辑">✏</button>'
+          + '<button class="log-act-btn del del-log-btn" data-date="' + esc(dateKey) + '" data-title="' + esc(e.title) + '" title="删除">✕</button>'
+          + '</span>'
           + '</div>';
       });
     }
@@ -2006,8 +2045,10 @@ function renderLogModal() {
         html += '<div class="log-entry" style="display:flex;align-items:center;justify-content:space-between;">'
           + '<span><span class="log-entry-time">' + (idx + 1) + '</span>'
           + '<span class="log-entry-title">' + esc(e.title) + '</span></span>'
-          + '<button class="del-log-btn" data-date="' + esc(dateKey) + '" data-title="' + esc(e.title) + '" '
-          + 'style="border:none;background:none;cursor:pointer;color:#aaa;font-size:14px;padding:0 4px;flex-shrink:0;" title="删除此条">✕</button>'
+          + '<span class="log-entry-actions">'
+          + '<button class="log-act-btn edit-log-btn" data-date="' + esc(dateKey) + '" data-title="' + esc(e.title) + '" data-cat="' + esc(e.category) + '" title="编辑">✏</button>'
+          + '<button class="log-act-btn del del-log-btn" data-date="' + esc(dateKey) + '" data-title="' + esc(e.title) + '" title="删除">✕</button>'
+          + '</span>'
           + '</div>';
       });
     }
@@ -2018,9 +2059,46 @@ function renderLogModal() {
   container.innerHTML = html;
   // 事件委托：用 data-date / data-title 避免 onclick 字符串转义问题
   container.addEventListener('click', function(ev) {
-    var btn = ev.target.closest('.del-log-btn');
-    if (!btn) return;
-    deleteLogEntry(btn.getAttribute('data-date'), btn.getAttribute('data-title'));
+    // 删除按钮
+    var delBtn = ev.target.closest('.del-log-btn');
+    if (delBtn) {
+      deleteLogEntry(delBtn.getAttribute('data-date'), delBtn.getAttribute('data-title'));
+      return;
+    }
+    // 编辑按钮
+    var editBtn = ev.target.closest('.edit-log-btn');
+    if (editBtn) {
+      _startEditLogEntry(editBtn.getAttribute('data-date'), editBtn.getAttribute('data-title'), editBtn.getAttribute('data-cat'));
+      return;
+    }
+    // 添加按钮（每天标题旁的＋添加）
+    var addBtn = ev.target.closest('.log-add-day-btn');
+    if (addBtn) {
+      _startAddLogEntry(addBtn.getAttribute('adddate'));
+      return;
+    }
+    // 编辑表单内的确认/取消
+    var okBtn = ev.target.closest('.log-edit-ok');
+    if (okBtn) {
+      _confirmEditLogEntry(okBtn);
+      return;
+    }
+    var cancelBtn = ev.target.closest('.log-edit-cancel');
+    if (cancelBtn) {
+      renderLogModal(); // 取消就刷新恢复原样
+      return;
+    }
+    // 添加表单内的确认/取消
+    var addOkBtn = ev.target.closest('.log-add-ok');
+    if (addOkBtn) {
+      _confirmAddLogEntry(addOkBtn);
+      return;
+    }
+    var addCancelBtn = ev.target.closest('.log-add-cancel');
+    if (addCancelBtn) {
+      renderLogModal();
+      return;
+    }
   });
 }
 
@@ -2034,6 +2112,132 @@ function deleteLogEntry(dateKey, title) {
     if (!log[dateKey].length) delete log[dateKey];
     saveDailyLog(log);
     renderLogModal(); // 刷新弹窗
+  });
+}
+
+// === 历史日志编辑功能 ===
+
+// 点击编辑按钮：把该条替换为内联编辑表单
+function _startEditLogEntry(dateKey, title, category) {
+  var log = getDailyLog();
+  var entries = log[dateKey];
+  if (!entries) return;
+  var entry = entries.find(function(e) { return e.title === title && e.category === category; });
+  if (!entry) return;
+
+  // 找到对应的 log-entry DOM 节点并替换
+  var container = document.getElementById('logModalContent');
+  var editBtns = container.querySelectorAll('.edit-log-btn');
+  var targetEntry = null;
+  editBtns.forEach(function(btn) {
+    if (btn.getAttribute('data-date') === dateKey && btn.getAttribute('data-title') === title) {
+      targetEntry = btn.closest('.log-entry');
+    }
+  });
+  if (!targetEntry) return;
+
+  // 构建内联编辑表单
+  var formHtml = '<div class="log-edit-form">'
+    + '<input type="text" class="log-edit-title" value="' + esc(title).replace(/"/g, '&quot;') + '" placeholder="标题">'
+    + '<select class="log-edit-cat">'
+    + '<option value="工作"' + (category === '工作' ? ' selected' : '') + '>工作</option>'
+    + '<option value="生活"' + (category === '生活' ? ' selected' : '') + '>生活</option>'
+    + '</select>'
+    + '<button class="log-edit-ok" data-olddate="' + esc(dateKey) + '" data-oldtitle="' + esc(title).replace(/"/g, '&quot;') + '" data-oldcat="' + esc(category) + '">✓</button>'
+    + '<button class="log-edit-cancel">✕</button>'
+    + '</div>';
+
+  var wrapper = document.createElement('div');
+  wrapper.innerHTML = formHtml;
+  targetEntry.replaceWith(wrapper.firstChild);
+  // 聚焦标题输入框
+  var titleInput = container.querySelector('.log-edit-title');
+  if (titleInput) titleInput.focus();
+}
+
+// 确认编辑
+function _confirmEditLogEntry(okBtn) {
+  _guardLocalChange(function() {
+    var log = getDailyLog();
+    var dateKey = okBtn.getAttribute('data-olddate');
+    var oldTitle = okBtn.getAttribute('data-oldtitle');
+    var oldCat = okBtn.getAttribute('data-oldcat');
+
+    var form = okBtn.closest('.log-edit-form');
+    var newTitle = form.querySelector('.log-edit-title').value.trim();
+    var newCat = form.querySelector('.log-edit-cat').value;
+
+    if (!newTitle) { alert('标题不能为空'); return; }
+
+    if (!log[dateKey]) { renderLogModal(); return; }
+    var idx = log[dateKey].findIndex(function(e) { return e.title === oldTitle && e.category === oldCat; });
+    if (idx === -1) { renderLogModal(); return; }
+
+    log[dateKey][idx].title = newTitle;
+    log[dateKey][idx].category = newCat;
+    saveDailyLog(log);
+    renderLogModal();
+  });
+}
+
+// 点击"＋ 添加"按钮：在该天插入一行添加表单
+function _startAddLogEntry(dateKey) {
+  var container = document.getElementById('logModalContent');
+  // 找到该天的 log-day-block
+  var addBtns = container.querySelectorAll('.log-add-day-btn');
+  var dayBlock = null;
+  addBtns.forEach(function(btn) {
+    if (btn.getAttribute('adddate') === dateKey) {
+      dayBlock = btn.closest('.log-day-block');
+    }
+  });
+  if (!dayBlock) return;
+
+  // 检查是否已有添加表单
+  if (dayBlock.querySelector('.log-edit-form')) return;
+
+  // 在 day-title 后插入添加表单
+  var formHtml = '<div class="log-edit-form">'
+    + '<input type="text" class="log-add-title" placeholder="输入标题..." style="flex:1;">'
+    + '<select class="log-add-cat">'
+    + '<option value="工作">工作</option>'
+    + '<option value="生活">生活</option>'
+    + '</select>'
+    + '<button class="log-add-ok" data-adddate="' + esc(dateKey) + '">✓</button>'
+    + '<button class="log-add-cancel">✕</button>'
+    + '</div>';
+
+  var wrapper = document.createElement('div');
+  wrapper.innerHTML = formHtml;
+  var dayTitle = dayBlock.querySelector('.log-day-title');
+  if (dayTitle && dayTitle.nextSibling) {
+    dayBlock.insertBefore(wrapper.firstChild, dayTitle.nextSibling);
+  } else {
+    dayBlock.appendChild(wrapper.firstChild);
+  }
+  // 聚焦
+  var titleInput = dayBlock.querySelector('.log-add-title');
+  if (titleInput) titleInput.focus();
+}
+
+// 确认添加
+function _confirmAddLogEntry(okBtn) {
+  _guardLocalChange(function() {
+    var dateKey = okBtn.getAttribute('data-adddate');
+    var form = okBtn.closest('.log-edit-form');
+    var title = form.querySelector('.log-add-title').value.trim();
+    var category = form.querySelector('.log-add-cat').value;
+
+    if (!title) { alert('标题不能为空'); return; }
+
+    var log = getDailyLog();
+    if (!log[dateKey]) log[dateKey] = [];
+    // 用当前时间作为 time
+    var now = new Date();
+    var timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+    log[dateKey].push({ title: title, category: category, time: timeStr });
+    saveDailyLog(log);
+    renderLogModal();
   });
 }
 
