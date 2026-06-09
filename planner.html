@@ -2038,7 +2038,6 @@ function renderLogModal() {
     html += '<div class="log-day-block">';
     html += '<div class="log-day-title" style="display:flex;align-items:center;justify-content:space-between;">'
       + '<span>' + dayLabel + '</span>'
-      + '<button class="log-add-day-btn" data-adddate="' + esc(dateKey) + '" title="添加条目到这天">＋ 添加</button>'
       + '</div>';
 
     // 工作区
@@ -2089,12 +2088,6 @@ function renderLogModal() {
       _startEditLogEntry(editBtn.getAttribute('data-date'), editBtn.getAttribute('data-title'), editBtn.getAttribute('data-cat'));
       return;
     }
-    // 添加按钮（每天标题旁的＋添加）
-    var addBtn = ev.target.closest('.log-add-day-btn');
-    if (addBtn) {
-      _startAddLogEntry(addBtn.getAttribute('adddate'));
-      return;
-    }
     // 编辑表单内的确认/取消
     var okBtn = ev.target.closest('.log-edit-ok');
     if (okBtn) {
@@ -2104,17 +2097,6 @@ function renderLogModal() {
     var cancelBtn = ev.target.closest('.log-edit-cancel');
     if (cancelBtn) {
       renderLogModal(); // 取消就刷新恢复原样
-      return;
-    }
-    // 添加表单内的确认/取消
-    var addOkBtn = ev.target.closest('.log-add-ok');
-    if (addOkBtn) {
-      _confirmAddLogEntry(addOkBtn);
-      return;
-    }
-    var addCancelBtn = ev.target.closest('.log-add-cancel');
-    if (addCancelBtn) {
-      renderLogModal();
       return;
     }
   });
