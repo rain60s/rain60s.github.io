@@ -2025,8 +2025,15 @@ function renderLogModal() {
   dayKeys.forEach(function(dateKey) {
     var entries = log[dateKey];
     if (!entries || !entries.length) return;
-    // 数据迁移：给没有 category 的条目补上"工作"
+    // 数据迁移：给没有 category 的条目补上"工作"（直接修改 log 对象，后面统一 save）
     entries.forEach(function(e) { if (!e.category) e.category = '工作'; });
+  });
+  // 把补好 category 的数据永久保存（只改缺失的，不改 updatedAt，不影响同步状态）
+  saveDailyLog(log);
+
+  dayKeys.forEach(function(dateKey) {
+    var entries = log[dateKey];
+    if (!entries || !entries.length) return;
     var d = new Date(dateKey);
     var wd = ['日','一','二','三','四','五','六'];
     var dayLabel = dateKey + ' 星期' + wd[d.getDay()] + '（' + entries.length + '项）';
@@ -2127,6 +2134,8 @@ function _startEditLogEntry(dateKey, title, category) {
   var entries = log[dateKey];
   if (!entries) return;
   var entry = entries.find(function(e) { return e.title === title && e.category === category; });
+  // 旧数据可能没有 category，fallback 到只匹配 title
+  if (!entry) entry = entries.find(function(e) { return e.title === title; });
   if (!entry) return;
 
   // 找到对应的 log-entry DOM 节点并替换（用 some 找到第一个就停，避免 forEach 覆盖）
@@ -2178,6 +2187,8 @@ function _confirmEditLogEntry(okBtn) {
 
     if (!log[dateKey]) { renderLogModal(); return; }
     var idx = log[dateKey].findIndex(function(e) { return e.title === oldTitle && e.category === oldCat; });
+    // fallback：旧数据可能没有 category
+    if (idx === -1) idx = log[dateKey].findIndex(function(e) { return e.title === oldTitle; });
     if (idx === -1) { renderLogModal(); return; }
 
     log[dateKey][idx].title = newTitle;
