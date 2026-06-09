@@ -701,8 +701,25 @@ body {
       <div class="log-month-label" id="logMonthLabel"></div>
       <button onclick="logNavMonth(1)">›</button>
     </div>
+    <!-- 往任意日期添加 -->
+    <div id="logAddNewDateBar" style="display:none;padding:10px 4px 2px;border-bottom:1px solid var(--border);margin-bottom:8px;">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <span style="font-size:13px;color:var(--text-dim);white-space:nowrap;">选择日期</span>
+        <input type="date" id="logNewDateInput" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px;outline:none;">
+        <input type="text" id="logNewTitleInput" placeholder="标题..." style="flex:1;min-width:100px;border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px;outline:none;">
+        <select id="logNewCatInput" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px;width:72px;">
+          <option value="工作">工作</option>
+          <option value="生活">生活</option>
+        </select>
+        <button onclick="confirmAddNewDateEntry()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:13px;font-weight:600;cursor:pointer;">✓ 确认</button>
+        <button onclick="document.getElementById('logAddNewDateBar').style.display='none';" style="background:#eee;color:#666;border:none;border-radius:6px;padding:5px 10px;font-size:13px;cursor:pointer;">取消</button>
+      </div>
+    </div>
     <div id="logModalContent"></div>
-    <button class="log-copy-btn" id="logCopyMonthBtn" onclick="copyMonthLog()">📋 复制本月全部记录</button>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="log-copy-btn" id="logCopyMonthBtn" onclick="copyMonthLog()" style="flex:1;margin-top:0;">📋 复制本月全部记录</button>
+      <button class="log-copy-btn" onclick="showLogAddNewDate()" style="flex:0 0 auto;margin-top:0;white-space:nowrap;border-color:var(--accent);color:var(--accent);">＋ 补录任意日期</button>
+    </div>
   </div>
 </div>
 
@@ -1999,6 +2016,7 @@ function renderLogModal() {
   if (!dayKeys.length) {
     document.getElementById('logModalContent').innerHTML = '<div class="log-empty">本月暂无完成记录</div>';
     document.getElementById('logCopyMonthBtn').style.display = 'none';
+    // 空月份也允许补录
     return;
   }
   document.getElementById('logCopyMonthBtn').style.display = '';
@@ -2237,6 +2255,53 @@ function _confirmAddLogEntry(okBtn) {
     var timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
     log[dateKey].push({ title: title, category: category, time: timeStr });
     saveDailyLog(log);
+    renderLogModal();
+  });
+}
+
+// 弹出底部补录栏，日期默认为当前月份的今天（或1日）
+function showLogAddNewDate() {
+  var bar = document.getElementById('logAddNewDateBar');
+  bar.style.display = 'block';
+  // 设置默认日期：当前正在浏览的月份的当天（如果在本月）或1日
+  var today = new Date();
+  var yr = _logViewYear, mo = _logViewMonth;
+  var defaultDay = 1;
+  if (today.getFullYear() === yr && (today.getMonth() + 1) === mo) {
+    defaultDay = today.getDate();
+  }
+  var dateStr = yr + '-' + String(mo).padStart(2,'0') + '-' + String(defaultDay).padStart(2,'0');
+  document.getElementById('logNewDateInput').value = dateStr;
+  document.getElementById('logNewTitleInput').value = '';
+  document.getElementById('logNewTitleInput').focus();
+  // 滚动到顶部让输入框可见
+  var container = document.querySelector('.log-modal');
+  if (container) container.scrollTop = 0;
+}
+
+function confirmAddNewDateEntry() {
+  _guardLocalChange(function() {
+    var dateKey = document.getElementById('logNewDateInput').value;
+    var title = document.getElementById('logNewTitleInput').value.trim();
+    var category = document.getElementById('logNewCatInput').value;
+
+    if (!dateKey) { alert('请选择日期'); return; }
+    if (!title) { alert('标题不能为空'); return; }
+
+    var log = getDailyLog();
+    if (!log[dateKey]) log[dateKey] = [];
+
+    // 用当前时间
+    var now = new Date();
+    var timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    log[dateKey].push({ title: title, category: category, time: timeStr });
+    saveDailyLog(log);
+
+    // 跳转到该日期所在月份并刷新
+    var parts = dateKey.split('-');
+    _logViewYear = parseInt(parts[0]);
+    _logViewMonth = parseInt(parts[1]);
+    document.getElementById('logAddNewDateBar').style.display = 'none';
     renderLogModal();
   });
 }
