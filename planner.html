@@ -2074,32 +2074,36 @@ function renderLogModal() {
   });
   var container = document.getElementById('logModalContent');
   container.innerHTML = html;
-  // 事件委托：用 data-date / data-title 避免 onclick 字符串转义问题
-  container.addEventListener('click', function(ev) {
-    // 删除按钮
-    var delBtn = ev.target.closest('.del-log-btn');
-    if (delBtn) {
-      deleteLogEntry(delBtn.getAttribute('data-date'), delBtn.getAttribute('data-title'));
-      return;
-    }
-    // 编辑按钮
-    var editBtn = ev.target.closest('.edit-log-btn');
-    if (editBtn) {
-      _startEditLogEntry(editBtn.getAttribute('data-date'), editBtn.getAttribute('data-title'), editBtn.getAttribute('data-cat'));
-      return;
-    }
-    // 编辑表单内的确认/取消
-    var okBtn = ev.target.closest('.log-edit-ok');
-    if (okBtn) {
-      _confirmEditLogEntry(okBtn);
-      return;
-    }
-    var cancelBtn = ev.target.closest('.log-edit-cancel');
-    if (cancelBtn) {
-      renderLogModal(); // 取消就刷新恢复原样
-      return;
-    }
-  });
+  // 事件委托：用命名函数避免监听器堆积（每次renderLogModal先移除旧的再添加）
+  container.removeEventListener('click', _logModalClickHandler);
+  container.addEventListener('click', _logModalClickHandler);
+}
+
+// 历史日志弹窗事件委托（命名函数，防止重复绑定）
+function _logModalClickHandler(ev) {
+  // 删除按钮
+  var delBtn = ev.target.closest('.del-log-btn');
+  if (delBtn) {
+    deleteLogEntry(delBtn.getAttribute('data-date'), delBtn.getAttribute('data-title'));
+    return;
+  }
+  // 编辑按钮
+  var editBtn = ev.target.closest('.edit-log-btn');
+  if (editBtn) {
+    _startEditLogEntry(editBtn.getAttribute('data-date'), editBtn.getAttribute('data-title'), editBtn.getAttribute('data-cat'));
+    return;
+  }
+  // 编辑表单内的确认/取消
+  var okBtn = ev.target.closest('.log-edit-ok');
+  if (okBtn) {
+    _confirmEditLogEntry(okBtn);
+    return;
+  }
+  var cancelBtn = ev.target.closest('.log-edit-cancel');
+  if (cancelBtn) {
+    renderLogModal(); // 取消就刷新恢复原样
+    return;
+  }
 }
 
 function deleteLogEntry(dateKey, title) {
@@ -2125,14 +2129,17 @@ function _startEditLogEntry(dateKey, title, category) {
   var entry = entries.find(function(e) { return e.title === title && e.category === category; });
   if (!entry) return;
 
-  // 找到对应的 log-entry DOM 节点并替换
+  // 找到对应的 log-entry DOM 节点并替换（用 some 找到第一个就停，避免 forEach 覆盖）
   var container = document.getElementById('logModalContent');
   var editBtns = container.querySelectorAll('.edit-log-btn');
   var targetEntry = null;
-  editBtns.forEach(function(btn) {
-    if (btn.getAttribute('data-date') === dateKey && btn.getAttribute('data-title') === title) {
+  editBtns = Array.prototype.slice.call(editBtns); // 兼容 some
+  editBtns.some(function(btn) {
+    if (btn.getAttribute('data-date') === dateKey && btn.getAttribute('data-title') === title && btn.getAttribute('data-cat') === category) {
       targetEntry = btn.closest('.log-entry');
+      return true; // 找到就停
     }
+    return false;
   });
   if (!targetEntry) return;
 
