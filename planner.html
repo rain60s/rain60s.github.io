@@ -963,13 +963,15 @@ function renderCalendar(){
     var festival='';
     var holidayTag='';
 
-    // 先查法定节假日
+    // 先查法定节假日（_legalHolidays 是2026年安排，仅对2026年生效）
     var hk=String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    if(_legalHolidays.rest[hk]){
-      holidayTag='休';
-      if(!festival)festival=_legalHolidays.rest[hk];
-    } else if(_legalHolidays.work[hk]){
-      holidayTag='班';
+    if(y===2026){
+      if(_legalHolidays.rest[hk]){
+        holidayTag='休';
+        if(!festival)festival=_legalHolidays.rest[hk];
+      } else if(_legalHolidays.work[hk]){
+        holidayTag='班';
+      }
     }
 
     var mmdd=String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
@@ -1689,6 +1691,14 @@ function categorize(tasks) {
 render();
 updateSyncTime();
 renderCalendar();
+
+// ===== 保底推送：确保云端始终最新 =====
+// 1. 每10分钟自动推送一次（如有未推送的修改，cloudPush内部会跳过）
+setInterval(function() { cloudPush(); }, 10 * 60 * 1000);
+// 2. 切换标签页/最小化窗口时立即推送
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden) cloudPush();
+});
 
 // ===== Render =====
 function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
