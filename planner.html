@@ -1576,6 +1576,7 @@ function autoRecoverData() {
 }
 
 // 页面关闭前兜底推送（仅在本地有修改时）
+// 注意：sendBeacon 不支持 PUT 方法和 Authorization Header，必须用 fetch+keepalive
 window.addEventListener('beforeunload', function(e) {
   var token = localStorage.getItem('xx_github_token');
   if (!token) return;
@@ -1592,8 +1593,39 @@ window.addEventListener('beforeunload', function(e) {
     content: content,
     sha: _cloudDataSha
   });
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon(CLOUD_API, new Blob([body], { type: 'application/json' }));
+  // 使用 fetch + keepalive：支持 PUT 方法和 Authorization Header
+  // sendBeacon 只支持 POST 且无法自定义 Header，无法调用 GitHub API
+  if (window.fetch) {
+    fetch(CLOUD_API, {
+      method: 'PUT',
+      headers: _getHeaders(true),
+      body: body,
+      keepalive: true
+    }).catch(function(){});
+  }
+});
+// 额外绑定 pagehide：移动端和现代浏览器中比 beforeunload 更可靠
+window.addEventListener('pagehide', function(e) {
+  var token = localStorage.getItem('xx_github_token');
+  if (!token) return;
+  var localModifiedStr = localStorage.getItem('xx_local_modified') || '0';
+  var localModified = isNaN(Number(localModifiedStr)) ? new Date(localModifiedStr).getTime() : Number(localModifiedStr);
+  var lastPush = parseInt(localStorage.getItem('xx_last_push') || '0');
+  if (localModified <= lastPush) return;
+  var payload = JSON.stringify(_buildCloudData());
+  var content = btoa(unescape(encodeURIComponent(payload)));
+  var body = JSON.stringify({
+    message: 'sync: ' + new Date().toLocaleString('zh-CN'),
+    content: content,
+    sha: _cloudDataSha
+  });
+  if (window.fetch) {
+    fetch(CLOUD_API, {
+      method: 'PUT',
+      headers: _getHeaders(true),
+      body: body,
+      keepalive: true
+    }).catch(function(){});
   }
 });
 
@@ -1949,7 +1981,7 @@ function mergeTasks(localTasks, cloudTasks) {
 function getDailyLog() {
   try { return JSON.parse(localStorage.getItem('xx_daily_log_v1') || '{}'); } catch(e) { return {}; }
 }
-function saveDailyLog(log) { localStorage.setItem('xx_daily_log_v1', JSON.stringify(log)); localStorage.setItem('xx_local_modified', String(Date.now())); updateSyncTime(); }
+function saveDailyLog(log) { localStorage.setItem('xx_daily_log_v1', JSON.stringify(log)); localStorage.setItem('xx_local_modified', String(Date.now())); updateSyncTime(); _scheduleAutoPush(); }
 function removeLogEntry(title, dateKey) {
   const log = getDailyLog();
   const key = dateKey || today();
