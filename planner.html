@@ -130,6 +130,26 @@ body {
   opacity: 0.5; cursor: not-allowed;
 }
 
+/* 历史版本列表 */
+.history-list { margin-top: 10px; max-height: 300px; overflow-y: auto; }
+.history-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 6px;
+  cursor: pointer; transition: all 0.2s; font-size: 13px;
+}
+.history-item:hover { border-color: var(--accent); background: var(--accent-light); }
+.history-item .hi-time { font-weight: 600; flex-shrink: 0; min-width: 130px; }
+.history-item .hi-msg { color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.history-item .hi-restore {
+  margin-left: auto; padding: 3px 10px; border-radius: 6px;
+  border: none; background: var(--accent); color: #fff;
+  font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0;
+}
+.history-item .hi-restore:hover { background: #d35400; }
+.history-loading { font-size: 13px; color: var(--text-dim); padding: 20px; text-align: center; }
+.history-empty { font-size: 13px; color: var(--text-dim); padding: 20px; text-align: center; }
+
 .sync-modal-footer {
   margin-top: 20px; padding-top: 14px;
   border-top: 1px solid var(--border);
@@ -747,6 +767,16 @@ body {
       </div>
     </div>
 
+    <div class="sync-step">
+      <div class="sync-step-num">3</div>
+      <div class="sync-step-body">
+        <div class="sync-step-title">从云端历史版本恢复</div>
+        <div class="sync-step-desc">查看云端最近的数据提交记录，选择一个版本恢复到本地并同步。</div>
+        <button class="sync-step-btn download" onclick="loadHistoryVersions()">⏳ 查看历史版本</button>
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </div>
+
     <div class="sync-modal-footer">
       <div class="tip">💡 日常使用无需手动操作，云端会自动同步<br>手动备份仅作为额外的安全措施</div>
       <button class="sync-modal-close" onclick="closeSyncModal()">关闭</button>
@@ -1145,6 +1175,80 @@ function openSyncModal() {
 }
 function closeSyncModal() {
   document.getElementById('syncModal').classList.remove('show');
+}
+
+// ===== 历史版本恢复 =====
+var _historyLoading = false;
+
+function loadHistoryVersions() {
+  var listEl = document.getElementById('historyList');
+  if (_historyLoading) return;
+  _historyLoading = true;
+  listEl.innerHTML = '<div class="history-loading">⏳ 正在加载历史版本...</div>';
+
+  // GitHub Commits API: 列出 planner-data.json 最近10次提交
+  var commitsUrl = 'https://api.github.com/repos/' + CLOUD_REPO + '/commits?path=' + CLOUD_FILE + '&per_page=10';
+  fetch(commitsUrl, { headers: _getHeaders(false), cache: 'no-store' })
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function(commits) {
+      _historyLoading = false;
+      if (!commits || commits.length === 0) {
+        listEl.innerHTML = '<div class="history-empty">暂无历史版本</div>';
+        return;
+      }
+      var html = '';
+      commits.forEach(function(c) {
+        var date = new Date(c.commit.committer.date);
+        var timeStr = date.toLocaleString('zh-CN', { hour12: false });
+        var msg = c.commit.message || '';
+        // 截取简短信息
+        if (msg.length > 40) msg = msg.substring(0, 40) + '...';
+        html += '<div class="history-item" data-sha="' + c.sha + '">' +
+          '<span class="hi-time">' + timeStr + '</span>' +
+          '<span class="hi-msg">' + msg + '</span>' +
+          '<button class="hi-restore" onclick="restoreHistoryVersion(\'' + c.sha + '\')">恢复</button>' +
+          '</div>';
+      });
+      listEl.innerHTML = html;
+    })
+    .catch(function(e) {
+      _historyLoading = false;
+      listEl.innerHTML = '<div class="history-empty">加载失败: ' + e.message + '</div>';
+    });
+}
+
+function restoreHistoryVersion(sha) {
+  if (!confirm('⚠️ 确认恢复到该版本？\n\n· 本地数据将被该版本覆盖\n· 覆盖后会自动推送到云端\n· 当前数据将丢失（建议先导出备份）\n\n确定恢复吗？')) return;
+
+  _setSyncStatus('⏳ 正在恢复历史版本...');
+  // 通过 GitHub API 读取指定 SHA 的 planner-data.json
+  var url = 'https://api.github.com/repos/' + CLOUD_REPO + '/contents/' + CLOUD_FILE + '?ref=' + sha;
+  fetch(url, { headers: _getHeaders(false), cache: 'no-store' })
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      var cloud = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+      // 写入本地
+      if (cloud.tasks) saveTasks(cloud.tasks);
+      if (cloud.habits) saveHabits(cloud.habits);
+      if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
+      _tasksCache = null; _habitsCache = null;
+      _cloudDataSha = data.sha; // 保存该版本的 SHA，推送时需要
+      localStorage.setItem('xx_local_modified', String(Date.now()));
+      render();
+      closeSyncModal();
+      _setSyncStatus('✅ 已恢复历史版本，正在推送到云端...', 'var(--green)');
+      // 自动推送到云端
+      cloudPush(true);
+    })
+    .catch(function(e) {
+      _setSyncStatus('❌ 恢复失败: ' + e.message, 'var(--red)');
+    });
 }
 
 // ===== Token 设置 =====
