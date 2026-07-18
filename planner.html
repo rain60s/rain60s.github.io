@@ -661,7 +661,7 @@ body {
     <div class="side-section habits-done-section" id="habitsDoneSection" style="display:none;">
       <div class="side-section-title" style="cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between;" onclick="toggleHabitsDone()">
         <span>🏆 已养成习惯 <span id="habitsDoneCount" style="font-size:12px;color:var(--text-dim);font-weight:400;"></span></span>
-        <span id="habitsDoneToggle" style="font-size:12px;color:var(--text-dim);">展开 ▸</span>
+        <span id="habitsDoneToggle" style="font-size:12px;color:var(--text-dim);">▸</span>
       </div>
       <div class="habits-done-chips" id="habitsDoneList" style="display:none;"></div>
     </div>
@@ -2209,7 +2209,7 @@ function render() {
     // 默认收起
     document.getElementById('habitsDoneList').style.display = 'none';
     var tg = document.getElementById('habitsDoneToggle');
-    tg.textContent = '展开 ▸';
+    tg.textContent = '▸';
     tg.dataset.open = '0';
   } else {
     doneSection.style.display = 'none';
@@ -2870,11 +2870,11 @@ function toggleHabitsDone() {
   if (!list || !tg) return;
   if (tg.dataset.open === '1') {
     list.style.display = 'none';
-    tg.textContent = '展开 ▸';
+    tg.textContent = '▸';
     tg.dataset.open = '0';
   } else {
     list.style.display = '';
-    tg.textContent = '收起 ▾';
+    tg.textContent = '▾';
     tg.dataset.open = '1';
   }
 }
