@@ -372,6 +372,53 @@ body {
 }
 .btn-add:hover { border-color: var(--accent); color: var(--accent); }
 
+/* ===== 种子库 ===== */
+.seed-section { margin-top: 16px; }
+.seed-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+  transition: 0.15s; position: relative;
+}
+.seed-card:hover { border-color: var(--green); }
+.seed-card-title { font-size: 14px; font-weight: 500; line-height: 1.4; }
+.seed-card-meta { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+.seed-card-actions {
+  display: flex; gap: 4px; margin-top: 6px;
+}
+.seed-act-btn {
+  border: none; background: none; cursor: pointer;
+  color: var(--text-dim); font-size: 12px; padding: 2px 8px;
+  border-radius: 4px; transition: 0.15s;
+}
+.seed-act-btn:hover { color: var(--accent); background: rgba(0,0,0,0.04); }
+.seed-act-btn.del:hover { color: var(--red); }
+.seed-act-btn.grow:hover { color: var(--green); }
+
+/* ===== 已养成习惯 ===== */
+.habits-done-section { margin-top: 12px; }
+.habits-done-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.habits-done-chip {
+  padding: 4px 12px; border-radius: 14px;
+  background: var(--bg); border: 1px solid var(--border);
+  font-size: 13px; color: var(--text-dim);
+  cursor: default; user-select: none;
+}
+.habits-done-chip .chip-icon { margin-right: 4px; }
+
+/* ===== 种子库弹窗 ===== */
+.seed-modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5); z-index: 200;
+  align-items: center; justify-content: center;
+}
+.seed-modal-overlay.show { display: flex; }
+.seed-modal {
+  background: var(--card); border-radius: 16px;
+  padding: 24px; width: 100%; max-width: 480px;
+  max-height: 85vh; overflow-y: auto;
+  animation: slideUp 0.25s ease;
+}
+
 /* ===== 历史日志弹窗 ===== */
 .log-modal-overlay {
   display: none; position: fixed; inset: 0;
@@ -611,6 +658,11 @@ body {
       <div style="font-size:13px;color:var(--text-dim);margin-top:6px;" id="sideHabitProgress"></div>
     </div>
 
+    <div class="side-section habits-done-section" id="habitsDoneSection" style="display:none;">
+      <div class="side-section-title">🏆 已养成习惯</div>
+      <div class="habits-done-chips" id="habitsDoneList"></div>
+    </div>
+
     <div class="side-section">
       <div class="side-section-title">工具</div>
       <div class="side-btn-row" style="margin-bottom:6px;">
@@ -636,6 +688,11 @@ body {
 
   <div class="right">
     <div id="tomorrowSection"></div>
+    <div class="section seed-section" id="seedSection" style="display:none;">
+      <div class="section-title">🌱 种子库 <span style="font-weight:400;color:var(--text-dim)" id="seedCount"></span></div>
+      <div id="seedList"></div>
+      <button class="btn-add" onclick="openSeedModal()" style="margin-top:8px;">＋ 添加种子</button>
+    </div>
   </div>
 </div>
 
@@ -705,6 +762,34 @@ body {
     <div class="modal-actions">
       <button class="btn btn-cancel" onclick="closeHabitModal()">关闭</button>
       <button class="btn btn-primary" onclick="saveHabitChanges()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Seed Modal -->
+<div class="seed-modal-overlay" id="seedModalOverlay">
+  <div class="seed-modal">
+    <h2 id="seedModalTitle">🌱 添加种子</h2>
+    <input type="hidden" id="seedEditId">
+    <div class="form-group">
+      <label>名称</label>
+      <input type="text" id="seedTitle" placeholder="想学什么/想做什么？" autofocus>
+    </div>
+    <div class="form-group">
+      <label>分类</label>
+      <div id="seedCategoryPicker" style="display:flex;gap:8px;margin-top:2px;">
+        <span class="cat-pick cat-pick-work active" onclick="pickSeedCategory('工作')">🟦 工作</span>
+        <span class="cat-pick cat-pick-life" onclick="pickSeedCategory('生活')">🟩 生活</span>
+      </div>
+      <input type="hidden" id="seedCategory" value="生活">
+    </div>
+    <div class="form-group">
+      <label>备注（可选）</label>
+      <textarea id="seedNote" placeholder="为什么想学？什么条件成熟了再开始？"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeSeedModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveSeed()">保存</button>
     </div>
   </div>
 </div>
@@ -1119,6 +1204,34 @@ function saveHabits(d) {
   updateSyncTime();
 }
 
+// ===== 种子库 =====
+let _backlogCache = null;
+function loadBacklog() {
+  if (_backlogCache) return _backlogCache;
+  var raw = localStorage.getItem('xx_backlog_v1');
+  return _backlogCache = raw ? JSON.parse(raw) : [];
+}
+function saveBacklog(d) {
+  _backlogCache = d;
+  localStorage.setItem('xx_backlog_v1', JSON.stringify(d));
+  localStorage.setItem('xx_local_modified', String(Date.now()));
+  updateSyncTime();
+}
+
+// ===== 已养成习惯 =====
+let _habitsDoneCache = null;
+function loadHabitsDone() {
+  if (_habitsDoneCache) return _habitsDoneCache;
+  var raw = localStorage.getItem('xx_habits_done_v1');
+  return _habitsDoneCache = raw ? JSON.parse(raw) : [];
+}
+function saveHabitsDone(d) {
+  _habitsDoneCache = d;
+  localStorage.setItem('xx_habits_done_v1', JSON.stringify(d));
+  localStorage.setItem('xx_local_modified', String(Date.now()));
+  updateSyncTime();
+}
+
 const DEFAULT_TASKS = [
   {id:'1',title:'汇总民生领域信访问题报纪检组（周五12时前）',date:'2026-04-17',note:'信访来源、问题主要内容、是否已解决、解决时间、预计解决时间',done:false,doneDate:null,category:'工作'},
   {id:'2',title:'反馈污排部整改复核环保督察工作',date:'2026-04-13',note:'协同',done:false,doneDate:null,category:'工作'},
@@ -1237,7 +1350,9 @@ function restoreHistoryVersion(sha) {
       if (cloud.tasks) saveTasks(cloud.tasks);
       if (cloud.habits) saveHabits(cloud.habits);
       if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
-      _tasksCache = null; _habitsCache = null;
+      if (cloud.backlog) saveBacklog(cloud.backlog);
+      if (cloud.habitsDone) saveHabitsDone(cloud.habitsDone);
+      _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null;
       _cloudDataSha = data.sha; // 保存该版本的 SHA，推送时需要
       localStorage.setItem('xx_local_modified', String(Date.now()));
       render();
@@ -1294,7 +1409,9 @@ function _buildCloudData() {
     updatedAt: new Date().toISOString(),
     tasks: loadTasks(),
     habits: loadHabits(),
-    dailyLog: getDailyLog()
+    dailyLog: getDailyLog(),
+    backlog: loadBacklog(),
+    habitsDone: loadHabitsDone()
   };
 }
 
@@ -1424,12 +1541,14 @@ function cloudPull() {
       localStorage.setItem('xx_pull_timestamp', String(Date.now()));
 
       // 如果本地数据为空（首次使用），直接用云端数据
-      var hasLocalData = localStorage.getItem('xx_tasks_v2') || localStorage.getItem('xx_habits_v2');
+      var hasLocalData = localStorage.getItem('xx_tasks_v2') || localStorage.getItem('xx_habits_v2') || localStorage.getItem('xx_backlog_v1') || localStorage.getItem('xx_habits_done_v1');
       if (!hasLocalData) {
         if (cloud.tasks) saveTasks(cloud.tasks);
         if (cloud.habits) saveHabits(cloud.habits);
         if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
-        _tasksCache = null; _habitsCache = null;
+        if (cloud.backlog) saveBacklog(cloud.backlog);
+        if (cloud.habitsDone) saveHabitsDone(cloud.habitsDone);
+        _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null;
         localStorage.setItem('xx_local_modified', String(new Date(cloud.updatedAt || 0).getTime()));
         render();
         _setSyncStatus('☁️ 已从云端恢复数据', 'var(--green)');
@@ -1450,7 +1569,9 @@ function cloudPull() {
           if (cloud.tasks) saveTasks(cloud.tasks);
           if (cloud.habits) saveHabits(cloud.habits);
           if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
-          _tasksCache = null; _habitsCache = null;
+          if (cloud.backlog) saveBacklog(cloud.backlog);
+          if (cloud.habitsDone) saveHabitsDone(cloud.habitsDone);
+          _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null;
           localStorage.setItem('xx_local_modified', String(_cloudUpdatedAt));
           render();
           _cloudIsStale = false;
@@ -1603,7 +1724,9 @@ function cloudSyncNow() {
       if (cloud.tasks) saveTasks(cloud.tasks);
       if (cloud.habits) saveHabits(cloud.habits);
       if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
-      _tasksCache = null; _habitsCache = null;
+      if (cloud.backlog) saveBacklog(cloud.backlog);
+      if (cloud.habitsDone) saveHabitsDone(cloud.habitsDone);
+      _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null;
       localStorage.setItem('xx_local_modified', String(_cloudUpdatedAt));
       render();
       _cloudIsStale = false;
@@ -1657,6 +1780,8 @@ function autoRecoverData() {
   var tasks = loadTasks();
   var habits = loadHabits();
   var dailyLog = getDailyLog();
+  var backlog = loadBacklog();
+  var habitsDone = loadHabitsDone();
 
   var hasMojibake = false;
   function check(o) {
@@ -1664,13 +1789,15 @@ function autoRecoverData() {
     else if (Array.isArray(o)) o.forEach(check);
     else if (o && typeof o === 'object') { for (var k in o) { check(k); check(o[k]); } }
   }
-  check(tasks); check(habits); check(dailyLog);
+  check(tasks); check(habits); check(dailyLog); check(backlog); check(habitsDone);
 
   if (hasMojibake) {
     if (confirm('⚠️ 检测到数据存在乱码（可能是上次同步导致）\n\n是否自动修复？\n（修复后会刷新页面）')) {
       saveTasks(_recoverObject(tasks));
       saveHabits(_recoverObject(habits));
       saveDailyLog(_recoverObject(dailyLog));
+      saveBacklog(_recoverObject(backlog));
+      saveHabitsDone(_recoverObject(habitsDone));
       alert('✅ 数据已修复，页面即将刷新');
       location.reload();
       return true;
@@ -1739,6 +1866,8 @@ function doExport() {
     tasks: loadTasks(),
     habits: loadHabits(),
     dailyLog: getDailyLog(),
+    backlog: loadBacklog(),
+    habitsDone: loadHabitsDone(),
     date: today(),
     exportedAt: new Date().toLocaleString('zh-CN')
   };
@@ -1768,6 +1897,9 @@ function importData(ev) {
       if (d.tasks) saveTasks(d.tasks);
       if (d.habits) saveHabits(d.habits);
       if (d.dailyLog) saveDailyLog(d.dailyLog);
+      if (d.backlog) saveBacklog(d.backlog);
+      if (d.habitsDone) saveHabitsDone(d.habitsDone);
+      _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null;
       render();
       closeSyncModal();
       var si = document.getElementById('sideSyncInfo');
@@ -2036,6 +2168,42 @@ function render() {
   // Calendar
   try { renderCalendar(); } catch(e) {
     document.getElementById('calendar').innerHTML = '<div style="padding:8px;font-size:11px;color:var(--red);">⚠️ ' + e.message + '</div>';
+  }
+
+  // ===== 种子库 =====
+  var backlog = loadBacklog();
+  var seedSection = document.getElementById('seedSection');
+  if (backlog.length) {
+    seedSection.style.display = '';
+    document.getElementById('seedCount').textContent = '(' + backlog.length + ')';
+    document.getElementById('seedList').innerHTML = backlog.map(function(s) {
+      var catIcon = s.category === '工作' ? '🟦' : '🟩';
+      return '<div class="seed-card">'
+        + '<div class="seed-card-title">' + catIcon + ' ' + esc(s.title) + '</div>'
+        + (s.note ? '<div class="seed-card-meta">' + esc(s.note) + '</div>' : '')
+        + '<div class="seed-card-actions">'
+        + '<button class="seed-act-btn" onclick="editSeed(\'' + s.id + '\')">✏️ 编辑</button>'
+        + '<button class="seed-act-btn grow" onclick="growSeed(\'' + s.id + '\')">🌱 转任务</button>'
+        + '<button class="seed-act-btn del" onclick="delSeed(\'' + s.id + '\')">🗑 删除</button>'
+        + '</div></div>';
+    }).join('');
+  } else {
+    seedSection.style.display = '';
+    document.getElementById('seedCount').textContent = '';
+    document.getElementById('seedList').innerHTML = '<div style="font-size:13px;color:var(--text-dim);padding:8px 0;">暂无种子，点击下方添加</div>';
+  }
+
+  // ===== 已养成习惯 =====
+  var habitsDone = loadHabitsDone();
+  var doneSection = document.getElementById('habitsDoneSection');
+  if (habitsDone.length) {
+    doneSection.style.display = '';
+    document.getElementById('habitsDoneList').innerHTML = habitsDone.map(function(h) {
+      return '<div class="habits-done-chip" title="已养成 · ' + esc(h.detail || '') + '">'
+        + '<span class="chip-icon">' + h.icon + '</span>' + esc(h.name) + '</div>';
+    }).join('');
+  } else {
+    doneSection.style.display = 'none';
   }
 }
 
@@ -2609,7 +2777,7 @@ function closeHabitModal() {
 function renderHabitModal() {
   const icons = ['🧘','📖','🏃','✍️','💤','💧','🧹','🍎','🎵','💡','📝','🧘‍♀️','🚴','🏊','🎨','🌿','💊','✨'];
   let html = '';
-  html += '<div style="font-size:12px;color:var(--text-dim);margin:10px 0 6px;font-weight:600;">📌 固定习惯</div>';
+  html += '<div style="font-size:12px;color:var(--text-dim);margin:10px 0 6px;font-weight:600;">📌 每日提醒习惯</div>';
   html += tempHabits.map((h, i) =>
     '<div class="habit-row" data-idx="' + i + '">'
     + '<div class="habit-row-icon"><select onchange="tempHabits[' + i + '].icon=this.value;renderHabitModal()" style="font-size:18px;border:none;background:none;cursor:pointer;outline:none;">'
@@ -2619,11 +2787,71 @@ function renderHabitModal() {
     + '<input type="text" value="' + esc(h.name) + '" onchange="tempHabits[' + i + '].name=this.value" placeholder="习惯名称" style="font-size:15px;border:none;background:none;outline:none;width:100%;padding:2px 0;">'
     + '<input type="text" value="' + esc(h.detail||'') + '" onchange="tempHabits[' + i + '].detail=this.value" placeholder="补充说明" style="font-size:12px;color:var(--text-dim);border:none;background:none;outline:none;width:100%;padding:2px 0;">'
     + '</div>'
+    + '<button class="habit-row-del" onclick="graduateHabit(' + i + ')" title="移到已养成" style="font-size:16px;margin-right:4px;">🏆</button>'
     + '<button class="habit-row-del" onclick="tempHabits.splice(' + i + ',1);renderHabitModal()" title="删除">🗑</button></div>'
   ).join('');
-  html += '<button class="btn-add" onclick="tempHabits.push({id:\'h\'+Date.now(),icon:\'✨\',name:\'\',detail:\'\',active:false});renderHabitModal()">＋ 添加固定习惯</button>';
+  html += '<button class="btn-add" onclick="tempHabits.push({id:\'h\'+Date.now(),icon:\'✨\',name:\'\',detail:\'\',active:false});renderHabitModal()">＋ 添加每日习惯</button>';
+
+  var done = loadHabitsDone();
+  if (done.length) {
+    html += '<div style="font-size:12px;color:var(--text-dim);margin:16px 0 6px;font-weight:600;">🏆 已养成习惯（不再每日提醒）</div>';
+    html += done.map(function(h, i) {
+      return '<div class="habit-row">'
+        + '<div class="habit-row-icon">' + h.icon + '</div>'
+        + '<div class="habit-row-info">'
+        + '<div class="habit-row-name" style="color:var(--text-dim);">' + esc(h.name) + '</div>'
+        + '<div class="habit-row-detail">' + esc(h.detail || '已养成') + '</div>'
+        + '</div>'
+        + '<button class="habit-row-del" onclick="restoreHabit(\'' + h.id + '\')" title="恢复为每日提醒" style="font-size:16px;">↩️</button>'
+        + '<button class="habit-row-del" onclick="delHabitDone(\'' + h.id + '\')" title="删除">🗑</button>'
+        + '</div>';
+    }).join('');
+  }
 
   document.getElementById('habitModalList').innerHTML = html;
+}
+
+function graduateHabit(idx) {
+  var h = tempHabits[idx];
+  if (!h || !h.name.trim()) return;
+  var done = loadHabitsDone();
+  done.push({
+    id: h.id,
+    icon: h.icon,
+    name: h.name,
+    detail: h.detail || '',
+    graduatedAt: new Date().toISOString()
+  });
+  saveHabitsDone(done);
+  tempHabits.splice(idx, 1);
+  renderHabitModal();
+}
+
+function restoreHabit(id) {
+  var done = loadHabitsDone();
+  var idx = done.findIndex(function(h) { return h.id === id; });
+  if (idx === -1) return;
+  var h = done[idx];
+  tempHabits.push({
+    id: h.id,
+    icon: h.icon,
+    name: h.name,
+    detail: h.detail || '',
+    active: false
+  });
+  done.splice(idx, 1);
+  saveHabitsDone(done);
+  renderHabitModal();
+}
+
+function delHabitDone(id) {
+  var done = loadHabitsDone();
+  var idx = done.findIndex(function(h) { return h.id === id; });
+  if (idx === -1) return;
+  if (!confirm('确定删除已养成习惯"' + done[idx].name + '"？')) return;
+  done.splice(idx, 1);
+  saveHabitsDone(done);
+  renderHabitModal();
 }
 
 function saveHabitChanges() {
@@ -2635,12 +2863,121 @@ function saveHabitChanges() {
   });
 }
 
+// ===== 种子库管理 =====
+var _seedEditCategory = '生活';
+
+function pickSeedCategory(cat) {
+  _seedEditCategory = cat;
+  document.getElementById('seedCategory').value = cat;
+  document.querySelectorAll('#seedCategoryPicker .cat-pick').forEach(function(el) {
+    el.classList.remove('active');
+  });
+  if (cat === '工作') {
+    document.querySelector('#seedCategoryPicker .cat-pick-work').classList.add('active');
+  } else {
+    document.querySelector('#seedCategoryPicker .cat-pick-life').classList.add('active');
+  }
+}
+
+function openSeedModal() {
+  document.getElementById('seedModalTitle').textContent = '🌱 添加种子';
+  document.getElementById('seedEditId').value = '';
+  document.getElementById('seedTitle').value = '';
+  document.getElementById('seedNote').value = '';
+  pickSeedCategory('生活');
+  document.getElementById('seedModalOverlay').classList.add('show');
+  setTimeout(function() { document.getElementById('seedTitle').focus(); }, 100);
+}
+
+function closeSeedModal() {
+  document.getElementById('seedModalOverlay').classList.remove('show');
+}
+
+function editSeed(id) {
+  var backlog = loadBacklog();
+  var s = backlog.find(function(b) { return b.id === id; });
+  if (!s) return;
+  document.getElementById('seedModalTitle').textContent = '✏️ 编辑种子';
+  document.getElementById('seedEditId').value = s.id;
+  document.getElementById('seedTitle').value = s.title;
+  document.getElementById('seedNote').value = s.note || '';
+  pickSeedCategory(s.category || '生活');
+  document.getElementById('seedModalOverlay').classList.add('show');
+}
+
+function saveSeed() {
+  var title = document.getElementById('seedTitle').value.trim();
+  if (!title) { document.getElementById('seedTitle').style.borderColor = 'var(--red)'; return; }
+  _guardLocalChange(function() {
+    var backlog = loadBacklog();
+    var editId = document.getElementById('seedEditId').value;
+    var cat = document.getElementById('seedCategory').value;
+    var note = document.getElementById('seedNote').value.trim();
+    if (editId) {
+      var idx = backlog.findIndex(function(b) { return b.id === editId; });
+      if (idx !== -1) {
+        backlog[idx].title = title;
+        backlog[idx].category = cat;
+        backlog[idx].note = note;
+      }
+    } else {
+      backlog.push({
+        id: 's' + Date.now(),
+        title: title,
+        category: cat,
+        note: note,
+        createdAt: new Date().toISOString()
+      });
+    }
+    saveBacklog(backlog);
+    closeSeedModal();
+    render();
+  });
+}
+
+function delSeed(id) {
+  var backlog = loadBacklog();
+  var s = backlog.find(function(b) { return b.id === id; });
+  if (!s) return;
+  if (!confirm('确定删除种子"' + s.title + '"？')) return;
+  _guardLocalChange(function() {
+    backlog = backlog.filter(function(b) { return b.id !== id; });
+    saveBacklog(backlog);
+    render();
+  });
+}
+
+function growSeed(id) {
+  var backlog = loadBacklog();
+  var s = backlog.find(function(b) { return b.id === id; });
+  if (!s) return;
+  if (!confirm('将种子"' + s.title + '"转为正式任务？\n（会从种子库移除，添加到任务列表）')) return;
+  _guardLocalChange(function() {
+    var tasks = loadTasks();
+    tasks.push({
+      id: Date.now().toString(),
+      title: s.title,
+      date: '',
+      category: s.category || '生活',
+      recurrence: '',
+      note: s.note || '',
+      done: false,
+      doneDate: null
+    });
+    saveTasks(tasks);
+    backlog = backlog.filter(function(b) { return b.id !== id; });
+    saveBacklog(backlog);
+    render();
+  });
+}
+
 // Events
 document.getElementById('modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
 document.getElementById('habitModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeHabitModal(); });
 document.getElementById('syncModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeSyncModal(); });
+document.getElementById('seedModalOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeSeedModal(); });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal(); closeHabitModal(); closeSyncModal(); }
+  if (e.key === 'Escape') { closeModal(); closeHabitModal(); closeSyncModal(); closeSeedModal(); }
   if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) openModal();
 });
 // 自动清理测试数据
