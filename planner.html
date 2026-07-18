@@ -2824,6 +2824,7 @@ function graduateHabit(idx) {
   });
   saveHabitsDone(done);
   tempHabits.splice(idx, 1);
+  saveHabits(tempHabits);
   renderHabitModal();
 }
 
