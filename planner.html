@@ -1235,6 +1235,35 @@ function saveHabitsDone(d) {
   updateSyncTime();
 }
 
+// ===== 习惯打卡记录 =====
+let _habitRecordsCache = null;
+function loadHabitRecords() {
+  if (_habitRecordsCache) return _habitRecordsCache;
+  var raw = localStorage.getItem('xx_habit_records_v1');
+  return _habitRecordsCache = raw ? JSON.parse(raw) : {};
+}
+function saveHabitRecords(d) {
+  _habitRecordsCache = d;
+  localStorage.setItem('xx_habit_records_v1', JSON.stringify(d));
+  localStorage.setItem('xx_local_modified', String(Date.now()));
+  updateSyncTime();
+}
+function isHabitDoneToday(id) {
+  var recs = loadHabitRecords();
+  var t = today();
+  return recs[t] && recs[t].indexOf(id) >= 0;
+}
+function toggleHabitRecord(id) {
+  var recs = loadHabitRecords();
+  var t = today();
+  if (!recs[t]) recs[t] = [];
+  var idx = recs[t].indexOf(id);
+  if (idx >= 0) { recs[t].splice(idx, 1); }
+  else { recs[t].push(id); }
+  if (recs[t].length === 0) delete recs[t];
+  saveHabitRecords(recs);
+}
+
 const DEFAULT_TASKS = [
   {id:'1',title:'汇总民生领域信访问题报纪检组（周五12时前）',date:'2026-04-17',note:'信访来源、问题主要内容、是否已解决、解决时间、预计解决时间',done:false,doneDate:null,category:'工作'},
   {id:'2',title:'反馈污排部整改复核环保督察工作',date:'2026-04-13',note:'协同',done:false,doneDate:null,category:'工作'},
@@ -1355,7 +1384,8 @@ function restoreHistoryVersion(sha) {
       if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
       if (cloud.backlog) saveBacklog(cloud.backlog);
       if (cloud.habitsDone) saveHabitsDone(cloud.habitsDone);
-      _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null;
+      if (cloud.habitRecords) saveHabitRecords(cloud.habitRecords);
+      _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null; _habitRecordsCache = null;
       _cloudDataSha = data.sha; // 保存该版本的 SHA，推送时需要
       localStorage.setItem('xx_local_modified', String(Date.now()));
       render();
@@ -1414,7 +1444,8 @@ function _buildCloudData() {
     habits: loadHabits(),
     dailyLog: getDailyLog(),
     backlog: loadBacklog(),
-    habitsDone: loadHabitsDone()
+    habitsDone: loadHabitsDone(),
+    habitRecords: loadHabitRecords()
   };
 }
 
@@ -1551,7 +1582,8 @@ function cloudPull() {
         if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
         if (cloud.backlog) saveBacklog(cloud.backlog);
         if (cloud.habitsDone) saveHabitsDone(cloud.habitsDone);
-        _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null;
+        if (cloud.habitRecords) saveHabitRecords(cloud.habitRecords);
+        _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null; _habitRecordsCache = null;
         localStorage.setItem('xx_local_modified', String(new Date(cloud.updatedAt || 0).getTime()));
         render();
         _setSyncStatus('☁️ 已从云端恢复数据', 'var(--green)');
@@ -1574,7 +1606,8 @@ function cloudPull() {
           if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
           if (cloud.backlog) saveBacklog(cloud.backlog);
           if (cloud.habitsDone) saveHabitsDone(cloud.habitsDone);
-          _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null;
+          if (cloud.habitRecords) saveHabitRecords(cloud.habitRecords);
+          _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null; _habitRecordsCache = null;
           localStorage.setItem('xx_local_modified', String(_cloudUpdatedAt));
           render();
           _cloudIsStale = false;
@@ -1729,7 +1762,8 @@ function cloudSyncNow() {
       if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
       if (cloud.backlog) saveBacklog(cloud.backlog);
       if (cloud.habitsDone) saveHabitsDone(cloud.habitsDone);
-      _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null;
+      if (cloud.habitRecords) saveHabitRecords(cloud.habitRecords);
+      _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null; _habitRecordsCache = null;
       localStorage.setItem('xx_local_modified', String(_cloudUpdatedAt));
       render();
       _cloudIsStale = false;
@@ -1785,6 +1819,7 @@ function autoRecoverData() {
   var dailyLog = getDailyLog();
   var backlog = loadBacklog();
   var habitsDone = loadHabitsDone();
+  var habitRecords = loadHabitRecords();
 
   var hasMojibake = false;
   function check(o) {
@@ -1792,7 +1827,7 @@ function autoRecoverData() {
     else if (Array.isArray(o)) o.forEach(check);
     else if (o && typeof o === 'object') { for (var k in o) { check(k); check(o[k]); } }
   }
-  check(tasks); check(habits); check(dailyLog); check(backlog); check(habitsDone);
+  check(tasks); check(habits); check(dailyLog); check(backlog); check(habitsDone); check(habitRecords);
 
   if (hasMojibake) {
     if (confirm('⚠️ 检测到数据存在乱码（可能是上次同步导致）\n\n是否自动修复？\n（修复后会刷新页面）')) {
@@ -1801,6 +1836,7 @@ function autoRecoverData() {
       saveDailyLog(_recoverObject(dailyLog));
       saveBacklog(_recoverObject(backlog));
       saveHabitsDone(_recoverObject(habitsDone));
+      saveHabitRecords(_recoverObject(habitRecords));
       alert('✅ 数据已修复，页面即将刷新');
       location.reload();
       return true;
@@ -1871,6 +1907,7 @@ function doExport() {
     dailyLog: getDailyLog(),
     backlog: loadBacklog(),
     habitsDone: loadHabitsDone(),
+    habitRecords: loadHabitRecords(),
     date: today(),
     exportedAt: new Date().toLocaleString('zh-CN')
   };
@@ -1902,7 +1939,8 @@ function importData(ev) {
       if (d.dailyLog) saveDailyLog(d.dailyLog);
       if (d.backlog) saveBacklog(d.backlog);
       if (d.habitsDone) saveHabitsDone(d.habitsDone);
-      _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null;
+      if (d.habitRecords) saveHabitRecords(d.habitRecords);
+      _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null; _habitRecordsCache = null;
       render();
       closeSyncModal();
       var si = document.getElementById('sideSyncInfo');
@@ -2115,12 +2153,15 @@ function render() {
   document.getElementById('headerDate').textContent =
     now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日 星期' + wd[now.getDay()];
 
-  // Habits
-  const active = habits.filter(h=>h.active).length;
+  // Habits - 只显示 active=true 的习惯，打卡状态查 habitRecords
+  const activeHabits = habits.filter(h=>h.active);
+  const todayDone = activeHabits.filter(h=>isHabitDoneToday(h.id)).length;
   document.getElementById('sideHabitProgress').innerHTML =
-    active ? active + '/' + habits.length + ' ✨ · <span style="cursor:pointer;text-decoration:underline;font-size:13px;" onclick="openHabitModal()" title="管理习惯">⚙️ 管理</span>' : '0/' + habits.length + ' · <span style="cursor:pointer;text-decoration:underline;font-size:13px;" onclick="openHabitModal()" title="管理习惯">⚙️ 管理</span>';
-  const chips = habits.map(function(h, idx) {
-    return '<div class="side-habit-chip ' + (h.active?'active':'') + '" draggable="true" data-idx="' + idx + '" ondragstart="onHabitDragStart(event,' + idx + ')" ondragover="onHabitDragOver(event,this)" ondragleave="onHabitDragLeave(event,this)" ondrop="onHabitDrop(event,' + idx + ')" ondragend="onHabitDragEnd(event)" onclick="toggleHabit(\'' + h.id + '\')">' + h.icon + ' ' + esc(h.name) + '</div>'
+    '今日 ' + todayDone + '/' + activeHabits.length + (todayDone===activeHabits.length && activeHabits.length>0 ? ' ✨' : '') + ' · <span style="cursor:pointer;text-decoration:underline;font-size:13px;" onclick="openHabitModal()" title="管理习惯">⚙️ 管理</span>';
+  const chips = activeHabits.map(function(h) {
+    var realIdx = habits.indexOf(h);
+    var done = isHabitDoneToday(h.id);
+    return '<div class="side-habit-chip ' + (done?'active':'') + '" draggable="true" data-idx="' + realIdx + '" ondragstart="onHabitDragStart(event,' + realIdx + ')" ondragover="onHabitDragOver(event,this)" ondragleave="onHabitDragLeave(event,this)" ondrop="onHabitDrop(event,' + realIdx + ')" ondragend="onHabitDragEnd(event)" onclick="toggleHabit(\'' + h.id + '\')">' + h.icon + ' ' + esc(h.name) + '</div>'
   }).join('');
   document.getElementById('sideHabitList').innerHTML = chips || '<span style="font-size:13px;color:var(--text-dim);">暂无，点击⚙️添加</span>';
 
@@ -2765,8 +2806,8 @@ function saveTask() {
 function toggleHabit(id) {
   if (habitDragged) { habitDragged = false; return; }
   _guardLocalChange(function() {
-    const d = loadHabits(), h = d.find(x=>x.id===id);
-    if (h) { h.active = !h.active; saveHabits(d); render(); }
+    toggleHabitRecord(id);
+    render();
   });
 }
 
@@ -2797,9 +2838,10 @@ function renderHabitModal() {
     + '<input type="text" value="' + esc(h.detail||'') + '" onchange="tempHabits[' + i + '].detail=this.value" placeholder="补充说明" style="font-size:12px;color:var(--text-dim);border:none;background:none;outline:none;width:100%;padding:2px 0;">'
     + '</div>'
     + '<button class="habit-row-del" onclick="graduateHabit(' + i + ')" title="移到已养成" style="font-size:16px;margin-right:4px;">🏆</button>'
+    + '<button class="habit-row-del" onclick="tempHabits[' + i + '].active=!tempHabits[' + i + '].active;renderHabitModal()" title="' + (h.active?'点击暂停追踪':'点击恢复追踪') + '" style="font-size:16px;margin-right:4px;opacity:' + (h.active?'1':'0.4') + ';">' + (h.active?'👁️':'🚫') + '</button>'
     + '<button class="habit-row-del" onclick="tempHabits.splice(' + i + ',1);renderHabitModal()" title="删除">🗑</button></div>'
   ).join('');
-  html += '<button class="btn-add" onclick="tempHabits.push({id:\'h\'+Date.now(),icon:\'✨\',name:\'\',detail:\'\',active:false});renderHabitModal()">＋ 添加每日习惯</button>';
+  html += '<button class="btn-add" onclick="tempHabits.push({id:\'h\'+Date.now(),icon:\'✨\',name:\'\',detail:\'\',active:true});renderHabitModal()">＋ 添加每日习惯</button>';
 
   var done = loadHabitsDone();
   if (done.length) {
