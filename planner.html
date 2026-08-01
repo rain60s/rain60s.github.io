@@ -611,6 +611,7 @@ body {
 .cal-cell.today { background: var(--accent); color: #fff; }
 .cal-cell.today .cal-lunar { color: rgba(255,255,255,0.75); }
 .cal-cell.other-month { opacity: 0.3; pointer-events: none; }
+.cal-cell.today.other-month { opacity: 1; pointer-events: auto; }
 .cal-solar { font-size: 13px; font-weight: 500; line-height: 1.2; }
 .cal-cell.today .cal-solar { font-size: 14px; font-weight: 700; }
 .cal-lunar { font-size: 10px; color: var(--text-dim); line-height: 1; margin-top: 1px; }
@@ -1010,8 +1011,9 @@ function calGoToday(){
 }
 
 function renderCalendar(){
-  if(!_calYear){
-    var now=new Date();
+  var now=new Date();
+  // 防御性初始化：未设置、跨年后残留非法月份都重置为今天
+  if(!_calYear || _calMonth<1 || _calMonth>12){
     _calYear=now.getFullYear();
     _calMonth=now.getMonth()+1;
   }
@@ -2002,9 +2004,11 @@ function categorize(tasks) {
 }
 
 // ===== 启动 =====
+// 先强制把万年历定位到今天，避免某些情况下月份停留在上月
+//（如浏览器缓存、跨天未刷新等场景）
+calGoToday();
 render();
 updateSyncTime();
-renderCalendar();
 
 // ===== 保底推送：确保云端始终最新 =====
 // 1. 每10分钟自动推送一次（如有未推送的修改，cloudPush内部会跳过）
