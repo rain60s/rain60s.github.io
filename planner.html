@@ -3043,10 +3043,23 @@ function growSeed(id) {
 }
 
 // Events
-document.getElementById('modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
-document.getElementById('habitModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeHabitModal(); });
+// 关键修复：任务弹窗一旦录入了内容，点遮罩不再关闭，避免误触（鼠标移出再回来顺手一点）丢失已填信息
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target !== e.currentTarget) return;
+  var t = document.getElementById('taskTitle'), n = document.getElementById('taskNote');
+  if ((t && t.value.trim()) || (n && n.value.trim())) return; // 有内容则保留弹窗
+  closeModal();
+});
+// 习惯管理弹窗：禁用遮罩点击关闭（改动需点"关闭/保存"按钮确认，防止误关丢失排序）
+document.getElementById('habitModal').addEventListener('click', e => { if(e.target===e.currentTarget) {/* 不改：需点按钮关闭，避免误触丢数据 */} });
 document.getElementById('syncModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeSyncModal(); });
-document.getElementById('seedModalOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeSeedModal(); });
+// 种子弹窗同样防护：已填内容时点遮罩不关闭
+document.getElementById('seedModalOverlay').addEventListener('click', e => {
+  if (e.target !== e.currentTarget) return;
+  var s = document.getElementById('seedTitle');
+  if (s && s.value.trim()) return; // 有内容则保留弹窗
+  closeSeedModal();
+});
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closeModal(); closeHabitModal(); closeSyncModal(); closeSeedModal(); }
   if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) openModal();
