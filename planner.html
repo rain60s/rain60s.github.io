@@ -1607,7 +1607,7 @@ function _guardLocalChange(action) {
 // 从云端拉取数据（页面加载时自动调用）
 function cloudPull() {
   _setSyncStatus('☁️ 正在拉取云端数据...');
-  fetch(CLOUD_API + '?t=' + Date.now(), { headers: _getHeaders(false), cache: 'no-store' })
+  _fetchWithRetry(CLOUD_API + '?t=' + Date.now(), { headers: _getHeaders(false), cache: 'no-store' })
     .then(function(r) {
       if (r.status === 404) {
         _setSyncStatus('☁️ 云端暂无数据，可正常使用', 'var(--text-dim)');
@@ -1678,7 +1678,11 @@ function cloudPull() {
       }
     })
     .catch(function(e) {
-      _setSyncStatus('☁️ 拉取失败: ' + e.message, 'var(--text-dim)');
+      var errMsg = _cloudErrMsg(e);
+      _setSyncStatus(errMsg, 'var(--red)');
+      _cloudDiagnose().then(function(d) {
+        _setSyncStatus(errMsg + ' ｜ ' + d, 'var(--red)');
+      });
     });
 }
 
