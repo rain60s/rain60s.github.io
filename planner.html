@@ -1509,28 +1509,10 @@ function checkCloudFreshness(callback) {
     });
 }
 
-// 推送后验证：读取云端数据确认上传真正成功（带重试，避免GitHub API延迟导致误判）
+// 注意：PUT 响应 200/201 本身已是写入成功的金标准，无需二次 GET 校验 SHA
+// 保留该函数占位仅为兼容老代码调用，实际什么都不做（直接显示"已上传 ✓"）
 function _verifyPush(expectedSha, _retryCount) {
-  if (!_retryCount) _retryCount = 0;
-  fetch(CLOUD_API + '?t=' + Date.now(), { headers: _getHeaders(false), cache: 'no-store' })
-    .then(function(r) {
-      if (!r.ok) throw new Error('verify failed');
-      return r.json();
-    })
-    .then(function(data) {
-      if (data.sha === expectedSha) {
-        _setSyncStatus('✅ ' + new Date().toLocaleTimeString('zh-CN') + ' 已验证上传成功 ✓', 'var(--green)');
-      } else if (_retryCount < 2) {
-        // SHA 不匹配，可能是 GitHub API 延迟或 CDN 缓存，2秒后重试
-        setTimeout(function() { _verifyPush(expectedSha, _retryCount + 1); }, 2000);
-      } else {
-        // 重试2次仍不匹配，给出温和提示（不是错误，可能是并发写入）
-        _setSyncStatus('☁️ ' + new Date().toLocaleTimeString('zh-CN') + ' 已上传（验证未通过，可忽略）', 'var(--blue)');
-      }
-    })
-    .catch(function(e) {
-      _setSyncStatus('✅ ' + new Date().toLocaleTimeString('zh-CN') + ' 已上传（未能验证）', 'var(--green)');
-    });
+  _setSyncStatus('✅ ' + new Date().toLocaleTimeString('zh-CN') + ' 已上传 ✓', 'var(--green)');
 }
 
 // ===== 同步健壮性增强：重试 + 真实错误分类 + 一键诊断 =====
