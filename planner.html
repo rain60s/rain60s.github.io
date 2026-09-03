@@ -358,6 +358,7 @@ body {
 .habit-row-info { flex: 1; }
 .habit-row-name { font-size: 15px; font-weight: 500; }
 .habit-row-detail { font-size: 12px; color: var(--text-dim); }
+.habit-row-type { display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
 .habit-row-del {
   width: 28px; height: 28px; border-radius: 6px;
   background: none; border: none; color: var(--text-dim);
@@ -632,6 +633,62 @@ body {
   .modal { border-radius: 16px; margin-bottom: 40px; }
   .modal-overlay { align-items: center; }
 }
+
+/* ===== 习惯打卡增强：进度环 / 心情 / 统计 ===== */
+.side-stats-link { font-weight: 400; font-size: 12px; color: var(--accent); cursor: pointer; }
+.side-stats-link:hover { text-decoration: underline; }
+.side-habit-ring { display: flex; align-items: center; gap: 12px; padding: 4px 0 10px; }
+.side-habit-ring svg { flex-shrink: 0; }
+.ring-center { text-align: center; }
+.ring-pct { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1; }
+.ring-sub { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+.side-ring-info { flex: 1; min-width: 0; }
+.side-ring-streak { font-size: 13px; color: var(--text); font-weight: 600; }
+.side-ring-streak b { color: var(--accent); font-size: 16px; }
+.side-ring-hint { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+.side-habit-chip { position: relative; }
+.side-habit-chip .chip-prog {
+  display: inline-block; margin-left: 4px; font-size: 12px;
+  color: var(--accent); font-weight: 700;
+}
+.side-habit-chip.counting { border-style: dashed; }
+.side-habit-chip.counting.active { border-style: solid; }
+
+.side-mood { display: flex; gap: 4px; margin-top: 10px; align-items: center; }
+.side-mood-label { font-size: 12px; color: var(--text-dim); margin-right: 2px; }
+.mood-emoji {
+  font-size: 20px; cursor: pointer; opacity: 0.35; transition: 0.15s;
+  padding: 2px; border-radius: 6px; line-height: 1;
+}
+.mood-emoji:hover { opacity: 0.7; }
+.mood-emoji.active { opacity: 1; transform: scale(1.2); }
+
+/* 统计 modal */
+.habit-stats-wrap { max-height: 72vh; overflow-y: auto; }
+.hs-section-title { font-size: 13px; font-weight: 700; color: var(--text); margin: 18px 0 8px; }
+.hs-section-title:first-child { margin-top: 4px; }
+.hs-heat { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.hs-heat-day { aspect-ratio: 1; border-radius: 4px; position: relative; cursor: default; }
+.hs-heat-day .hs-dot-label {
+  position: absolute; left: 0; right: 0; top: 2px; text-align: center;
+  font-size: 8px; color: rgba(0,0,0,0.5); pointer-events: none;
+}
+.hs-legend { display: flex; gap: 4px; align-items: center; font-size: 11px; color: var(--text-dim); margin-top: 6px; }
+.hs-legend .sw { width: 12px; height: 12px; border-radius: 3px; }
+.hs-bars { display: flex; align-items: flex-end; gap: 8px; height: 110px; padding: 4px 2px 0; }
+.hs-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+.hs-bar { width: 100%; max-width: 34px; border-radius: 4px 4px 0 0; background: var(--blue); min-height: 2px; transition: 0.2s; }
+.hs-bar-label { font-size: 10px; color: var(--text-dim); }
+.hs-bar-val { font-size: 10px; color: var(--text-dim); }
+.hs-badge-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.hs-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 14px; background: var(--accent-light);
+  color: var(--accent); font-size: 13px; font-weight: 600;
+}
+.hs-badge.locked { background: var(--card); color: var(--text-dim); border: 1px dashed var(--border); }
+.hs-empty { font-size: 13px; color: var(--text-dim); padding: 12px 0; }
 </style>
 </head>
 <body>
@@ -654,9 +711,14 @@ body {
     </div>
 
     <div class="side-section">
-      <div class="side-section-title">今日习惯</div>
+      <div class="side-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>今日习惯</span>
+        <span class="side-stats-link" onclick="openHabitStats()">📊 统计</span>
+      </div>
+      <div class="side-habit-ring" id="sideHabitRing"></div>
       <div class="side-habits" id="sideHabitList"></div>
       <div style="font-size:13px;color:var(--text-dim);margin-top:6px;" id="sideHabitProgress"></div>
+      <div class="side-mood" id="sideMood"></div>
     </div>
 
     <div class="side-section habits-done-section" id="habitsDoneSection" style="display:none;">
@@ -769,6 +831,17 @@ body {
     <div class="modal-actions">
       <button class="btn btn-cancel" onclick="closeHabitModal()">关闭</button>
       <button class="btn btn-primary" onclick="saveHabitChanges()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Habit Stats Modal -->
+<div class="modal-overlay" id="habitStatsModal">
+  <div class="modal">
+    <h2>📊 习惯统计</h2>
+    <div class="habit-stats-wrap" id="habitStatsBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeHabitStats()">关闭</button>
     </div>
   </div>
 </div>
@@ -1203,7 +1276,9 @@ function saveTasks(d) {
 function loadHabits() {
   if (_habitsCache) return _habitsCache;
   const raw = localStorage.getItem('xx_habits_v2');
-  return _habitsCache = raw ? JSON.parse(raw) : DEFAULT_HABITS;
+  var list = raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_HABITS));
+  list = list.map(normalizeHabit);
+  return _habitsCache = list;
 }
 function saveHabits(d) {
   _habitsCache = d;
@@ -1269,6 +1344,63 @@ function toggleHabitRecord(id) {
   saveHabitRecords(recs);
 }
 
+// ===== 习惯数值记录（计数 / 时长 / 时间段）=====
+let _habitValuesCache = null;
+function loadHabitValues() {
+  if (_habitValuesCache) return _habitValuesCache;
+  var raw = localStorage.getItem('xx_habit_values_v1');
+  return _habitValuesCache = raw ? JSON.parse(raw) : {};
+}
+function saveHabitValues(d) {
+  _habitValuesCache = d;
+  localStorage.setItem('xx_habit_values_v1', JSON.stringify(d));
+  localStorage.setItem('xx_local_modified', String(Date.now()));
+  updateSyncTime();
+}
+// 读取某习惯在指定日期的数值（无则 0）
+function getHabitValue(id, dateStr) {
+  var vals = loadHabitValues();
+  var day = vals[dateStr || today()];
+  return day && day[id] != null ? day[id] : 0;
+}
+
+// ===== 心情记录 =====
+let _moodCache = null;
+function loadMood() {
+  if (_moodCache) return _moodCache;
+  var raw = localStorage.getItem('xx_mood_v1');
+  return _moodCache = raw ? JSON.parse(raw) : {};
+}
+function saveMood(d) {
+  _moodCache = d;
+  localStorage.setItem('xx_mood_v1', JSON.stringify(d));
+  localStorage.setItem('xx_local_modified', String(Date.now()));
+  updateSyncTime();
+}
+
+// ===== 习惯结构归一化（旧数据自动补齐新字段，向后兼容）=====
+function normalizeHabit(h) {
+  if (!h || typeof h !== 'object') return h;
+  if (!h.type) h.type = 'check';
+  if (h.type !== 'check') {
+    if (h.unit == null) h.unit = '';
+    if (h.target == null) h.target = (h.type === 'duration' ? 30 : 1);
+  } else {
+    if (h.unit == null) h.unit = '';
+    if (h.target == null) h.target = 1;
+  }
+  return h;
+}
+// 判断习惯今天是否已完成（按类型）
+function isHabitDoneTodayEx(h) {
+  if (h.type === 'count' || h.type === 'duration') {
+    var v = getHabitValue(h.id, today());
+    var target = h.target || 1;
+    return v >= target;
+  }
+  return isHabitDoneToday(h.id);
+}
+
 const DEFAULT_TASKS = [
   {id:'1',title:'汇总民生领域信访问题报纪检组（周五12时前）',date:'2026-04-17',note:'信访来源、问题主要内容、是否已解决、解决时间、预计解决时间',done:false,doneDate:null,category:'工作'},
   {id:'2',title:'反馈污排部整改复核环保督察工作',date:'2026-04-13',note:'协同',done:false,doneDate:null,category:'工作'},
@@ -1307,10 +1439,10 @@ const DEFAULT_TASKS = [
   {id:'35',title:'调度第八巡察（局长谈话）',date:'',note:'',recurrence:'每周',done:false,doneDate:null,category:'工作'},
 ];
 const DEFAULT_HABITS = [
-  {id:'h1',icon:'🧘',name:'冥想',detail:'20分钟',active:false},
-  {id:'h2',icon:'📖',name:'阅读',detail:'30分钟',active:false},
-  {id:'h3',icon:'🏃',name:'运动',detail:'30分钟',active:false},
-  {id:'h4',icon:'✍️',name:'复盘',detail:'每日总结',active:false},
+  {id:'h1',icon:'🧘',name:'冥想',detail:'20分钟',active:false,type:'duration',unit:'分钟',target:20},
+  {id:'h2',icon:'📖',name:'阅读',detail:'30分钟',active:false,type:'duration',unit:'分钟',target:30},
+  {id:'h3',icon:'🏃',name:'运动',detail:'30分钟',active:false,type:'duration',unit:'分钟',target:30},
+  {id:'h4',icon:'✍️',name:'复盘',detail:'每日总结',active:false,type:'check',unit:'',target:1},
 ];
 
 // ===== 同步状态 =====
@@ -1443,14 +1575,16 @@ function _getHeaders(write) {
 
 function _buildCloudData() {
   return {
-    version: 1,
+    version: 2,
     updatedAt: new Date().toISOString(),
     tasks: loadTasks(),
     habits: loadHabits(),
     dailyLog: getDailyLog(),
     backlog: loadBacklog(),
     habitsDone: loadHabitsDone(),
-    habitRecords: loadHabitRecords()
+    habitRecords: loadHabitRecords(),
+    habitValues: loadHabitValues(),
+    mood: loadMood()
   };
 }
 
@@ -1621,7 +1755,9 @@ function cloudPull() {
         if (cloud.backlog) saveBacklog(cloud.backlog);
         if (cloud.habitsDone) saveHabitsDone(cloud.habitsDone);
         if (cloud.habitRecords) saveHabitRecords(cloud.habitRecords);
-        _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null; _habitRecordsCache = null;
+        if (cloud.habitValues) saveHabitValues(cloud.habitValues);
+        if (cloud.mood) saveMood(cloud.mood);
+        _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null; _habitRecordsCache = null; _habitValuesCache = null; _moodCache = null;
         localStorage.setItem('xx_local_modified', String(new Date(cloud.updatedAt || 0).getTime()));
         render();
         _setSyncStatus('☁️ 已从云端恢复数据', 'var(--green)');
@@ -1645,7 +1781,9 @@ function cloudPull() {
           if (cloud.backlog) saveBacklog(cloud.backlog);
           if (cloud.habitsDone) saveHabitsDone(cloud.habitsDone);
           if (cloud.habitRecords) saveHabitRecords(cloud.habitRecords);
-          _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null; _habitRecordsCache = null;
+          if (cloud.habitValues) saveHabitValues(cloud.habitValues);
+          if (cloud.mood) saveMood(cloud.mood);
+          _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null; _habitRecordsCache = null; _habitValuesCache = null; _moodCache = null;
           localStorage.setItem('xx_local_modified', String(_cloudUpdatedAt));
           render();
           _cloudIsStale = false;
@@ -1959,6 +2097,8 @@ function doExport() {
     backlog: loadBacklog(),
     habitsDone: loadHabitsDone(),
     habitRecords: loadHabitRecords(),
+    habitValues: loadHabitValues(),
+    mood: loadMood(),
     date: today(),
     exportedAt: new Date().toLocaleString('zh-CN')
   };
@@ -1991,7 +2131,9 @@ function importData(ev) {
       if (d.backlog) saveBacklog(d.backlog);
       if (d.habitsDone) saveHabitsDone(d.habitsDone);
       if (d.habitRecords) saveHabitRecords(d.habitRecords);
-      _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null; _habitRecordsCache = null;
+      if (d.habitValues) saveHabitValues(d.habitValues);
+      if (d.mood) saveMood(d.mood);
+      _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null; _habitRecordsCache = null; _habitValuesCache = null; _moodCache = null;
       render();
       closeSyncModal();
       var si = document.getElementById('sideSyncInfo');
@@ -2206,17 +2348,18 @@ function render() {
   document.getElementById('headerDate').textContent =
     now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日 星期' + wd[now.getDay()];
 
-  // Habits - 只显示 active=true 的习惯，打卡状态查 habitRecords
+  // Habits - 只显示 active=true 的习惯，打卡状态查 habitRecords + habitValues
   const activeHabits = habits.filter(h=>h.active);
-  const todayDone = activeHabits.filter(h=>isHabitDoneToday(h.id)).length;
+  const todayDone = activeHabits.filter(h=>isHabitDoneTodayEx(h)).length;
+  const streak = calcStreak();
+  document.getElementById('sideHabitRing').innerHTML = renderHabitRing(todayDone, activeHabits.length, streak);
   document.getElementById('sideHabitProgress').innerHTML =
     '今日 ' + todayDone + '/' + activeHabits.length + (todayDone===activeHabits.length && activeHabits.length>0 ? ' ✨' : '') + ' · <span style="cursor:pointer;text-decoration:underline;font-size:13px;" onclick="openHabitModal()" title="管理习惯">⚙️ 管理</span>';
   const chips = activeHabits.map(function(h) {
-    var realIdx = habits.indexOf(h);
-    var done = isHabitDoneToday(h.id);
-    return '<div class="side-habit-chip ' + (done?'active':'') + '" draggable="true" data-idx="' + realIdx + '" ondragstart="onHabitDragStart(event,' + realIdx + ')" ondragover="onHabitDragOver(event,this)" ondragleave="onHabitDragLeave(event,this)" ondrop="onHabitDrop(event,' + realIdx + ')" ondragend="onHabitDragEnd(event)" onclick="toggleHabit(\'' + h.id + '\')">' + h.icon + ' ' + esc(h.name) + '</div>'
+    return renderHabitChip(h, habits.indexOf(h));
   }).join('');
   document.getElementById('sideHabitList').innerHTML = chips || '<span style="font-size:13px;color:var(--text-dim);">暂无，点击⚙️添加</span>';
+  document.getElementById('sideMood').innerHTML = renderMoodPicker();
 
   // Filter bar
   var filterHtml = '<button class="filter-btn ' + (_activeFilter==='全部'?'active':'') + '" onclick="setFilter(\'全部\')">全部 ' + tasks.length + '</button>';
@@ -2308,6 +2451,230 @@ function render() {
   } else {
     doneSection.style.display = 'none';
   }
+}
+
+// ===== 习惯打卡增强（渲染 + 交互）=====
+function fmtDate(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+// 连续打卡天数：今天完成算 1，再往前累计连续完成的天数
+function calcStreak() {
+  var habits = loadHabits().filter(function(h){ return h.active; });
+  if (!habits.length) return 0;
+  var streak = 0;
+  var d = new Date();
+  if (habits.some(isHabitDoneTodayEx)) streak = 1;
+  d.setDate(d.getDate() - 1);
+  while (streak < 999) {
+    var ds = fmtDate(d);
+    var any = habits.some(function(h) {
+      if (h.type === 'count' || h.type === 'duration') return getHabitValue(h.id, ds) > 0;
+      var recs = loadHabitRecords();
+      return recs[ds] && recs[ds].indexOf(h.id) >= 0;
+    });
+    if (!any) break;
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+// 进度环（内联 SVG）
+function renderHabitRing(done, total, streak) {
+  var pct = total > 0 ? Math.round(done/total*100) : 0;
+  var C = 163.36;
+  var offset = C * (1 - pct/100);
+  return '<svg width="62" height="62" viewBox="0 0 64 64">'
+    + '<circle cx="32" cy="32" r="26" fill="none" stroke="var(--border)" stroke-width="7"></circle>'
+    + '<circle cx="32" cy="32" r="26" fill="none" stroke="var(--green)" stroke-width="7" stroke-linecap="round" stroke-dasharray="' + C + '" stroke-dashoffset="' + offset + '" transform="rotate(-90 32 32)"></circle>'
+    + '<text x="32" y="34" text-anchor="middle" font-size="14" font-weight="800" fill="var(--text)">' + pct + '%</text>'
+    + '</svg>'
+    + '<div class="side-ring-info">'
+    + '<div class="side-ring-streak">🔥 连续 <b>' + streak + '</b> 天</div>'
+    + '<div class="side-ring-hint">' + (total > 0 ? ('已完成 ' + done + '/' + total + ' 项') : '暂无习惯，点 ⚙️ 添加') + '</div>'
+    + '</div>';
+}
+// 单个习惯 chip（按类型渲染不同交互）
+function renderHabitChip(h, realIdx) {
+  var drag = ' draggable="true" data-idx="' + realIdx + '" ondragstart="onHabitDragStart(event,' + realIdx + ')" ondragover="onHabitDragOver(event,this)" ondragleave="onHabitDragLeave(event,this)" ondrop="onHabitDrop(event,' + realIdx + ')" ondragend="onHabitDragEnd(event)"';
+  if (h.type === 'count' || h.type === 'duration') {
+    var v = getHabitValue(h.id, today());
+    var target = h.target || 1;
+    var done = v >= target;
+    var step = (h.type === 'duration') ? 5 : 1;
+    var unit = h.unit || '';
+    return '<div class="side-habit-chip counting ' + (done?'active':'') + '" ' + drag + ' onclick="stepHabit(\'' + h.id + '\',' + step + ')" title="点击 +' + step + unit + '">'
+      + '<span onclick="event.stopPropagation();stepHabit(\'' + h.id + '\',' + (-step) + ')" title="-' + step + unit + '" style="cursor:pointer;opacity:0.55;margin-right:2px;">−</span>'
+      + h.icon + ' ' + esc(h.name)
+      + '<span class="chip-prog">' + v + '/' + target + esc(unit) + '</span>'
+      + '</div>';
+  }
+  var done = isHabitDoneToday(h.id);
+  return '<div class="side-habit-chip ' + (done?'active':'') + '" ' + drag + ' onclick="toggleHabit(\'' + h.id + '\')">' + h.icon + ' ' + esc(h.name) + '</div>';
+}
+// 心情选择器
+function renderMoodPicker() {
+  var MOODS = ['😫','😕','😐','🙂','😄'];
+  var MOOD_LABELS = ['很差','不太好','一般','不错','超棒'];
+  var cur = loadMood()[today()];
+  var html = '<span class="side-mood-label">心情</span>';
+  MOODS.forEach(function(m, i) {
+    html += '<span class="mood-emoji ' + (cur === i ? 'active' : '') + '" onclick="setMood(' + i + ')" title="' + MOOD_LABELS[i] + '">' + m + '</span>';
+  });
+  return html;
+}
+function stepHabit(id, delta) {
+  _guardLocalChange(function() {
+    var vals = loadHabitValues();
+    var t = today();
+    if (!vals[t]) vals[t] = {};
+    var cur = vals[t][id] || 0;
+    var next = Math.max(0, cur + delta);
+    vals[t][id] = next;
+    if (next === 0) delete vals[t][id];
+    if (Object.keys(vals[t]).length === 0) delete vals[t];
+    saveHabitValues(vals);
+    render();
+  });
+}
+function setMood(idx) {
+  _guardLocalChange(function() {
+    var mood = loadMood();
+    mood[today()] = idx;
+    saveMood(mood);
+    render();
+  });
+}
+
+// ===== 习惯统计视图 =====
+function dayDoneCount(dateStr, habits, recs) {
+  var c = 0;
+  habits.forEach(function(h) {
+    if (h.type === 'count' || h.type === 'duration') {
+      if (getHabitValue(h.id, dateStr) > 0) c++;
+    } else {
+      if (recs[dateStr] && recs[dateStr].indexOf(h.id) >= 0) c++;
+    }
+  });
+  return c;
+}
+function openHabitStats() {
+  renderHabitStats();
+  document.getElementById('habitStatsModal').classList.add('show');
+}
+function closeHabitStats() {
+  document.getElementById('habitStatsModal').classList.remove('show');
+}
+function renderHabitStats() {
+  var body = document.getElementById('habitStatsBody');
+  if (!body) return;
+  var habits = loadHabits().filter(function(h){ return h.active; });
+  var recs = loadHabitRecords();
+
+  var html = '';
+  var streak = calcStreak();
+  var total30 = 0;
+  for (var i = 0; i < 30; i++) {
+    var dd = new Date(); dd.setDate(dd.getDate() - i);
+    total30 += dayDoneCount(fmtDate(dd), habits, recs);
+  }
+  html += '<div class="hs-badge-row">'
+    + '<span class="hs-badge">🔥 连续 ' + streak + ' 天</span>'
+    + '<span class="hs-badge">✅ 近30天完成 ' + total30 + ' 次</span>'
+    + '<span class="hs-badge">🎯 活跃习惯 ' + habits.length + ' 个</span>'
+    + '</div>';
+
+  if (!habits.length) {
+    body.innerHTML = html + '<div class="hs-empty">暂无活跃习惯，先去「⚙️ 管理」添加并开启追踪吧</div>';
+    return;
+  }
+
+  html += '<div class="hs-section-title">🗓️ 近 5 周打卡热力图</div>';
+  html += renderHeatmap(habits, recs);
+  html += '<div class="hs-legend"><span class="sw" style="background:#ececea;"></span>0 项 <span class="sw" style="background:var(--green-light);"></span>1 项 <span class="sw" style="background:var(--green);"></span>2+ 项</div>';
+
+  html += '<div class="hs-section-title">📈 近 7 天完成率</div>';
+  html += renderWeekBars(habits, recs);
+
+  html += '<div class="hs-section-title">💭 近 30 天心情曲线</div>';
+  html += renderMoodLine();
+
+  body.innerHTML = html;
+}
+function renderHeatmap(habits, recs) {
+  var WDAYS = ['一','二','三','四','五','六','日'];
+  var dow = new Date().getDay();
+  var toMonday = (dow === 0) ? 6 : (dow - 1);
+  var monday = new Date(); monday.setDate(monday.getDate() - toMonday);
+  var cells = [];
+  for (var i = 34; i >= 0; i--) {
+    var d = new Date(monday); d.setDate(monday.getDate() - i);
+    cells.push(d);
+  }
+  var head = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:2px;">'
+    + WDAYS.map(function(w){ return '<div style="font-size:9px;color:var(--text-dim);text-align:center;">' + w + '</div>'; }).join('')
+    + '</div>';
+  var grid = '<div class="hs-heat">' + cells.map(function(d) {
+    var ds = fmtDate(d);
+    var c = dayDoneCount(ds, habits, recs);
+    var bg = c === 0 ? '#ececea' : (c === 1 ? 'var(--green-light)' : 'var(--green)');
+    return '<div class="hs-heat-day" style="background:' + bg + ';" title="' + ds + ' · 完成 ' + c + ' 项"></div>';
+  }).join('') + '</div>';
+  return head + grid;
+}
+function renderWeekBars(habits, recs) {
+  var WDAYS = ['日','一','二','三','四','五','六'];
+  var html = '';
+  for (var i = 6; i >= 0; i--) {
+    var d = new Date(); d.setDate(d.getDate() - i);
+    var ds = fmtDate(d);
+    var done = 0;
+    habits.forEach(function(h) {
+      if (h.type === 'count' || h.type === 'duration') {
+        if (getHabitValue(h.id, ds) >= (h.target || 1)) done++;
+      } else {
+        if (recs[ds] && recs[ds].indexOf(h.id) >= 0) done++;
+      }
+    });
+    var pct = habits.length ? Math.round(done / habits.length * 100) : 0;
+    html += '<div class="hs-bar-col">'
+      + '<div class="hs-bar-val">' + done + '</div>'
+      + '<div class="hs-bar" style="height:' + Math.max(pct, 2) + '%;"></div>'
+      + '<div class="hs-bar-label">' + WDAYS[d.getDay()] + '</div>'
+      + '</div>';
+  }
+  return '<div class="hs-bars">' + html + '</div>';
+}
+function renderMoodLine() {
+  var mood = loadMood();
+  var W = 320, H = 88;
+  var days = [];
+  for (var i = 29; i >= 0; i--) {
+    var d = new Date(); d.setDate(d.getDate() - i);
+    days.push(fmtDate(d));
+  }
+  var pts = days.map(function(ds, i) {
+    var v = mood[ds];
+    if (v == null) return null;
+    var x = 6 + i * (W - 12) / 29;
+    var y = H - 10 - (v / 4) * (H - 20);
+    return { x: x, y: y };
+  });
+  var hasData = pts.some(function(p){ return p; });
+  if (!hasData) return '<div class="hs-empty">暂无心情记录，去侧栏选个心情吧 😊</div>';
+  var line = '', prev = null;
+  pts.forEach(function(p) {
+    if (!p) { prev = null; return; }
+    if (prev) line += '<line x1="' + prev.x + '" y1="' + prev.y + '" x2="' + p.x + '" y2="' + p.y + '" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>';
+    prev = p;
+  });
+  var dots = pts.filter(function(p){ return p; }).map(function(p) {
+    return '<circle cx="' + p.x + '" cy="' + p.y + '" r="2.5" fill="var(--accent)"></circle>';
+  }).join('');
+  return '<svg width="100%" viewBox="0 0 ' + W + ' ' + H + '" style="max-width:340px;display:block;">'
+    + '<line x1="6" y1="' + (H-10) + '" x2="' + (W-6) + '" y2="' + (H-10) + '" stroke="var(--border)" stroke-width="1"/>'
+    + line + dots
+    + '</svg>'
+    + '<div style="font-size:10px;color:var(--text-dim);margin-top:4px;">😫 ← 心情 → 😄</div>';
 }
 
 // ===== Actions =====
@@ -2866,6 +3233,12 @@ function toggleHabit(id) {
 
 // ===== Habit Management =====
 let tempHabits = [];
+const HABIT_TYPES = [
+  {v:'check', label:'打勾'},
+  {v:'count', label:'计数'},
+  {v:'duration', label:'时长'},
+  {v:'timeslot', label:'时间段'},
+];
 
 function openHabitModal() {
   tempHabits = JSON.parse(JSON.stringify(loadHabits()));
@@ -2888,7 +3261,16 @@ function renderHabitModal() {
     + '</select></div>'
     + '<div class="habit-row-info">'
     + '<input type="text" value="' + esc(h.name) + '" onchange="tempHabits[' + i + '].name=this.value" placeholder="习惯名称" style="font-size:15px;border:none;background:none;outline:none;width:100%;padding:2px 0;">'
-    + '<input type="text" value="' + esc(h.detail||'') + '" onchange="tempHabits[' + i + '].detail=this.value" placeholder="补充说明" style="font-size:12px;color:var(--text-dim);border:none;background:none;outline:none;width:100%;padding:2px 0;">'
+    + '<input type="text" value="' + esc(h.detail||'') + '" onchange="tempHabits[' + i + '].detail=this.value" placeholder="补充说明 / 时间段" style="font-size:12px;color:var(--text-dim);border:none;background:none;outline:none;width:100%;padding:2px 0;">'
+    + '<div class="habit-row-type">'
+    + '<select onchange="tempHabits[' + i + '].type=this.value;renderHabitModal()" style="font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);padding:2px 4px;">'
+    + HABIT_TYPES.map(function(t) { return '<option value="' + t.v + '"' + ((h.type||'check')===t.v?' selected':'') + '>' + t.label + '</option>'; }).join('')
+    + '</select>'
+    + ((h.type==='count'||h.type==='duration')
+        ? '<input type="text" value="' + esc(h.unit||'') + '" onchange="tempHabits[' + i + '].unit=this.value" placeholder="单位" style="font-size:12px;border:1px solid var(--border);border-radius:6px;width:48px;padding:2px 4px;background:var(--card);color:var(--text);">'
+        + '<input type="number" value="' + (h.target||1) + '" onchange="tempHabits[' + i + '].target=parseFloat(this.value)||1" placeholder="目标" style="font-size:12px;border:1px solid var(--border);border-radius:6px;width:56px;padding:2px 4px;background:var(--card);color:var(--text);">'
+        : '')
+    + '</div>'
     + '</div>'
     + '<button class="habit-row-del" onclick="graduateHabit(' + i + ')" title="移到已养成" style="font-size:16px;margin-right:4px;">🏆</button>'
     + '<button class="habit-row-del" onclick="tempHabits[' + i + '].active=!tempHabits[' + i + '].active;renderHabitModal()" title="' + (h.active?'点击暂停追踪':'点击恢复追踪') + '" style="font-size:16px;margin-right:4px;opacity:' + (h.active?'1':'0.4') + ';">' + (h.active?'👁️':'🚫') + '</button>'
