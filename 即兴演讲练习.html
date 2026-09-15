@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>即兴演讲练习</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background: #f5f4f1;
+    color: #1f2328;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    justify-content: center;
+    padding: 44px 20px 64px;
+  }
+
+  .wrap { width: 100%; max-width: 640px; }
+
+  header { margin-bottom: 24px; }
+  h1 { font-size: 20px; font-weight: 600; letter-spacing: .5px; }
+  .sub { margin-top: 7px; font-size: 13.5px; color: #8b8f95; letter-spacing: .2px; }
+
+  .card {
+    background: #fff;
+    border: 1px solid #efece7;
+    border-radius: 20px;
+    padding: 42px 36px 34px;
+    box-shadow: 0 2px 4px rgba(0,0,0,.02), 0 14px 34px rgba(0,0,0,.05);
+  }
+
+  .topic {
+    font-size: clamp(21px, 3.4vw, 27px);
+    line-height: 1.68;
+    font-weight: 600;
+    letter-spacing: .2px;
+    min-height: 3.4em;
+    text-wrap: pretty;
+  }
+
+  .hints {
+    margin-top: 30px;
+    padding-top: 26px;
+    border-top: 1px dashed #ecebe7;
+    display: grid;
+    gap: 15px;
+  }
+
+  .hint { display: flex; align-items: flex-start; gap: 12px; }
+
+  .tag {
+    flex: none;
+    font-size: 12.5px;
+    line-height: 1;
+    font-weight: 500;
+    padding: 6px 11px;
+    border-radius: 8px;
+    letter-spacing: .5px;
+  }
+  .t1 { background: #e9f1fb; color: #2d6199; }
+  .t2 { background: #f1ecfb; color: #5f4ea3; }
+  .t3 { background: #fdf0e4; color: #b1641f; }
+
+  .hint p { font-size: 14.5px; line-height: 1.55; color: #55595f; padding-top: 4px; }
+
+  #btn {
+    display: block;
+    margin: 28px auto 0;
+    padding: 15px 42px;
+    border: none;
+    border-radius: 999px;
+    background: #1f2328;
+    color: #fff;
+    font-family: inherit;
+    font-size: 15.5px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(31,35,40,.18);
+    transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+  }
+  #btn:hover { background: #2c313a; transform: translateY(-1px); box-shadow: 0 10px 24px rgba(31,35,40,.22); }
+  #btn:active { transform: translateY(1px) scale(.99); box-shadow: 0 4px 12px rgba(31,35,40,.18); }
+
+  .tip { margin-top: 18px; text-align: center; font-size: 12.5px; color: #a3a7ad; letter-spacing: .3px; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(9px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .card.in .topic { animation: fadeUp .42s ease both; }
+  .card.in .hints { animation: fadeUp .42s ease .06s both; }
+
+  @media (max-width: 520px) {
+    body { padding: 30px 14px 48px; }
+    .card { padding: 30px 22px 26px; border-radius: 16px; }
+    .hint p { font-size: 14px; }
+    #btn { width: 100%; padding: 15px 0; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>即兴演讲练习</h1>
+      <p class="sub">每天几分钟，抽一个题目，说给自己听</p>
+    </header>
+
+    <main class="card in" id="card">
+      <div class="topic" id="topic"></div>
+      <div class="hints">
+        <div class="hint">
+          <span class="tag t1">经历</span>
+          <p>你有没有相关的真实经历？</p>
+        </div>
+        <div class="hint">
+          <span class="tag t2">观点</span>
+          <p>你怎么看这件事？</p>
+        </div>
+        <div class="hint">
+          <span class="tag t3">行动</span>
+          <p>你会给别人什么建议，或者接下来怎么做？</p>
+        </div>
+      </div>
+    </main>
+
+    <button id="btn">换一个题目</button>
+    <p class="tip">按空格键也可以换题</p>
+  </div>
+
+<script>
+  var topics = [
+    "你最近一次被别人说服，是因为他哪句话？",
+    "如果可以给十年前的自己打一个电话，你会说什么？",
+    "你手机里最舍不得删的一张照片，背后是什么故事？",
+    "最近一次你明明是对的，却选择了不争，为什么？",
+    "你有没有花过一笔钱，当时心疼，现在觉得特别值？",
+    "说一个你从小听到大、现在越来越认同的道理。",
+    "你身上哪个习惯，是被某个人带出来的？",
+    "如果只能保留一种日常小确幸，你会选什么？",
+    "你有没有突然意识到父母老了的那一刻？",
+    "讲一个你曾经特别害怕、现在已经不怕的东西。",
+    "你最近一次说算了，是真的想通了还是懒得争了？",
+    "有什么事情你坚持了超过三年？为什么能坚持下来？",
+    "如果给你一天时间回到某个年纪，你想回到几岁，为什么？",
+    "你身边有没有一个看起来普通但特别厉害的人？",
+    "讲一件你小时候深信不疑、长大后发现完全错的事。",
+    "你最近一次感到被理解，是谁做了什么？",
+    "你手机里有没有一个一直没删的联系人？为什么留着？",
+    "如果朋友要给你写一句墓志铭，你希望他写什么？",
+    "你有什么技能，是生活逼出来的？",
+    "说一件你至今想起来还想笑的事。",
+    "你最近一次拒绝别人，是怎么说的？事后后悔吗？",
+    "有一天你发现自己说话的方式越来越像某个人，是谁？",
+    "你有没有过东西丢了反而轻松的经历？",
+    "讲一个你曾经很想得到、得到后却没那么开心的东西。",
+    "你最近一次哭，是因为什么？",
+    "你身边谁的话你最信？为什么？",
+    "有没有一句别人随口说的话，你记了很多年？",
+    "你最不想成为什么样的人？",
+    "讲一次你和陌生人之间发生的温暖小事。",
+    "你生活里有什么东西，看着没用却舍不得扔？",
+    "你怎么看下班后不回工作消息这件事？",
+    "你觉得现在的年轻人，比十年前更累还是更轻松？",
+    "外卖、做饭、下馆子，你更愿意把时间花在哪？",
+    "现在很多人开始断舍离，你怎么看？",
+    "短视频刷多了，人会变笨吗？",
+    "你觉得该不该和同事做朋友？",
+    "你会为了省几块钱多走两站路吗？",
+    "你怎么看顾客就是上帝这句话？",
+    "有人说成年人的友谊都是打扰出来的，你同意吗？",
+    "你觉得该不该给老人让座？如果对方看起来并不虚弱呢？",
+    "你怎么看现在人人都想做自媒体？",
+    "一个城市对你来说最重要的东西是什么？",
+    "你怎么看空出一段时间不工作这件事？换作你敢吗？",
+    "现在找工作，稳定还重要吗？",
+    "你觉得一个人应该什么时候学会开车？",
+    "该不该在朋友圈发负能量的内容？",
+    "你怎么看体制内这三个字？",
+    "网购七天无理由退货，是被滥用还是理所应当？",
+    "你觉得现在的孩子比大人更懂手机，这是好事吗？",
+    "你怎么看早起这件事被捧得那么高？",
+    "出门旅游，你更愿意跟团还是自己去？",
+    "朋友聚餐要不要AA？",
+    "你怎么看家长拼命给孩子报班？",
+    "亲戚问你工资，该不该如实回答？",
+    "你怎么看打工人这个自称？",
+    "相亲的时候，最该了解对方什么？",
+    "父母该不该管孩子玩手机的时间？",
+    "你怎么看早八和加班？",
+    "一个人吃饭、一个人看电影、一个人旅行，你能接受吗？",
+    "你最近做过的一个小决定，改变了你这一周？",
+    "如果让你教别人一个生活技巧，你教什么？",
+    "你打算从哪一件小事开始改变，让自己更轻松一点？",
+    "你会给刚毕业的大学生什么建议？",
+    "身边有人正在经历低谷，你会对他说什么？",
+    "四十岁的人想对二十岁的人说的一句忠告是什么？",
+    "如果有人问你该不该离职，你会先问他什么？",
+    "你希望别人怎么记住你？",
+    "如果非要你删掉一个社交软件，你删哪个？",
+    "你觉得存钱重要还是花钱体验重要？",
+    "对一个每天很忙但不知道忙什么的人，你会建议什么？",
+    "如果明天开始你要独居一年，你会先做什么准备？",
+    "你会怎么拒绝一个你不想去的饭局？",
+    "一个年轻人想去大城市闯，你会支持还是劝他留下？",
+    "你觉得该怎么跟父母解释你现在的工作？",
+    "如果你的朋友总是迟到，你会怎么处理？",
+    "你想给自己定一条不做什么的规矩，是什么？",
+    "现在让你重新选一次专业，你会怎么选？",
+    "你会怎么度过一个完全没有安排的周末？",
+    "你想给自己的生活加什么、减什么？",
+    "说一个你曾经误解过的人。",
+    "你有没有过突然理解父母的瞬间？",
+    "讲一次你输给了比自己年轻的人。",
+    "你有什么不服老的表现？",
+    "如果高中可以重来一次，你会怎么过？",
+    "你怎么看努力不一定有回报这句话？",
+    "你见过最体面的告别是什么样子？",
+    "有没有一个地方，你去了还想再去？",
+    "说一个你已经放弃、但偶尔还会想起的梦想。",
+    "你希望自己的晚年是什么样子？",
+    "你今年做过最值的一件事是什么？",
+    "讲一个你印象最深的老师。",
+    "你会怎么跟孩子解释钱是怎么来的？",
+    "你怎么看把爱好变成工作这件事？",
+    "说一件你曾经以为做不到、后来做到的事。",
+    "有没有一句话改变了你的想法？",
+    "如果只能给家人做一道菜，你做什么？",
+    "你觉得什么样的人算靠谱？",
+    "讲一次你主动道歉的经历。",
+    "你希望十年后的今天，你在做什么？"
+  ];
+
+  var topicEl = document.getElementById('topic');
+  var cardEl = document.getElementById('card');
+  var btn = document.getElementById('btn');
+  var last = -1;
+
+  function pickIndex() {
+    if (topics.length < 2) return 0;
+    var i;
+    do { i = Math.floor(Math.random() * topics.length); } while (i === last);
+    last = i;
+    return i;
+  }
+
+  function next() {
+    var i = pickIndex();
+    cardEl.classList.remove('in');
+    void cardEl.offsetWidth;
+    topicEl.textContent = topics[i];
+    cardEl.classList.add('in');
+  }
+
+  btn.addEventListener('click', next);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.code === 'Space' || e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      next();
+    }
+  });
+
+  next();
+</script>
+</body>
+</html>
