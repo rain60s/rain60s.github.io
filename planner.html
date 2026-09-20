@@ -662,12 +662,12 @@ body {
   padding: 2px 8px; border-radius: 10px; line-height: 1.4;
   white-space: nowrap;
 }
-.cal-habit-dot {
-  display: inline-block; width: 5px; height: 5px;
-  border-radius: 50%; background: var(--green-light);
-  margin-left: 2px; vertical-align: middle;
-}
-.cal-habit-dot.full { background: var(--green); }
+.cal-cell.habit-full { background: var(--green); }
+.cal-cell.habit-full:hover { background: var(--green); }
+.cal-cell.habit-full .cal-solar, .cal-cell.habit-full .cal-lunar { color: #fff; }
+.cal-cell.habit-full .cal-festival, .cal-cell.habit-full .cal-holiday { color: rgba(255,255,255,0.85); }
+.cal-cell.habit-part { background: var(--green-light); }
+.cal-cell.habit-part:hover { background: var(--green-light); }
 .side-habit-chip .chip-streak {
   display: inline-block; margin-left: 5px; font-size: 11px;
   color: #e67e22; font-weight: 700;
@@ -1198,18 +1198,18 @@ function renderCalendar(){
     // 任务小圆点
     var dotHtml='';
     if(_taskCount[ds])dotHtml='<span class="cal-task-dot" title="'+_taskCount[ds]+'个任务"></span>';
-    // 习惯打卡绿点（全完成为深绿，部分完成为浅绿）
-    var habitDotHtml='';
-    if(_habits.length){
+    // 习惯打卡整格底色（全完成深绿，部分完成浅绿；今天保留橙色高亮）
+    var cellTitle='';
+    if(_habits.length && !isToday && !isOther){
       var hDone=dayDoneCount(ds,_habits,_recs);
       if(hDone>0){
-        var hFull=(hDone>=_habits.length);
-        habitDotHtml='<span class="cal-habit-dot'+(hFull?' full':'')+'" title="习惯打卡 '+hDone+'/'+_habits.length+'"></span>';
+        cellClass+=(hDone>=_habits.length)?' habit-full':' habit-part';
+        cellTitle=' title="习惯打卡 '+hDone+'/'+_habits.length+'"';
       }
     }
 
-    html+='<div class="'+cellClass+'" onclick="calClickDay('+y+','+m+','+d+')">';
-    html+='<div class="cal-solar">'+d+dotHtml+habitDotHtml+'</div>';
+    html+='<div class="'+cellClass+'"'+cellTitle+' onclick="calClickDay('+y+','+m+','+d+')">';
+    html+='<div class="cal-solar">'+d+dotHtml+'</div>';
     html+='<div class="cal-lunar">'+lunarStr+'</div>';
     html+=festHtml;
     html+='</div>';
