@@ -634,7 +634,7 @@ body {
   .modal-overlay { align-items: center; }
 }
 
-/* ===== 习惯打卡增强：进度环 / 心情 / 统计 ===== */
+/* ===== 习惯打卡增强：进度环 / 统计 ===== */
 .side-stats-link { font-weight: 400; font-size: 12px; color: var(--accent); cursor: pointer; }
 .side-stats-link:hover { text-decoration: underline; }
 .side-habit-ring { display: flex; align-items: center; gap: 12px; padding: 4px 0 10px; }
@@ -655,14 +655,24 @@ body {
 .side-habit-chip.counting { border-style: dashed; }
 .side-habit-chip.counting.active { border-style: solid; }
 
-.side-mood { display: flex; gap: 4px; margin-top: 10px; align-items: center; }
-.side-mood-label { font-size: 12px; color: var(--text-dim); margin-right: 2px; }
-.mood-emoji {
-  font-size: 20px; cursor: pointer; opacity: 0.35; transition: 0.15s;
-  padding: 2px; border-radius: 6px; line-height: 1;
+/* ===== 万年历习惯统计：连续天数徽章 + 打卡轨迹 ===== */
+.cal-streak-badge {
+  font-size: 11px; font-weight: 700; color: #fff;
+  background: linear-gradient(135deg, #ff9a3d, #ff6b35);
+  padding: 2px 8px; border-radius: 10px; line-height: 1.4;
+  white-space: nowrap;
 }
-.mood-emoji:hover { opacity: 0.7; }
-.mood-emoji.active { opacity: 1; transform: scale(1.2); }
+.cal-habit-dot {
+  display: inline-block; width: 5px; height: 5px;
+  border-radius: 50%; background: var(--green-light);
+  margin-left: 2px; vertical-align: middle;
+}
+.cal-habit-dot.full { background: var(--green); }
+.side-habit-chip .chip-streak {
+  display: inline-block; margin-left: 5px; font-size: 11px;
+  color: #e67e22; font-weight: 700;
+}
+.side-habit-chip.active .chip-streak { color: inherit; opacity: 0.75; }
 
 /* 统计 modal */
 .habit-stats-wrap { max-height: 72vh; overflow-y: auto; }
@@ -718,7 +728,6 @@ body {
       <div class="side-habit-ring" id="sideHabitRing"></div>
       <div class="side-habits" id="sideHabitList"></div>
       <div style="font-size:13px;color:var(--text-dim);margin-top:6px;" id="sideHabitProgress"></div>
-      <div class="side-mood" id="sideMood"></div>
     </div>
 
     <div class="side-section habits-done-section" id="habitsDoneSection" style="display:none;">
@@ -1109,6 +1118,10 @@ function renderCalendar(){
     }
   }
 
+  // 习惯打卡轨迹：日期 → 完成习惯数（绿点直接标在万年历上）
+  var _habits=loadHabits().filter(function(h){return h.active;});
+  var _recs=loadHabitRecords();
+
   var wd=['一','二','三','四','五','六','日'];
 
   var html='';
@@ -1185,9 +1198,18 @@ function renderCalendar(){
     // 任务小圆点
     var dotHtml='';
     if(_taskCount[ds])dotHtml='<span class="cal-task-dot" title="'+_taskCount[ds]+'个任务"></span>';
+    // 习惯打卡绿点（全完成为深绿，部分完成为浅绿）
+    var habitDotHtml='';
+    if(_habits.length){
+      var hDone=dayDoneCount(ds,_habits,_recs);
+      if(hDone>0){
+        var hFull=(hDone>=_habits.length);
+        habitDotHtml='<span class="cal-habit-dot'+(hFull?' full':'')+'" title="习惯打卡 '+hDone+'/'+_habits.length+'"></span>';
+      }
+    }
 
     html+='<div class="'+cellClass+'" onclick="calClickDay('+y+','+m+','+d+')">';
-    html+='<div class="cal-solar">'+d+dotHtml+'</div>';
+    html+='<div class="cal-solar">'+d+dotHtml+habitDotHtml+'</div>';
     html+='<div class="cal-lunar">'+lunarStr+'</div>';
     html+=festHtml;
     html+='</div>';
@@ -1195,6 +1217,14 @@ function renderCalendar(){
   html+='</div>';
 
   document.getElementById('calendar').innerHTML=html;
+
+  // 万年历标题右侧：连续坚持天数徽章（锚点）
+  var _calBadge=document.getElementById('calStreakBadge');
+  if(_calBadge){
+    var _st=calcStreak();
+    _calBadge.textContent='🔥 连续 '+_st+' 天';
+    _calBadge.title='习惯连续打卡 '+_st+' 天（今日未打时按昨日累计）';
+  }
 }
 
 function calClickDay(y,m,d) {
@@ -2360,7 +2390,6 @@ function render() {
     return renderHabitChip(h, habits.indexOf(h));
   }).join('');
   document.getElementById('sideHabitList').innerHTML = chips || '<span style="font-size:13px;color:var(--text-dim);">暂无，点击⚙️添加</span>';
-  document.getElementById('sideMood').innerHTML = renderMoodPicker();
 
   // Filter bar
   var filterHtml = '<button class="filter-btn ' + (_activeFilter==='全部'?'active':'') + '" onclick="setFilter(\'全部\')">全部 ' + tasks.length + '</button>';
@@ -2458,14 +2487,13 @@ function render() {
 function fmtDate(d) {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
-// 连续打卡天数：今天完成算 1，再往前累计连续完成的天数
+// 连续打卡天数（宽松锚点版）：今天已打按今天起算；今天还没打则按昨日累计，保留坚持记录不轻易清零
 function calcStreak() {
   var habits = loadHabits().filter(function(h){ return h.active; });
   if (!habits.length) return 0;
-  var streak = 0;
   var d = new Date();
-  if (habits.some(isHabitDoneTodayEx)) streak = 1;
-  d.setDate(d.getDate() - 1);
+  if (!habits.some(isHabitDoneTodayEx)) d.setDate(d.getDate() - 1);
+  var streak = 0;
   while (streak < 999) {
     var ds = fmtDate(d);
     var any = habits.some(function(h) {
@@ -2476,6 +2504,21 @@ function calcStreak() {
     if (!any) break;
     streak++;
     d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+// 单个习惯连续打卡天数（显示在习惯 chip 上，作为各自的坚持锚点）
+function calcHabitStreak(h) {
+  var doneOn = function(ds) {
+    if (h.type === 'count' || h.type === 'duration') return getHabitValue(h.id, ds) > 0;
+    var recs = loadHabitRecords();
+    return recs[ds] && recs[ds].indexOf(h.id) >= 0;
+  };
+  var d = new Date();
+  if (!doneOn(fmtDate(d))) d.setDate(d.getDate() - 1);
+  var streak = 0;
+  while (streak < 999) {
+    if (doneOn(fmtDate(d))) { streak++; d.setDate(d.getDate() - 1); } else break;
   }
   return streak;
 }
@@ -2494,34 +2537,26 @@ function renderHabitRing(done, total, streak) {
     + '<div class="side-ring-hint">' + (total > 0 ? ('已完成 ' + done + '/' + total + ' 项') : '暂无习惯，点 ⚙️ 添加') + '</div>'
     + '</div>';
 }
-// 单个习惯 chip（按类型渲染不同交互）
+// 单个习惯 chip（按类型渲染不同交互，含各自连续天数锚点）
 function renderHabitChip(h, realIdx) {
   var drag = ' draggable="true" data-idx="' + realIdx + '" ondragstart="onHabitDragStart(event,' + realIdx + ')" ondragover="onHabitDragOver(event,this)" ondragleave="onHabitDragLeave(event,this)" ondrop="onHabitDrop(event,' + realIdx + ')" ondragend="onHabitDragEnd(event)"';
+  var st = calcHabitStreak(h);
+  var stHtml = st > 0 ? '<span class="chip-streak">' + st + '天</span>' : '';
   if (h.type === 'count' || h.type === 'duration') {
     var v = getHabitValue(h.id, today());
     var target = h.target || 1;
     var done = v >= target;
     var step = (h.type === 'duration') ? 5 : 1;
     var unit = h.unit || '';
-    return '<div class="side-habit-chip counting ' + (done?'active':'') + '" ' + drag + ' onclick="stepHabit(\'' + h.id + '\',' + step + ')" title="点击 +' + step + unit + '">'
+    return '<div class="side-habit-chip counting ' + (done?'active':'') + '" ' + drag + ' onclick="stepHabit(\'' + h.id + '\',' + step + ')" title="点击 +' + step + unit + ' · 已连续 ' + st + ' 天">'
       + '<span onclick="event.stopPropagation();stepHabit(\'' + h.id + '\',' + (-step) + ')" title="-' + step + unit + '" style="cursor:pointer;opacity:0.55;margin-right:2px;">−</span>'
       + h.icon + ' ' + esc(h.name)
       + '<span class="chip-prog">' + v + '/' + target + esc(unit) + '</span>'
+      + stHtml
       + '</div>';
   }
   var done = isHabitDoneToday(h.id);
-  return '<div class="side-habit-chip ' + (done?'active':'') + '" ' + drag + ' onclick="toggleHabit(\'' + h.id + '\')">' + h.icon + ' ' + esc(h.name) + '</div>';
-}
-// 心情选择器
-function renderMoodPicker() {
-  var MOODS = ['😫','😕','😐','🙂','😄'];
-  var MOOD_LABELS = ['很差','不太好','一般','不错','超棒'];
-  var cur = loadMood()[today()];
-  var html = '<span class="side-mood-label">心情</span>';
-  MOODS.forEach(function(m, i) {
-    html += '<span class="mood-emoji ' + (cur === i ? 'active' : '') + '" onclick="setMood(' + i + ')" title="' + MOOD_LABELS[i] + '">' + m + '</span>';
-  });
-  return html;
+  return '<div class="side-habit-chip ' + (done?'active':'') + '" ' + drag + ' onclick="toggleHabit(\'' + h.id + '\')" title="连续坚持 ' + st + ' 天">' + h.icon + ' ' + esc(h.name) + stHtml + '</div>';
 }
 function stepHabit(id, delta) {
   _guardLocalChange(function() {
@@ -2534,14 +2569,6 @@ function stepHabit(id, delta) {
     if (next === 0) delete vals[t][id];
     if (Object.keys(vals[t]).length === 0) delete vals[t];
     saveHabitValues(vals);
-    render();
-  });
-}
-function setMood(idx) {
-  _guardLocalChange(function() {
-    var mood = loadMood();
-    mood[today()] = idx;
-    saveMood(mood);
     render();
   });
 }
@@ -2596,9 +2623,6 @@ function renderHabitStats() {
   html += '<div class="hs-section-title">📈 近 7 天完成率</div>';
   html += renderWeekBars(habits, recs);
 
-  html += '<div class="hs-section-title">💭 近 30 天心情曲线</div>';
-  html += renderMoodLine();
-
   body.innerHTML = html;
 }
 function renderHeatmap(habits, recs) {
@@ -2646,45 +2670,16 @@ function renderWeekBars(habits, recs) {
   return '<div class="hs-bars">' + html + '</div>';
 }
 function renderMoodLine() {
-  var mood = loadMood();
-  var W = 320, H = 88;
-  var days = [];
-  for (var i = 29; i >= 0; i--) {
-    var d = new Date(); d.setDate(d.getDate() - i);
-    days.push(fmtDate(d));
-  }
-  var pts = days.map(function(ds, i) {
-    var v = mood[ds];
-    if (v == null) return null;
-    var x = 6 + i * (W - 12) / 29;
-    var y = H - 10 - (v / 4) * (H - 20);
-    return { x: x, y: y };
-  });
-  var hasData = pts.some(function(p){ return p; });
-  if (!hasData) return '<div class="hs-empty">暂无心情记录，去侧栏选个心情吧 😊</div>';
-  var line = '', prev = null;
-  pts.forEach(function(p) {
-    if (!p) { prev = null; return; }
-    if (prev) line += '<line x1="' + prev.x + '" y1="' + prev.y + '" x2="' + p.x + '" y2="' + p.y + '" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>';
-    prev = p;
-  });
-  var dots = pts.filter(function(p){ return p; }).map(function(p) {
-    return '<circle cx="' + p.x + '" cy="' + p.y + '" r="2.5" fill="var(--accent)"></circle>';
-  }).join('');
-  return '<svg width="100%" viewBox="0 0 ' + W + ' ' + H + '" style="max-width:340px;display:block;">'
-    + '<line x1="6" y1="' + (H-10) + '" x2="' + (W-6) + '" y2="' + (H-10) + '" stroke="var(--border)" stroke-width="1"/>'
-    + line + dots
-    + '</svg>'
-    + '<div style="font-size:10px;color:var(--text-dim);margin-top:4px;">😫 ← 心情 → 😄</div>';
+  return '';
 }
 
 // ===== Actions =====
 function mergeDailyLog(localLog, cloudLog) {
-  // 合并策略：取两边所有日期，同一天内按 title 去重，保留双方的所有条目
+  // 合并策略：取两边所有日期，同一天内按 title 去重，保留双方的所有条目（忽略空日期键）
   var result = {};
   var allDates = {};
-  for (var d in localLog) allDates[d] = true;
-  for (var d in cloudLog) allDates[d] = true;
+  for (var d in localLog) if (d) allDates[d] = true;
+  for (var d in cloudLog) if (d) allDates[d] = true;
   for (var date in allDates) {
     var seen = {};
     var entries = [];
@@ -2722,9 +2717,20 @@ function mergeTasks(localTasks, cloudTasks) {
   return Object.values(map);
 }
 function getDailyLog() {
-  try { return JSON.parse(localStorage.getItem('xx_daily_log_v1') || '{}'); } catch(e) { return {}; }
+  try {
+    var log = JSON.parse(localStorage.getItem('xx_daily_log_v1') || '{}');
+    // 自动清理空日期键的历史测试残留（如"1111"）
+    if (log['']) {
+      delete log[''];
+      localStorage.setItem('xx_daily_log_v1', JSON.stringify(log));
+    }
+    return log;
+  } catch(e) { return {}; }
 }
-function saveDailyLog(log) { localStorage.setItem('xx_daily_log_v1', JSON.stringify(log)); localStorage.setItem('xx_local_modified', String(Date.now())); updateSyncTime(); }
+function saveDailyLog(log) {
+  if (log && log['']) delete log['']; // 空日期键不落盘
+  localStorage.setItem('xx_daily_log_v1', JSON.stringify(log)); localStorage.setItem('xx_local_modified', String(Date.now())); updateSyncTime();
+}
 function removeLogEntry(title, dateKey) {
   const log = getDailyLog();
   const key = dateKey || today();
