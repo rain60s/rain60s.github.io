@@ -1200,12 +1200,14 @@ function renderCalendar(){
     var dotHtml='';
     if(_taskCount[ds])dotHtml='<span class="cal-task-dot" title="'+_taskCount[ds]+'个任务"></span>';
     // 习惯打卡整格底色（全完成深绿，部分完成浅绿；今天保留橙色高亮）
+    // 只与"当天已存在"的习惯对比，后加的习惯不回溯校准历史
     var cellTitle='';
     if(_habits.length && !isToday && !isOther){
-      var hDone=dayDoneCount(ds,_habits,_recs);
+      var _dayHabits=_habits.filter(function(h){return habitStartDate(h,_recs)<=ds;});
+      var hDone=dayDoneCount(ds,_dayHabits,_recs);
       if(hDone>0){
-        cellClass+=(hDone>=_habits.length)?' habit-full':' habit-part';
-        cellTitle=' title="习惯打卡 '+hDone+'/'+_habits.length+'"';
+        cellClass+=(hDone>=_dayHabits.length)?' habit-full':' habit-part';
+        cellTitle=' title="习惯打卡 '+hDone+'/'+_dayHabits.length+'"';
       }
     }
 
@@ -1310,6 +1312,14 @@ function loadHabits() {
   const raw = localStorage.getItem('xx_habits_v2');
   var list = raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_HABITS));
   list = list.map(normalizeHabit);
+  // 回填创建日期：老数据无created时用最早打卡记录推断，避免新加习惯回溯校准历史日历
+  var _recsForCreated = null;
+  list.forEach(function(h) {
+    if (!h.created) {
+      if (!_recsForCreated) _recsForCreated = loadHabitRecords();
+      h.created = habitStartDate(h, _recsForCreated);
+    }
+  });
   return _habitsCache = list;
 }
 function saveHabits(d) {
@@ -2575,6 +2585,15 @@ function stepHabit(id, delta) {
 }
 
 // ===== 习惯统计视图 =====
+// 习惯的"生效起始日"：优先用创建日期；老数据无created字段时，用最早打卡记录推断，无记录则视为今天新增
+function habitStartDate(h, recs) {
+  if (h.created) return h.created;
+  var min = null;
+  for (var ds in recs) {
+    if (recs[ds] && recs[ds].indexOf(h.id) >= 0 && (!min || ds < min)) min = ds;
+  }
+  return min || today();
+}
 function dayDoneCount(dateStr, habits, recs) {
   var c = 0;
   habits.forEach(function(h) {
@@ -3284,7 +3303,7 @@ function renderHabitModal() {
     + '<button class="habit-row-del" onclick="tempHabits[' + i + '].active=!tempHabits[' + i + '].active;renderHabitModal()" title="' + (h.active?'点击暂停追踪':'点击恢复追踪') + '" style="font-size:16px;margin-right:4px;opacity:' + (h.active?'1':'0.4') + ';">' + (h.active?'👁️':'🚫') + '</button>'
     + '<button class="habit-row-del" onclick="tempHabits.splice(' + i + ',1);renderHabitModal()" title="删除">🗑</button></div>'
   ).join('');
-  html += '<button class="btn-add" onclick="tempHabits.push({id:\'h\'+Date.now(),icon:\'✨\',name:\'\',detail:\'\',active:true});renderHabitModal()">＋ 添加每日习惯</button>';
+  html += '<button class="btn-add" onclick="tempHabits.push({id:\'h\'+Date.now(),icon:\'✨\',name:\'\',detail:\'\',active:true,created:today()});renderHabitModal()">＋ 添加每日习惯</button>';
 
   var done = loadHabitsDone();
   if (done.length) {
