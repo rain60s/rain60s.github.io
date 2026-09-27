@@ -878,6 +878,10 @@ body {
       <label>备注（可选）</label>
       <textarea id="seedNote" placeholder="为什么想学？什么条件成熟了再开始？"></textarea>
     </div>
+    <div class="form-group">
+      <label>链接（可选）</label>
+      <input type="text" id="seedLink" placeholder="例如：AI口才训练营.html#camp=speech">
+    </div>
     <div class="modal-actions">
       <button class="btn btn-cancel" onclick="closeSeedModal()">取消</button>
       <button class="btn btn-primary" onclick="saveSeed()">保存</button>
@@ -2463,6 +2467,7 @@ function render() {
         + '<div class="seed-card-title">' + catIcon + ' ' + esc(s.title) + '</div>'
         + (s.note ? '<div class="seed-card-meta">' + esc(s.note) + '</div>' : '')
         + '<div class="seed-card-actions">'
+        + (s.link ? '<button class="seed-act-btn" onclick="window.open(\'' + esc(s.link) + '\',\'_blank\')">🔗 打开</button>' : '')
         + '<button class="seed-act-btn" onclick="editSeed(\'' + s.id + '\')">✏️ 编辑</button>'
         + '<button class="seed-act-btn grow" onclick="growSeed(\'' + s.id + '\')">🌱 转任务</button>'
         + '<button class="seed-act-btn del" onclick="delSeed(\'' + s.id + '\')">🗑 删除</button>'
@@ -3413,6 +3418,7 @@ function openSeedModal() {
   document.getElementById('seedEditId').value = '';
   document.getElementById('seedTitle').value = '';
   document.getElementById('seedNote').value = '';
+  document.getElementById('seedLink').value = '';
   pickSeedCategory('生活');
   document.getElementById('seedModalOverlay').classList.add('show');
   setTimeout(function() { document.getElementById('seedTitle').focus(); }, 100);
@@ -3430,6 +3436,7 @@ function editSeed(id) {
   document.getElementById('seedEditId').value = s.id;
   document.getElementById('seedTitle').value = s.title;
   document.getElementById('seedNote').value = s.note || '';
+  document.getElementById('seedLink').value = s.link || '';
   pickSeedCategory(s.category || '生活');
   document.getElementById('seedModalOverlay').classList.add('show');
 }
@@ -3442,12 +3449,14 @@ function saveSeed() {
     var editId = document.getElementById('seedEditId').value;
     var cat = document.getElementById('seedCategory').value;
     var note = document.getElementById('seedNote').value.trim();
+    var link = document.getElementById('seedLink').value.trim();
     if (editId) {
       var idx = backlog.findIndex(function(b) { return b.id === editId; });
       if (idx !== -1) {
         backlog[idx].title = title;
         backlog[idx].category = cat;
         backlog[idx].note = note;
+        backlog[idx].link = link;
       }
     } else {
       backlog.push({
@@ -3455,6 +3464,7 @@ function saveSeed() {
         title: title,
         category: cat,
         note: note,
+        link: link,
         createdAt: new Date().toISOString()
       });
     }
@@ -3489,7 +3499,7 @@ function growSeed(id) {
       date: '',
       category: s.category || '生活',
       recurrence: '',
-      note: s.note || '',
+      note: (s.note || '') + (s.link ? (s.note ? '\n' : '') + '🔗 ' + s.link : ''),
       done: false,
       doneDate: null
     });
