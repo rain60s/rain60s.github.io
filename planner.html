@@ -750,10 +750,7 @@ body {
         <button class="side-btn" onclick="openTokenModal()">🔑 设置Token</button>
         <button class="side-btn" onclick="openSyncModal()">📁 手动备份</button>
       </div>
-      <div class="side-btn-row" style="margin-bottom:6px;">
-        <button class="side-btn" onclick="window.open('故事演讲结构训练营.html','_blank')" style="background:var(--accent-light);color:var(--accent);font-weight:700;">🎯 故事演讲训练营</button>
-        <button class="side-btn" onclick="window.open('即兴演讲练习.html','_blank')" style="background:var(--accent-light);color:var(--accent);font-weight:700;">🎤 即兴演讲练习</button>
-      </div>
+      <div id="sideCampList"></div>
       <div class="side-sync" style="font-size:11px;">
         <span id="cloudSyncStatus">正在连接...</span>
       </div>
@@ -1347,6 +1344,42 @@ function saveBacklog(d) {
   updateSyncTime();
 }
 
+// ===== 训练营（左侧快捷入口，从种子库放出/可收回） =====
+let _campsCache = null;
+function loadCamps() {
+  if (_campsCache) return _campsCache;
+  var raw = localStorage.getItem('xx_camps_v1');
+  return _campsCache = raw ? JSON.parse(raw) : [];
+}
+function saveCamps(d) {
+  _campsCache = d;
+  localStorage.setItem('xx_camps_v1', JSON.stringify(d));
+  localStorage.setItem('xx_local_modified', String(Date.now()));
+  updateSyncTime();
+}
+function campIcon(name) {
+  if (name.indexOf('少儿') >= 0) return '🌱';
+  if (name.indexOf('亲子') >= 0) return '👨‍👩‍👧';
+  if (name.indexOf('金句') >= 0) return '📖';
+  if (name.indexOf('职场') >= 0) return '💼';
+  if (name.indexOf('故事') >= 0) return '🎯';
+  return '🎤';
+}
+function renderCamps() {
+  var el = document.getElementById('sideCampList');
+  if (!el) return;
+  var camps = loadCamps();
+  if (!camps.length) { el.innerHTML = ''; el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.innerHTML = camps.map(function(c) {
+    return '<div style="display:flex;gap:6px;margin-bottom:6px;">'
+      + '<button class="side-btn" style="flex:1;background:var(--accent-light);color:var(--accent);font-weight:700;" onclick="window.open(\'' + esc(c.link) + '\',\'_blank\')">'
+      + (c.icon || '🎯') + ' ' + esc(c.name) + '</button>'
+      + '<button class="side-btn" style="flex:0 0 auto;" title="收回种子库" onclick="recallCamp(\'' + c.id + '\')">↩</button>'
+      + '</div>';
+  }).join('');
+}
+
 // ===== 已养成习惯 =====
 let _habitsDoneCache = null;
 function loadHabitsDone() {
@@ -1566,9 +1599,10 @@ function restoreHistoryVersion(sha) {
       if (cloud.habits) saveHabits(cloud.habits);
       if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
       if (cloud.backlog) saveBacklog(cloud.backlog);
+      if (cloud.camps) saveCamps(cloud.camps);
       if (cloud.habitsDone) saveHabitsDone(cloud.habitsDone);
       if (cloud.habitRecords) saveHabitRecords(cloud.habitRecords);
-      _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null; _habitRecordsCache = null;
+      _tasksCache = null; _habitsCache = null; _backlogCache = null; _campsCache = null; _habitsDoneCache = null; _habitRecordsCache = null;
       _cloudDataSha = data.sha; // 保存该版本的 SHA，推送时需要
       localStorage.setItem('xx_local_modified', String(Date.now()));
       render();
@@ -1627,6 +1661,7 @@ function _buildCloudData() {
     habits: loadHabits(),
     dailyLog: getDailyLog(),
     backlog: loadBacklog(),
+    camps: loadCamps(),
     habitsDone: loadHabitsDone(),
     habitRecords: loadHabitRecords(),
     habitValues: loadHabitValues(),
@@ -1799,11 +1834,13 @@ function cloudPull() {
         if (cloud.habits) saveHabits(cloud.habits);
         if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
         if (cloud.backlog) saveBacklog(cloud.backlog);
+        if (cloud.camps) saveCamps(cloud.camps);
+      if (cloud.camps) saveCamps(cloud.camps);
         if (cloud.habitsDone) saveHabitsDone(cloud.habitsDone);
         if (cloud.habitRecords) saveHabitRecords(cloud.habitRecords);
         if (cloud.habitValues) saveHabitValues(cloud.habitValues);
         if (cloud.mood) saveMood(cloud.mood);
-        _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null; _habitRecordsCache = null; _habitValuesCache = null; _moodCache = null;
+        _tasksCache = null; _habitsCache = null; _backlogCache = null; _campsCache = null; _habitsDoneCache = null; _habitRecordsCache = null; _habitValuesCache = null; _moodCache = null;
         localStorage.setItem('xx_local_modified', String(new Date(cloud.updatedAt || 0).getTime()));
         render();
         _setSyncStatus('☁️ 已从云端恢复数据', 'var(--green)');
@@ -1825,11 +1862,14 @@ function cloudPull() {
           if (cloud.habits) saveHabits(cloud.habits);
           if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
           if (cloud.backlog) saveBacklog(cloud.backlog);
+          if (cloud.camps) saveCamps(cloud.camps);
+        if (cloud.camps) saveCamps(cloud.camps);
+      if (cloud.camps) saveCamps(cloud.camps);
           if (cloud.habitsDone) saveHabitsDone(cloud.habitsDone);
           if (cloud.habitRecords) saveHabitRecords(cloud.habitRecords);
           if (cloud.habitValues) saveHabitValues(cloud.habitValues);
           if (cloud.mood) saveMood(cloud.mood);
-          _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null; _habitRecordsCache = null; _habitValuesCache = null; _moodCache = null;
+          _tasksCache = null; _habitsCache = null; _backlogCache = null; _campsCache = null; _habitsDoneCache = null; _habitRecordsCache = null; _habitValuesCache = null; _moodCache = null;
           localStorage.setItem('xx_local_modified', String(_cloudUpdatedAt));
           render();
           _cloudIsStale = false;
@@ -1991,9 +2031,10 @@ function cloudSyncNow() {
       if (cloud.habits) saveHabits(cloud.habits);
       if (cloud.dailyLog) saveDailyLog(cloud.dailyLog);
       if (cloud.backlog) saveBacklog(cloud.backlog);
+      if (cloud.camps) saveCamps(cloud.camps);
       if (cloud.habitsDone) saveHabitsDone(cloud.habitsDone);
       if (cloud.habitRecords) saveHabitRecords(cloud.habitRecords);
-      _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null; _habitRecordsCache = null;
+      _tasksCache = null; _habitsCache = null; _backlogCache = null; _campsCache = null; _habitsDoneCache = null; _habitRecordsCache = null;
       localStorage.setItem('xx_local_modified', String(_cloudUpdatedAt));
       render();
       _cloudIsStale = false;
@@ -2141,6 +2182,7 @@ function doExport() {
     habits: loadHabits(),
     dailyLog: getDailyLog(),
     backlog: loadBacklog(),
+    camps: loadCamps(),
     habitsDone: loadHabitsDone(),
     habitRecords: loadHabitRecords(),
     habitValues: loadHabitValues(),
@@ -2175,11 +2217,12 @@ function importData(ev) {
       if (d.habits) saveHabits(d.habits);
       if (d.dailyLog) saveDailyLog(d.dailyLog);
       if (d.backlog) saveBacklog(d.backlog);
+      if (d.camps) saveCamps(d.camps);
       if (d.habitsDone) saveHabitsDone(d.habitsDone);
       if (d.habitRecords) saveHabitRecords(d.habitRecords);
       if (d.habitValues) saveHabitValues(d.habitValues);
       if (d.mood) saveMood(d.mood);
-      _tasksCache = null; _habitsCache = null; _backlogCache = null; _habitsDoneCache = null; _habitRecordsCache = null; _habitValuesCache = null; _moodCache = null;
+      _tasksCache = null; _habitsCache = null; _backlogCache = null; _campsCache = null; _habitsDoneCache = null; _habitRecordsCache = null; _habitValuesCache = null; _moodCache = null;
       render();
       closeSyncModal();
       var si = document.getElementById('sideSyncInfo');
@@ -2406,6 +2449,8 @@ function render() {
   }).join('');
   document.getElementById('sideHabitList').innerHTML = chips || '<span style="font-size:13px;color:var(--text-dim);">暂无，点击⚙️添加</span>';
 
+  renderCamps();
+
   // Filter bar
   var filterHtml = '<button class="filter-btn ' + (_activeFilter==='全部'?'active':'') + '" onclick="setFilter(\'全部\')">全部 ' + tasks.length + '</button>';
   CATEGORIES.forEach(function(c) {
@@ -2469,7 +2514,9 @@ function render() {
         + '<div class="seed-card-actions">'
         + (s.link ? '<button class="seed-act-btn" onclick="window.open(\'' + esc(s.link) + '\',\'_blank\')">🔗 打开</button>' : '')
         + '<button class="seed-act-btn" onclick="editSeed(\'' + s.id + '\')">✏️ 编辑</button>'
-        + '<button class="seed-act-btn grow" onclick="growSeed(\'' + s.id + '\')">🌱 转任务</button>'
+        + (s.link
+          ? '<button class="seed-act-btn grow" onclick="releaseCamp(\'' + s.id + '\')">🌱 放出</button>'
+          : '<button class="seed-act-btn grow" onclick="growSeed(\'' + s.id + '\')">🌱 转任务</button>')
         + '<button class="seed-act-btn del" onclick="delSeed(\'' + s.id + '\')">🗑 删除</button>'
         + '</div></div>';
     }).join('');
@@ -3482,6 +3529,63 @@ function delSeed(id) {
   _guardLocalChange(function() {
     backlog = backlog.filter(function(b) { return b.id !== id; });
     saveBacklog(backlog);
+    render();
+  });
+}
+
+// ===== 训练营放出/收回 =====
+function releaseCamp(id) {
+  var backlog = loadBacklog();
+  var s = backlog.find(function(b) { return b.id === id; });
+  if (!s || !s.link) return;
+  _guardLocalChange(function() {
+    var camps = loadCamps();
+    var name = s.title;
+    var names = camps.map(function(c) { return c.name; });
+    if (names.indexOf(name) >= 0) {
+      var i = 2;
+      while (names.indexOf(name + '（' + i + '）') >= 0) i++;
+      name = name + '（' + i + '）';
+    }
+    camps.push({
+      id: 'c' + Date.now(),
+      name: name,
+      icon: campIcon(name),
+      link: s.link,
+      releasedAt: new Date().toISOString()
+    });
+    saveCamps(camps);
+    backlog = backlog.filter(function(b) { return b.id !== id; });
+    saveBacklog(backlog);
+    render();
+  });
+}
+
+function recallCamp(id) {
+  var camps = loadCamps();
+  var c = camps.find(function(x) { return x.id === id; });
+  if (!c) return;
+  if (!confirm('将「' + c.name + '」收回种子库？\n（左侧入口会移除，之后可从种子库再次放出）')) return;
+  _guardLocalChange(function() {
+    var backlog = loadBacklog();
+    var title = c.name;
+    var titles = backlog.map(function(b) { return b.title; });
+    if (titles.indexOf(title) >= 0) {
+      var i = 2;
+      while (titles.indexOf(title + '（' + i + '）') >= 0) i++;
+      title = title + '（' + i + '）';
+    }
+    backlog.push({
+      id: 's' + Date.now(),
+      title: title,
+      category: '生活',
+      note: '',
+      link: c.link,
+      createdAt: new Date().toISOString()
+    });
+    saveBacklog(backlog);
+    camps = camps.filter(function(x) { return x.id !== id; });
+    saveCamps(camps);
     render();
   });
 }
