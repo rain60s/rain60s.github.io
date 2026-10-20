@@ -316,6 +316,23 @@ body {
   animation: slideUp 0.25s ease;
 }
 .modal h2 { font-size: 17px; font-weight: 700; margin-bottom: 18px; }
+/* 归档弹窗 */
+.archive-section-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.archive-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border: 1px solid var(--border, #e5e5e5);
+  border-radius: 10px; margin-bottom: 6px; background: var(--card);
+}
+.archive-item-body { flex: 1; min-width: 0; }
+.archive-item-title { font-size: 14px; word-break: break-all; }
+.archive-item-meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.archive-item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.archive-btn {
+  border: 1px solid var(--border, #e5e5e5); background: transparent;
+  border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer; color: var(--text);
+}
+.archive-btn:hover { border-color: var(--accent); color: var(--accent); }
+.archive-btn.del:hover { border-color: var(--red); color: var(--red); }
 .form-group { margin-bottom: 14px; }
 .form-group label {
   display: block; font-size: 12px; color: var(--text-dim);
@@ -815,6 +832,7 @@ body {
       <div class="side-btn-row" style="margin-bottom:6px;">
         <button class="side-btn" onclick="openTokenModal()">🔑 设置Token</button>
         <button class="side-btn" onclick="openSyncModal()">📁 手动备份</button>
+        <button class="side-btn" onclick="openArchiveModal()">🗂 归档</button>
       </div>
       <div id="sideCampList"></div>
       <div class="side-sync" style="font-size:11px;">
@@ -835,6 +853,22 @@ body {
       <div class="section-title">🌱 种子库 <span style="font-weight:400;color:var(--text-dim)" id="seedCount"></span></div>
       <div id="seedList"></div>
       <button class="btn-add" onclick="openSeedModal()" style="margin-top:8px;">＋ 添加种子</button>
+    </div>
+  </div>
+</div>
+
+<!-- Archive Modal（归档：已完成 + 回收站） -->
+<div class="modal-overlay" id="archiveModal">
+  <div class="modal" style="max-width:520px;max-height:80vh;display:flex;flex-direction:column;">
+    <h2>🗂 归档</h2>
+    <div style="overflow-y:auto;flex:1;min-height:0;">
+      <div class="archive-section-title">✅ 已完成 <span id="archiveDoneCount" style="font-weight:400;color:var(--text-dim);font-size:12px;"></span></div>
+      <div id="archiveDoneList"></div>
+      <div class="archive-section-title" style="margin-top:16px;">🗑 回收站（已删除） <span id="archiveBinCount" style="font-weight:400;color:var(--text-dim);font-size:12px;"></span></div>
+      <div id="archiveBinList"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeArchiveModal()">关闭</button>
     </div>
   </div>
 </div>
@@ -1374,6 +1408,20 @@ function saveTasks(d) {
   localStorage.setItem('xx_local_modified', String(Date.now()));
   updateSyncTime();
 }
+// ===== 回收站（已删除任务）=====
+let _deletedTasksCache = null;
+function loadDeletedTasks() {
+  if (_deletedTasksCache) return _deletedTasksCache;
+  const raw = localStorage.getItem('xx_deleted_tasks_v1');
+  var list = raw ? JSON.parse(raw) : [];
+  return _deletedTasksCache = list;
+}
+function saveDeletedTasks(d) {
+  _deletedTasksCache = d;
+  localStorage.setItem('xx_deleted_tasks_v1', JSON.stringify(d));
+  localStorage.setItem('xx_local_modified', String(Date.now()));
+  updateSyncTime();
+}
 function loadHabits() {
   if (_habitsCache) return _habitsCache;
   const raw = localStorage.getItem('xx_habits_v2');
@@ -1731,7 +1779,8 @@ function _buildCloudData() {
     habitsDone: loadHabitsDone(),
     habitRecords: loadHabitRecords(),
     habitValues: loadHabitValues(),
-    mood: loadMood()
+    mood: loadMood(),
+    deletedTasks: loadDeletedTasks()
   };
 }
 
@@ -1906,7 +1955,8 @@ function cloudPull() {
         if (cloud.habitRecords) saveHabitRecords(cloud.habitRecords);
         if (cloud.habitValues) saveHabitValues(cloud.habitValues);
         if (cloud.mood) saveMood(cloud.mood);
-        _tasksCache = null; _habitsCache = null; _backlogCache = null; _campsCache = null; _habitsDoneCache = null; _habitRecordsCache = null; _habitValuesCache = null; _moodCache = null;
+        if (cloud.deletedTasks) saveDeletedTasks(cloud.deletedTasks);
+        _tasksCache = null; _habitsCache = null; _backlogCache = null; _campsCache = null; _habitsDoneCache = null; _habitRecordsCache = null; _habitValuesCache = null; _moodCache = null; _deletedTasksCache = null;
         localStorage.setItem('xx_local_modified', String(new Date(cloud.updatedAt || 0).getTime()));
         render();
         _setSyncStatus('☁️ 已从云端恢复数据', 'var(--green)');
@@ -1935,7 +1985,8 @@ function cloudPull() {
           if (cloud.habitRecords) saveHabitRecords(cloud.habitRecords);
           if (cloud.habitValues) saveHabitValues(cloud.habitValues);
           if (cloud.mood) saveMood(cloud.mood);
-          _tasksCache = null; _habitsCache = null; _backlogCache = null; _campsCache = null; _habitsDoneCache = null; _habitRecordsCache = null; _habitValuesCache = null; _moodCache = null;
+          if (cloud.deletedTasks) saveDeletedTasks(cloud.deletedTasks);
+          _tasksCache = null; _habitsCache = null; _backlogCache = null; _campsCache = null; _habitsDoneCache = null; _habitRecordsCache = null; _habitValuesCache = null; _moodCache = null; _deletedTasksCache = null;
           localStorage.setItem('xx_local_modified', String(_cloudUpdatedAt));
           render();
           _cloudIsStale = false;
@@ -2253,6 +2304,7 @@ function doExport() {
     habitRecords: loadHabitRecords(),
     habitValues: loadHabitValues(),
     mood: loadMood(),
+    deletedTasks: loadDeletedTasks(),
     date: today(),
     exportedAt: new Date().toLocaleString('zh-CN')
   };
@@ -2288,7 +2340,8 @@ function importData(ev) {
       if (d.habitRecords) saveHabitRecords(d.habitRecords);
       if (d.habitValues) saveHabitValues(d.habitValues);
       if (d.mood) saveMood(d.mood);
-      _tasksCache = null; _habitsCache = null; _backlogCache = null; _campsCache = null; _habitsDoneCache = null; _habitRecordsCache = null; _habitValuesCache = null; _moodCache = null;
+      if (d.deletedTasks) saveDeletedTasks(d.deletedTasks);
+      _tasksCache = null; _habitsCache = null; _backlogCache = null; _campsCache = null; _habitsDoneCache = null; _habitRecordsCache = null; _habitValuesCache = null; _moodCache = null; _deletedTasksCache = null;
       render();
       closeSyncModal();
       var si = document.getElementById('sideSyncInfo');
@@ -2517,10 +2570,11 @@ function render() {
 
   renderCamps();
 
-  // Filter bar
-  var filterHtml = '<button class="filter-btn ' + (_activeFilter==='全部'?'active':'') + '" onclick="setFilter(\'全部\')">全部 ' + tasks.length + '</button>';
+  // Filter bar（只统计未完成任务，已完成的在归档里）
+  var activeTasks = tasks.filter(function(t) { return !t.done; });
+  var filterHtml = '<button class="filter-btn ' + (_activeFilter==='全部'?'active':'') + '" onclick="setFilter(\'全部\')">全部 ' + activeTasks.length + '</button>';
   CATEGORIES.forEach(function(c) {
-    var cnt = tasks.filter(function(t) { return t.category === c; }).length;
+    var cnt = activeTasks.filter(function(t) { return t.category === c; }).length;
     filterHtml += '<button class="filter-btn ' + (_activeFilter===c?'active':'') + '" onclick="setFilter(\'' + c + '\')">' + c + ' ' + cnt + '</button>';
   });
   document.getElementById('filterBar').innerHTML = filterHtml;
@@ -2535,21 +2589,10 @@ function render() {
     { title: '🔴 今天', tasks: cat.urgent },
     { title: '🟡 本周', tasks: cat.week },
     { title: '🔵 以后再说', tasks: cat.later },
-    { title: '✅ 已完成', tasks: cat.done },
   ];
-  var logEntries = (getDailyLog()[today()] || []).length;
 
-  // Render today sections (center)
+  // Render today sections (center)（已完成/已删除任务移入「🗂 归档」弹窗，主页面不再显示）
   document.getElementById('taskSections').innerHTML = todaySections.map(function(s) {
-    if (s.title === '✅ 已完成' && !s.tasks.length && !logEntries) return '';
-    if (s.title === '✅ 已完成') {
-      return '<div class="section">'
-        + '<div class="section-title">'
-        + '<span>✅ 已完成 <span style="font-weight:400;color:var(--text-dim)">' + s.tasks.length + '</span></span>'
-        + '</div>'
-        + (s.tasks.length ? '<div>' + renderList(s.tasks) + '</div>' : '')
-        + '</div>';
-    }
     return '<div class="section">'
       + '<div class="section-title">' + s.title + ' <span style="font-weight:400;color:var(--text-dim)">' + s.tasks.length + '</span></div>'
       + '<div>' + renderList(s.tasks) + '</div></div>';
@@ -3291,6 +3334,7 @@ function toggleTask(id) {
     if (!t) return;
     t.done = !t.done;
     t.doneDate = t.done ? today() : null;
+    t.doneAt = t.done ? Date.now() : null;
     if (t.done) addLogEntry(t.title, t.category);
     else removeLogEntry(t.title, t.doneDate || today());
     if (t.done && t.recurrence && t.date) {
@@ -3303,6 +3347,7 @@ function toggleTask(id) {
       t.date = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
       t.done = false;
       t.doneDate = null;
+      t.doneAt = null;
     }
     saveTasks(d); render();
   });
@@ -3310,8 +3355,112 @@ function toggleTask(id) {
 
 function deleteTask(id) {
   _guardLocalChange(function() {
-    const d = loadTasks().filter(t=>t.id!==id);
-    saveTasks(d); render();
+    const d = loadTasks();
+    const t = d.find(x => x.id === id);
+    if (!t) return;
+    // 移入回收站，记录删除时间，便于以后恢复
+    t.deletedAt = Date.now();
+    const bin = loadDeletedTasks();
+    bin.push(t);
+    saveDeletedTasks(bin);
+    saveTasks(d.filter(x => x.id !== id));
+    render();
+  });
+}
+
+// ===== 归档（已完成 + 已删除）=====
+function _fmtTs(ts) {
+  if (!ts) return '';
+  var d = new Date(ts);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0')
+    + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+function openArchiveModal() {
+  renderArchiveModal();
+  document.getElementById('archiveModal').classList.add('show');
+}
+function closeArchiveModal() {
+  document.getElementById('archiveModal').classList.remove('show');
+}
+function renderArchiveModal() {
+  // 已完成：按完成时间倒序（最近完成的在最上面，便于恢复）
+  var done = loadTasks().filter(function(t){ return t.done; }).slice().sort(function(a,b){
+    return (b.doneAt || (b.doneDate ? new Date(b.doneDate + 'T23:59:59').getTime() : 0))
+         - (a.doneAt || (a.doneDate ? new Date(a.doneDate + 'T23:59:59').getTime() : 0));
+  });
+  // 已删除：按删除时间倒序
+  var bin = loadDeletedTasks().slice().sort(function(a,b){ return (b.deletedAt||0) - (a.deletedAt||0); });
+
+  var doneHtml = done.length ? done.map(function(t) {
+    return '<div class="archive-item">'
+      + '<div class="archive-item-body">'
+      + '<div class="archive-item-title">' + esc(t.title) + '</div>'
+      + '<div class="archive-item-meta">' + esc(t.category || '') + ' · 完成于 ' + _fmtTs(t.doneAt || (t.doneDate ? t.doneDate + 'T00:00:00' : null)) + '</div>'
+      + '</div>'
+      + '<div class="archive-item-actions">'
+      + '<button class="archive-btn" onclick="restoreDoneTask(\'' + t.id + '\')" title="恢复为未完成">↩️ 恢复</button>'
+      + '<button class="archive-btn del" onclick="deleteDoneTask(\'' + t.id + '\')" title="移入回收站">🗑</button>'
+      + '</div></div>';
+  }).join('') : '<div class="empty">✨ 暂无已完成任务</div>';
+
+  var binHtml = bin.length ? bin.map(function(t) {
+    return '<div class="archive-item">'
+      + '<div class="archive-item-body">'
+      + '<div class="archive-item-title" style="text-decoration:line-through;color:var(--text-dim);">' + esc(t.title) + '</div>'
+      + '<div class="archive-item-meta">' + esc(t.category || '') + ' · 删除于 ' + _fmtTs(t.deletedAt) + '</div>'
+      + '</div>'
+      + '<div class="archive-item-actions">'
+      + '<button class="archive-btn" onclick="restoreDeletedTask(\'' + t.id + '\')" title="恢复到任务列表">↩️ 恢复</button>'
+      + '<button class="archive-btn del" onclick="purgeDeletedTask(\'' + t.id + '\')" title="彻底删除，不可恢复">❌</button>'
+      + '</div></div>';
+  }).join('') : '<div class="empty">✨ 回收站是空的</div>';
+
+  document.getElementById('archiveDoneList').innerHTML = doneHtml;
+  document.getElementById('archiveBinList').innerHTML = binHtml;
+  document.getElementById('archiveDoneCount').textContent = done.length ? '(' + done.length + ')' : '';
+  document.getElementById('archiveBinCount').textContent = bin.length ? '(' + bin.length + ')' : '';
+}
+function restoreDoneTask(id) {
+  _guardLocalChange(function() {
+    const d = loadTasks(), t = d.find(x => x.id === id);
+    if (!t) return;
+    t.done = false; t.doneDate = null; t.doneAt = null;
+    saveTasks(d); render(); renderArchiveModal();
+  });
+}
+function deleteDoneTask(id) {
+  // 把已完成任务移入回收站
+  _guardLocalChange(function() {
+    const d = loadTasks(), t = d.find(x => x.id === id);
+    if (!t) return;
+    t.deletedAt = Date.now();
+    const bin = loadDeletedTasks();
+    bin.push(t);
+    saveDeletedTasks(bin);
+    saveTasks(d.filter(x => x.id !== id));
+    render(); renderArchiveModal();
+  });
+}
+function restoreDeletedTask(id) {
+  _guardLocalChange(function() {
+    const bin = loadDeletedTasks();
+    const idx = bin.findIndex(x => x.id === id);
+    if (idx < 0) return;
+    const t = bin.splice(idx, 1)[0];
+    delete t.deletedAt;
+    // 已完成的任务恢复后仍是已完成状态（回到归档的已完成区）
+    const d = loadTasks();
+    d.push(t);
+    saveTasks(d);
+    saveDeletedTasks(bin);
+    render(); renderArchiveModal();
+  });
+}
+function purgeDeletedTask(id) {
+  if (!confirm('彻底删除后无法恢复，确定吗？')) return;
+  _guardLocalChange(function() {
+    saveDeletedTasks(loadDeletedTasks().filter(x => x.id !== id));
+    renderArchiveModal();
   });
 }
 
