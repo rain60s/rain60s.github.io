@@ -1398,6 +1398,16 @@ function loadTasks() {
   var changed = false;
   tasks.forEach(function(t) {
     if (!t.category) { t.category = '工作'; changed = true; }
+    // 数据迁移：修复异常 doneDate（完整 ISO 串如 2026-07-26T13:02:00.381Z），拆成 doneDate + doneAt
+    // 否则会污染归档排序（NaN 比较键导致整个排序失效）
+    if (t.doneDate && String(t.doneDate).length > 10) {
+      var iso = new Date(t.doneDate).getTime();
+      if (!isNaN(iso)) {
+        if (!t.doneAt) t.doneAt = iso;
+        t.doneDate = String(t.doneDate).slice(0, 10);
+        changed = true;
+      }
+    }
   });
   if (changed) { localStorage.setItem('xx_tasks_v2', JSON.stringify(tasks)); }
   return _tasksCache = tasks;
@@ -3338,6 +3348,19 @@ function toggleTask(id) {
     if (t.done) addLogEntry(t.title, t.category);
     else removeLogEntry(t.title, t.doneDate || today());
     if (t.done && t.recurrence && t.date) {
+      // 循环任务：为本次完成生成一条归档快照（不进回收站、不可再循环），原件翻转到下个周期
+      const snapshot = {
+        id: 'snap_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+        title: t.title,
+        date: '',
+        note: (t.note ? t.note + ' ｜ ' : '') + '循环任务（' + t.recurrence + '）本次完成',
+        category: t.category,
+        done: true,
+        doneDate: today(),
+        doneAt: Date.now(),
+        order: t.order
+      };
+      d.push(snapshot);
       const dt = new Date(t.date);
       if (t.recurrence === '每天') dt.setDate(dt.getDate()+1);
       else if (t.recurrence === '每周') dt.setDate(dt.getDate()+7);
@@ -3369,6 +3392,17 @@ function deleteTask(id) {
 }
 
 // ===== 归档（已完成 + 已删除）=====
+function _doneTs(t, endOfDay) {
+  // 完成时间排序/显示键：兼容异常 doneDate（完整 ISO 串、非法值），只取前10位日期
+  // 旧写法 new Date(doneDate + 'T23:59:59') 遇到 ISO 串会得到 NaN，会毒化整个 sort
+  if (t.doneAt) return t.doneAt;
+  if (t.doneDate) {
+    var s = String(t.doneDate).slice(0, 10);
+    var ts = new Date(s + (endOfDay ? 'T23:59:59' : 'T00:00:00')).getTime();
+    if (!isNaN(ts)) return ts;
+  }
+  return 0;
+}
 function _fmtTs(ts) {
   if (!ts) return '';
   var d = new Date(ts);
@@ -3385,8 +3419,7 @@ function closeArchiveModal() {
 function renderArchiveModal() {
   // 已完成：按完成时间倒序（最近完成的在最上面，便于恢复）
   var done = loadTasks().filter(function(t){ return t.done; }).slice().sort(function(a,b){
-    return (b.doneAt || (b.doneDate ? new Date(b.doneDate + 'T23:59:59').getTime() : 0))
-         - (a.doneAt || (a.doneDate ? new Date(a.doneDate + 'T23:59:59').getTime() : 0));
+    return _doneTs(b, true) - _doneTs(a, true);
   });
   // 已删除：按删除时间倒序
   var bin = loadDeletedTasks().slice().sort(function(a,b){ return (b.deletedAt||0) - (a.deletedAt||0); });
@@ -3395,7 +3428,7 @@ function renderArchiveModal() {
     return '<div class="archive-item">'
       + '<div class="archive-item-body">'
       + '<div class="archive-item-title">' + esc(t.title) + '</div>'
-      + '<div class="archive-item-meta">' + esc(t.category || '') + ' · 完成于 ' + _fmtTs(t.doneAt || (t.doneDate ? t.doneDate + 'T00:00:00' : null)) + '</div>'
+      + '<div class="archive-item-meta">' + esc(t.category || '') + ' · 完成于 ' + _fmtTs(_doneTs(t, false) || null) + '</div>'
       + '</div>'
       + '<div class="archive-item-actions">'
       + '<button class="archive-btn" onclick="restoreDoneTask(\'' + t.id + '\')" title="恢复为未完成">↩️ 恢复</button>'
