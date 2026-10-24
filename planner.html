@@ -3358,7 +3358,10 @@ function toggleTask(id) {
         done: true,
         doneDate: today(),
         doneAt: Date.now(),
-        order: t.order
+        order: t.order,
+        // 记录原件与本次完成当天的日期：归档里点「恢复」= 撤销本次完成，原件回到该日期
+        originId: t.id,
+        originDate: t.date
       };
       d.push(snapshot);
       const dt = new Date(t.date);
@@ -3425,10 +3428,14 @@ function renderArchiveModal() {
   var bin = loadDeletedTasks().slice().sort(function(a,b){ return (b.deletedAt||0) - (a.deletedAt||0); });
 
   var doneHtml = done.length ? done.map(function(t) {
+    var isSnap = String(t.id).indexOf('snap_') === 0;
+    var metaHtml = isSnap
+      ? '🔁 循环完成记录 · 完成于 ' + _fmtTs(_doneTs(t, false) || null) + '（恢复 = 撤销本次完成，原件回到 ' + esc(t.originDate || '') + '）'
+      : esc(t.category || '') + ' · 完成于 ' + _fmtTs(_doneTs(t, false) || null);
     return '<div class="archive-item">'
       + '<div class="archive-item-body">'
       + '<div class="archive-item-title">' + esc(t.title) + '</div>'
-      + '<div class="archive-item-meta">' + esc(t.category || '') + ' · 完成于 ' + _fmtTs(_doneTs(t, false) || null) + '</div>'
+      + '<div class="archive-item-meta">' + metaHtml + '</div>'
       + '</div>'
       + '<div class="archive-item-actions">'
       + '<button class="archive-btn" onclick="restoreDoneTask(\'' + t.id + '\')" title="恢复为未完成">↩️ 恢复</button>'
@@ -3457,7 +3464,45 @@ function restoreDoneTask(id) {
   _guardLocalChange(function() {
     const d = loadTasks(), t = d.find(x => x.id === id);
     if (!t) return;
+    // ① 循环任务的完成快照：恢复 = 撤销本次完成
+    //    原件已翻转到下个周期，把它回退到完成当天并置未完成，快照本身删除（本次完成被撤销，不留记录）
+    if (t.originId) {
+      const backTo = t.originDate || today();
+      let orig = d.find(x => x.id === t.originId);
+      if (!orig) {
+        // 原件已被删除：连同回收站里的原件一起恢复
+        const bin = loadDeletedTasks();
+        const bi = bin.findIndex(x => x.id === t.originId);
+        if (bi >= 0) {
+          orig = bin.splice(bi, 1)[0];
+          delete orig.deletedAt;
+          orig.date = backTo;
+          orig.done = false; orig.doneDate = null; orig.doneAt = null;
+          d.push(orig);
+          saveDeletedTasks(bin);
+        }
+      }
+      if (orig) {
+        orig.date = backTo;
+        orig.done = false; orig.doneDate = null; orig.doneAt = null;
+      } else {
+        // 原件彻底找不到了：退化为把快照本身变成一条今天的任务
+        t.date = backTo;
+        t.done = false; t.doneDate = null; t.doneAt = null;
+        removeLogEntry(t.title, t.originDate || today());
+        saveTasks(d); render(); renderArchiveModal();
+        return;
+      }
+      removeLogEntry(orig.title, backTo);
+      saveTasks(d.filter(x => x.id !== t.id));
+      render(); renderArchiveModal();
+      return;
+    }
+    // ② 普通任务：置回未完成；没有日期的补今天，保证一定出现在「🔴 今天」
+    const dk = t.doneDate || today();
     t.done = false; t.doneDate = null; t.doneAt = null;
+    removeLogEntry(t.title, dk);
+    if (!t.date && !t.recurrence) t.date = today();
     saveTasks(d); render(); renderArchiveModal();
   });
 }
@@ -3482,6 +3527,8 @@ function restoreDeletedTask(id) {
     const t = bin.splice(idx, 1)[0];
     delete t.deletedAt;
     // 已完成的任务恢复后仍是已完成状态（回到归档的已完成区）
+    // 无日期且非循环的任务：补上今天，避免恢复后掉进「以后再说」看不见
+    if (!t.date && !t.recurrence) t.date = today();
     const d = loadTasks();
     d.push(t);
     saveTasks(d);
