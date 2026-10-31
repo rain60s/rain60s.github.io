@@ -822,6 +822,8 @@ body {
 .or-row { display:flex; gap:10px; margin-top:12px; }
 .or-time-input { flex:1; padding:9px; border:1.5px solid var(--border); border-radius:8px; font-size:14px; background:var(--bg); color:var(--text); }
 .or-mini { font-size:12px; color:var(--text-dim); margin-bottom:8px; }
+.or-mini-btn { flex:1; padding:7px; border-radius:8px; border:1px solid var(--border); background:#fff; color:var(--text-dim); font-size:12px; cursor:pointer; }
+.or-mini-btn:hover { border-color:var(--accent); color:var(--accent); }
 .or-disabled { opacity:.45; cursor:not-allowed; border-color:var(--border)!important; color:var(--text-dim)!important; background:#fff!important; }
 </style>
 </head>
@@ -2634,9 +2636,9 @@ function orRelease(){
   localStorage.removeItem('or_occupied_date');
   render();
 }
-function orAddTask(title, dateStr, note){
+function orAddTask(o){
   var ts = loadTasks();
-  ts.push({ id:String(Date.now()), title:title, date:dateStr||'', note:note||'', done:false, doneDate:null, category:'工作', recurrence:'' });
+  ts.push({ id:String(Date.now()), title:o.title, date:o.date||'', note:o.note||'', recurrence:o.recurrence||'', done:false, doneDate:null, category:o.category||'工作' });
   saveTasks(ts);
 }
 function orActiveNow(){
@@ -2690,39 +2692,40 @@ function orPickDo(id){
   render();
 }
 // 意外分诊（自制弹窗 + 占用记账）
+var _orNeedConfirm = false;
 function orTriageOpen(){
   document.getElementById('orTriageName').value='';
-  var used = orGetOccupied(), btn = document.getElementById('orTriageUrgent');
-  if(used){
-    document.getElementById('orTriageWarn').innerHTML = '⚠️ 今日缓冲已被"'+esc(used)+'"用完，默认不能再录急诊。';
-    btn.disabled = true; btn.classList.add('or-disabled'); btn.textContent = '🚨 急诊（缓冲已用完）';
-    document.getElementById('orTriageUnlockWrap').style.display = '';
-  } else {
-    document.getElementById('orTriageWarn').innerHTML = '';
-    btn.disabled = false; btn.classList.remove('or-disabled'); btn.textContent = '🚨 急诊·占用手术室';
-    document.getElementById('orTriageUnlockWrap').style.display = 'none';
-  }
+  document.getElementById('orTriageNote').value='';
+  document.getElementById('orTriageDate').value = today();
+  document.getElementById('orTriageCategory').value = '工作';
+  document.getElementById('orTriageRecurrence').value = '';
+  _orNeedConfirm = false;
+  var saveBtn = document.getElementById('orTriageSave');
+  saveBtn.textContent = '保存';
+  var used = orGetOccupied();
+  document.getElementById('orTriageWarn').innerHTML = used ? '⚠️ 今日缓冲已被"'+esc(used)+'"占用。日期选"今天"会需再点一次确认。' : '';
   document.getElementById('orTriageOverlay').classList.add('show');
   setTimeout(function(){ document.getElementById('orTriageName').focus(); }, 50);
 }
 function orTriageClose(){ document.getElementById('orTriageOverlay').classList.remove('show'); }
-function orTriageUnlock(){
-  var btn = document.getElementById('orTriageUrgent');
-  btn.disabled = false; btn.classList.remove('or-disabled'); btn.textContent = '⚠️ 确认增加新任务';
-  document.getElementById('orTriageWarn').innerHTML = '已解锁。再点上面红色按钮，就会挤掉今天既定安排。';
-  document.getElementById('orTriageUnlockWrap').style.display = 'none';
+function orTriageSet(kind){
+  document.getElementById('orTriageDate').value = (kind==='urgent') ? today() : '';
 }
-function orTriageDo(kind){
-  if(kind==='urgent' && document.getElementById('orTriageUrgent').disabled) return;
+function orTriageSave(){
   var name = document.getElementById('orTriageName').value.trim();
-  if(!name){ document.getElementById('orTriageWarn').textContent='先填一下意外任务名～'; return; }
-  if(kind==='urgent'){
-    var overflow = !!orGetOccupied();
-    orAddTask(name, today(), overflow ? '⚠️ 缓冲已超' : '← 占用手术室');
-    if(!overflow) orSetOccupied(name);
-  } else {
-    orAddTask(name, '', '← 分诊:能等');
+  if(!name){ document.getElementById('orTriageWarn').textContent='先填任务名～'; return; }
+  var date = document.getElementById('orTriageDate').value;
+  var rec = document.getElementById('orTriageRecurrence').value;
+  var occupy = (date === today()) || (rec === '每天');
+  var used = orGetOccupied();
+  if(occupy && used && !_orNeedConfirm){
+    _orNeedConfirm = true;
+    document.getElementById('orTriageSave').textContent = '⚠️ 确认增加新任务（缓冲已用完）';
+    document.getElementById('orTriageWarn').innerHTML = '今日缓冲已被"'+esc(used)+'"用完。再点一次保存 = 确认仍加到今天（会挤掉既定安排）；或把日期改成以后。';
+    return;
   }
+  orAddTask({ title:name, date:date, note:document.getElementById('orTriageNote').value, recurrence:rec, category:document.getElementById('orTriageCategory').value });
+  if(occupy && !used) orSetOccupied(name);
   orTriageClose();
   render();
 }
@@ -4141,12 +4144,22 @@ setInterval(function() { checkCloudFreshness(); }, CLOUD_CHECK_INTERVAL);
     <div class="or-pick-head">🚨 意外分诊 <span style="cursor:pointer;color:var(--text-dim);" onclick="orTriageClose()">✕</span></div>
     <div class="or-body">
       <div class="or-warn" id="orTriageWarn"></div>
-      <input class="or-input" id="orTriageName" placeholder="意外任务是什么？">
-      <div class="or-row">
-        <button class="or-btn or-btn-triage" id="orTriageUrgent" onclick="orTriageDo('urgent')">🚨 急诊·占用手术室</button>
-        <button class="or-btn" onclick="orTriageDo('later')">🕐 能等·放以后再说</button>
+      <input class="or-input" id="orTriageName" placeholder="意外任务是什么？" style="margin-bottom:10px;">
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button class="or-mini-btn" onclick="orTriageSet('urgent')">🚨 急诊 = 今天</button>
+        <button class="or-mini-btn" onclick="orTriageSet('later')">🕐 能等 = 以后再说</button>
       </div>
-      <div id="orTriageUnlockWrap" style="display:none;text-align:center;margin-top:10px;"><span style="color:var(--red);font-size:12px;cursor:pointer;text-decoration:underline;" onclick="orTriageUnlock()">仍要增加新任务？点我确认（会挤掉既定安排）</span></div>
+      <div class="or-row" style="margin-top:0;">
+        <input class="or-input" id="orTriageDate" type="date" style="flex:1;">
+        <select class="or-input" id="orTriageCategory" style="flex:1;"><option value="工作">工作</option><option value="生活">生活</option></select>
+      </div>
+      <div class="or-row">
+        <select class="or-input" id="orTriageRecurrence">
+          <option value="">不循环</option><option value="每天">🔄 每天</option><option value="每周">🔄 每周</option><option value="每月">🔄 每月</option><option value="每季">🔄 每季</option><option value="每年">🔄 每年</option>
+        </select>
+      </div>
+      <div class="or-row"><input class="or-input" id="orTriageNote" placeholder="备注（选填）"></div>
+      <div class="or-row"><button class="or-btn or-btn-triage" id="orTriageSave" onclick="orTriageSave()">保存</button></div>
     </div>
   </div>
 </div>
