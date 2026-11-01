@@ -2731,6 +2731,11 @@ function orTriageSave(){
   orTriageClose();
   render();
 }
+// 每30秒仅局部刷新手术室卡片（到点亮/过点灭/跨天清占用），只读不写，不动任务列表与弹窗输入
+setInterval(function(){
+  var w = document.getElementById('orCardWrap');
+  if(w){ w.innerHTML = orCardHtml(); }
+}, 30000);
 
 function render() {
   const tasks = loadTasks(), habits = loadHabits();
@@ -2775,7 +2780,7 @@ function render() {
   ];
 
   // Render today sections (center)（已完成/已删除任务移入「🗂 归档」弹窗，主页面不再显示）
-  document.getElementById('taskSections').innerHTML = orCardHtml() + todaySections.map(function(s) {
+  document.getElementById('taskSections').innerHTML = '<div id="orCardWrap">' + orCardHtml() + '</div>' + todaySections.map(function(s) {
     return '<div class="section">'
       + '<div class="section-title">' + s.title + ' <span style="font-weight:400;color:var(--text-dim)">' + s.tasks.length + '</span></div>'
       + '<div>' + renderList(s.tasks) + '</div></div>';
