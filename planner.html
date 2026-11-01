@@ -2622,7 +2622,7 @@ function orTimeClose(){ document.getElementById('orTimeOverlay').classList.remov
 function orTimeSave(){
   var s=document.getElementById('orStart').value, e=document.getElementById('orEnd').value;
   if(s&&e){ localStorage.setItem('or_start',s); localStorage.setItem('or_end',e); }
-  orTimeClose(); render();
+  orTimeClose(); orScheduleNext(); render();
 }
 // 占用记账（按日期，每天自动重置）
 function orGetOccupied(){
@@ -2731,11 +2731,22 @@ function orTriageSave(){
   orTriageClose();
   render();
 }
-// 每30秒仅局部刷新手术室卡片（到点亮/过点灭/跨天清占用），只读不写，不动任务列表与弹窗输入
-setInterval(function(){
-  var w = document.getElementById('orCardWrap');
-  if(w){ w.innerHTML = orCardHtml(); }
-}, 30000);
+// 到点精准刷新：只在 开始/结束/午夜 三个边界自动更新卡片，不轮询、不整页刷新、只读不写
+function orScheduleNext(){
+  var t = orTime(), now = new Date();
+  function atToday(hm){ var a=hm.split(':'); var d=new Date(now); d.setHours(+a[0],+a[1],0,0); return d; }
+  var points = [atToday(t.s), atToday(t.e)];
+  var mid = new Date(now); mid.setHours(24,0,0,0); points.push(mid);
+  var next = null;
+  points.forEach(function(p){ if(p>now && (!next||p<next)) next=p; });
+  if(!next){ next = atToday(t.s); next.setDate(next.getDate()+1); }
+  clearTimeout(window._orTimer);
+  window._orTimer = setTimeout(function(){
+    var w = document.getElementById('orCardWrap'); if(w){ w.innerHTML = orCardHtml(); }
+    orScheduleNext();
+  }, next-now);
+}
+orScheduleNext();
 
 function render() {
   const tasks = loadTasks(), habits = loadHabits();
