@@ -805,8 +805,10 @@ body {
 /* 时间块：固定时段 + 到点高亮 */
 .or-time { font-size:12px; font-weight:700; color:var(--accent); border:1px solid var(--accent); border-radius:6px; padding:1px 8px; cursor:pointer; }
 .or-time:hover { background:var(--accent); color:#fff; }
-.or-card.or-live { border-style:solid; border-color:var(--accent); box-shadow:0 0 0 3px rgba(230,126,34,0.15); }
-.or-live-tag { font-size:12px; color:var(--accent); font-weight:700; }
+.or-card.or-live { border:1.5px solid var(--accent); background:linear-gradient(135deg,#fff4e2,#ffe9cf); animation:orPulse 2.4s ease-in-out infinite; }
+@keyframes orPulse { 0%,100%{box-shadow:0 0 0 3px rgba(230,126,34,.20);} 50%{box-shadow:0 0 0 9px rgba(230,126,34,.08);} }
+.or-live-tag { font-size:13px; color:var(--accent); font-weight:700; animation:orBlink 1.2s ease-in-out infinite; }
+@keyframes orBlink { 0%,100%{opacity:1;} 50%{opacity:.4;} }
 .or-grp { font-size:11px; color:var(--accent); font-weight:700; margin:10px 4px 2px; }
 /* 占用记账状态 */
 .or-card.or-used { border:1.5px solid var(--red); background:#fff6f4; }
