@@ -827,6 +827,22 @@ body {
 .or-mini-btn { flex:1; padding:7px; border-radius:8px; border:1px solid var(--border); background:#fff; color:var(--text-dim); font-size:12px; cursor:pointer; }
 .or-mini-btn:hover { border-color:var(--accent); color:var(--accent); }
 .or-disabled { opacity:.45; cursor:not-allowed; border-color:var(--border)!important; color:var(--text-dim)!important; background:#fff!important; }
+/* ===== 定时提醒（到点前响铃+闪烁）===== */
+.task.remind-flash { border:1.5px solid var(--accent); background:linear-gradient(135deg,#fff4e2,#ffe9cf); animation:orPulse 1.6s ease-in-out infinite; }
+.tag-remind { background:#fff3e0; color:var(--accent); }
+.remind-toast {
+  position:fixed; top:14px; left:50%; transform:translateX(-50%);
+  z-index:9999; display:flex; align-items:center; gap:12px;
+  background:var(--card); border:1.5px solid var(--accent); border-radius:12px;
+  padding:12px 16px; font-size:14px; font-weight:600; color:var(--text);
+  box-shadow:0 6px 24px rgba(230,126,34,0.35);
+  animation:slideDown 0.3s ease; max-width:90vw;
+}
+.remind-toast-btn {
+  flex:none; padding:5px 14px; border-radius:8px; border:none;
+  background:var(--accent); color:#fff; font-size:13px; font-weight:600; cursor:pointer;
+}
+.remind-toast-btn:hover { background:#d35400; }
 </style>
 </head>
 <body>
@@ -932,6 +948,10 @@ body {
     <div class="form-group">
       <label>截止日期（可选）</label>
       <input type="date" id="taskDate">
+    </div>
+    <div class="form-group">
+      <label>提醒时间（可选，到点前10分钟响铃提醒）</label>
+      <input type="time" id="taskRemindTime">
     </div>
     <div class="form-group">
       <label>分类</label>
@@ -1423,6 +1443,7 @@ function dayTasksAdd() {
   document.getElementById('editId').value = '';
   document.getElementById('taskTitle').value = '';
   document.getElementById('taskDate').value = ds;
+  document.getElementById('taskRemindTime').value = '';
   pickCategory('工作');
   document.getElementById('taskNote').value = '';
   document.getElementById('taskRecurrence').value = '';
@@ -2481,7 +2502,7 @@ function renderTask(tk) {
     + '<div class="task-check ' + (tk.done?'checked':'') + '" onclick="toggleTask(\'' + tk.id + '\')"></div>'
     + '<div class="task-body">'
     + '<div class="task-title">' + esc(tk.title) + '</div>'
-    + '<div class="task-sub">' + catTag + ' ' + dateTag(tk) + '</div>'
+    + '<div class="task-sub">' + catTag + ' ' + dateTag(tk) + (getRemindTime(tk) ? ' <span class="task-tag tag-remind">⏰ ' + getRemindTime(tk) + '</span>' : '') + '</div>'
     + noteHtml
     + '</div>'
     + '<div class="task-actions">'
@@ -3740,6 +3761,7 @@ function editTask(id) {
   document.getElementById('editId').value = id;
   document.getElementById('taskTitle').value = t.title;
   document.getElementById('taskDate').value = t.date||'';
+  document.getElementById('taskRemindTime').value = t.remindTime||'';
   pickCategory(t.category||'工作');
   document.getElementById('taskRecurrence').value = t.recurrence||'';
   document.getElementById('taskNote').value = t.note||'';
@@ -3752,6 +3774,7 @@ function openModal() {
   document.getElementById('editId').value = '';
   document.getElementById('taskTitle').value = '';
   document.getElementById('taskDate').value = today();
+  document.getElementById('taskRemindTime').value = '';
   pickCategory('工作');
   document.getElementById('taskNote').value = '';
   document.getElementById('taskRecurrence').value = '';
@@ -3771,6 +3794,7 @@ function saveTask() {
       date: document.getElementById('taskDate').value,
       category: document.getElementById('taskCategory').value,
       recurrence: document.getElementById('taskRecurrence').value,
+      remindTime: document.getElementById('taskRemindTime').value,
       note: document.getElementById('taskNote').value.trim(),
       done: false, doneDate: null,
     };
@@ -4097,6 +4121,126 @@ function growSeed(id) {
     render();
   });
 }
+
+// ===== 定时提醒（⏰ 提前10分钟 + 到点，双重提醒：响铃 + 任务行闪烁 + 标签页标题闪烁 + 顶部横幅）=====
+var REMIND_AHEAD_MIN = 10;
+var _remindFiredKey = 'xx_remind_fired_v1';
+function _loadRemindFired() {
+  try {
+    var o = JSON.parse(localStorage.getItem(_remindFiredKey) || '{}');
+    return (o && o._d === today()) ? o : { _d: today() };
+  } catch (e) { return { _d: today() }; }
+}
+function _saveRemindFired(o) { localStorage.setItem(_remindFiredKey, JSON.stringify(o)); }
+// 提醒时间来源：①任务属性 remindTime（编辑弹窗里填的，优先）②标题里写的 17:30 / 17：30 / 17点30分 / 17点（兜底，不用改老任务）
+function getRemindTime(t) {
+  if (t.remindTime && /^\d{1,2}:\d{2}$/.test(t.remindTime)) return t.remindTime;
+  var s = t.title || '';
+  var m = s.match(/(\d{1,2})[:：](\d{2})/);
+  if (m) {
+    var h1 = parseInt(m[1], 10);
+    if (h1 <= 23) return String(h1).padStart(2, '0') + ':' + m[2];
+  }
+  m = s.match(/(\d{1,2})点(?:(\d{1,2})分?)?/);
+  if (m) {
+    var h2 = parseInt(m[1], 10);
+    if (h2 >= 0 && h2 <= 23) return String(h2).padStart(2, '0') + ':' + String(parseInt(m[2] || '0', 10)).padStart(2, '0');
+  }
+  return '';
+}
+// 提示音（WebAudio 短铃三连，无需音频文件；首次交互后自动解锁）
+function _remindBeep() {
+  try {
+    if (!_remindBeep.ctx) _remindBeep.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var ctx = _remindBeep.ctx;
+    if (ctx.state === 'suspended') ctx.resume();
+    var t0 = ctx.currentTime;
+    for (var i = 0; i < 3; i++) {
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, t0 + i * 0.35);
+      g.gain.exponentialRampToValueAtTime(0.25, t0 + i * 0.35 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + i * 0.35 + 0.3);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t0 + i * 0.35); o.stop(t0 + i * 0.35 + 0.32);
+    }
+  } catch (e) {}
+}
+// 标签页标题闪烁（后台标签页也能看见）
+var _titleFlashTimer = null;
+var _origTitle = document.title;
+function startTitleFlash(msg) {
+  stopTitleFlash();
+  var on = false;
+  _titleFlashTimer = setInterval(function() {
+    on = !on;
+    document.title = on ? msg : _origTitle;
+  }, 1000);
+}
+function stopTitleFlash() {
+  if (_titleFlashTimer) { clearInterval(_titleFlashTimer); _titleFlashTimer = null; }
+  document.title = _origTitle;
+}
+document.addEventListener('pointerdown', stopTitleFlash);
+document.addEventListener('keydown', stopTitleFlash);
+// 顶部横幅 + 任务行高亮闪烁
+function showRemindToast(text) {
+  var old = document.getElementById('remindToast'); if (old) old.remove();
+  var div = document.createElement('div');
+  div.id = 'remindToast'; div.className = 'remind-toast';
+  div.innerHTML = '<span>⏰ ' + esc(text) + '</span><button class="remind-toast-btn" onclick="dismissRemindToast()">知道了</button>';
+  document.body.appendChild(div);
+}
+function dismissRemindToast() {
+  var el = document.getElementById('remindToast'); if (el) el.remove();
+  stopTitleFlash();
+  document.querySelectorAll('.task.remind-flash').forEach(function(x) { x.classList.remove('remind-flash'); });
+}
+function fireReminder(t, rt, label) {
+  _remindBeep();
+  startTitleFlash('⏰ ' + label + '｜' + rt + ' ' + t.title);
+  showRemindToast(label + '（' + rt + '）：' + t.title);
+  var row = document.querySelector('.task[data-id="' + t.id + '"]');
+  if (row) {
+    row.classList.add('remind-flash');
+    try { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+  }
+}
+// 每20秒巡检一次（页面开着才有提醒；当天已提醒过的，重启页面不会重复响）
+function checkReminders() {
+  var now = new Date();
+  var curMin = now.getHours() * 60 + now.getMinutes();
+  var todayStr = today();
+  var fired = _loadRemindFired();
+  var changed = false;
+  loadTasks().forEach(function(t) {
+    if (t.done) return;
+    // 只提醒「今天该做」的任务：无日期 / 今天 / 已过期未做（都在「今天」区）
+    if (t.date && t.date > todayStr) return;
+    var rt = getRemindTime(t);
+    if (!rt) return;
+    var a = rt.split(':'), target = (+a[0]) * 60 + (+a[1]);
+    var base = t.id + '|' + todayStr + '|' + rt;
+    if (curMin >= target - REMIND_AHEAD_MIN && curMin < target && !fired[base + '|pre']) {
+      fired[base + '|pre'] = 1; changed = true;
+      fireReminder(t, rt, REMIND_AHEAD_MIN + '分钟后');
+    }
+    if (curMin >= target && curMin < target + 60 && !fired[base + '|at']) {
+      fired[base + '|at'] = 1; changed = true;
+      fireReminder(t, rt, '到点了');
+    }
+  });
+  if (changed) _saveRemindFired(fired);
+}
+setInterval(checkReminders, 20000);
+checkReminders();
+// 首次交互解锁声音（浏览器自动播放策略要求：当天点过一次页面即可出声）
+document.addEventListener('pointerdown', function unlock() {
+  try {
+    if (!_remindBeep.ctx) _remindBeep.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (_remindBeep.ctx.state === 'suspended') _remindBeep.ctx.resume();
+  } catch (e) {}
+}, { once: true });
 
 // Events
 // 关键修复：任务弹窗一旦录入了内容，点遮罩不再关闭，避免误触（鼠标移出再回来顺手一点）丢失已填信息
